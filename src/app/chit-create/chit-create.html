@@ -1,0 +1,16 @@
+<h1>Create Chit</h1>
+<form (ngSubmit)="create()">
+  <label>Name: <input type="text" [(ngModel)]="chit.name" name="name" required></label><br>
+  <label>Chit Value: <input type="number" [(ngModel)]="chit.chitValue" name="chitValue" required></label><br>
+  <label>Total Members: <input type="number" [(ngModel)]="chit.totalMembers" name="totalMembers" required></label><br>
+  <label>Installment Amount: <input type="number" [(ngModel)]="chit.installmentAmount" name="installmentAmount" required></label><br>
+  <label>Organizer Payout Term: <input type="number" [(ngModel)]="chit.organizerPayoutTerm" name="organizerPayoutTerm" required></label><br>
+  <label>Dividend Distribution Type: 
+    <select [(ngModel)]="chit.dividendDistributionType" name="dividendDistributionType">
+      <option value="1">ALL_MEMBERS</option>
+      <option value="2">NON_PRIZED_ONLY</option>
+    </select>
+  </label><br>
+  <label>Start Date: <input type="date" [(ngModel)]="chit.startDate" name="startDate"></label><br>
+  <button type="submit">Create</button>
+</form>

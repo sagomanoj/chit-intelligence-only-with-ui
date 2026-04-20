@@ -1,0 +1,7 @@
+<h1>Chit Funds</h1>
+<button (click)="createChit()">Create New Chit</button>
+<ul>
+  <li *ngFor="let chit of chits">
+    <a (click)="viewChit(chit.id)">{{ chit.name }}</a>
+  </li>
+</ul>

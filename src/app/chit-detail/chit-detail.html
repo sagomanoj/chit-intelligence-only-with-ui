@@ -1,0 +1,21 @@
+<h1 *ngIf="chit">{{ chit.name }}</h1>
+<p *ngIf="chit">Value: {{ chit.chitValue }}</p>
+<p *ngIf="chit">Members: {{ chit.totalMembers }}</p>
+
+<h2>Terms</h2>
+<ul *ngIf="chit">
+  <li *ngFor="let term of chit.terms">
+    Term {{ term.termNumber }}: Winning {{ term.winningAmount }}, Discount {{ term.discountAmount }}
+  </li>
+</ul>
+
+<h2>Add Term</h2>
+<form (ngSubmit)="addTerm()">
+  <label>Term Number: <input type="number" [(ngModel)]="newTerm.termNumber" name="termNumber" required></label><br>
+  <label>Winning Amount: <input type="number" [(ngModel)]="newTerm.winningAmount" name="winningAmount" required></label><br>
+  <label>Discount Amount: <input type="number" [(ngModel)]="newTerm.discountAmount" name="discountAmount" required></label><br>
+  <label>Is Self Prized: <input type="checkbox" [(ngModel)]="newTerm.isSelfPrized" name="isSelfPrized"></label><br>
+  <button type="submit">Add Term</button>
+</form>
+
+<button (click)="goToAuction()">Go to Auction</button>
