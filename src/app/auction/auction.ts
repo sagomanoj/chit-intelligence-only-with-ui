@@ -21,7 +21,6 @@ export class AuctionComponent implements OnInit {
 
   // Results
   profit: ProfitResponse | null = null;
-  recommendations: { bestTimeToBid: string; expectedDiscountRange: string } | null = null;
   bidNowResult: ProfitResponse | null = null;
   waitResult: string | null = null;
   isCalculating: boolean = false;
@@ -211,21 +210,6 @@ export class AuctionComponent implements OnInit {
       this.monthlyRupee = inputValue;
       this.annualInterest = inputValue * 12;
     }
-  }
-
-  getRecommendations(): void {
-    this.syncInputsFromView();
-    if (this.totalAmount <= 0 || this.discountAmount <= 0) {
-      alert('Please enter chit value and discount amount first');
-      return;
-    }
-
-    this.calcService.getDetailedRecommendation(
-      this.totalAmount,
-      this.discountAmount,
-      this.currentChitNumber,
-      this.participants
-    ).subscribe(res => this.recommendations = res);
   }
 
   calculateBidNow(): void {
