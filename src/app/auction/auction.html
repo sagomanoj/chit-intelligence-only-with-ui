@@ -47,7 +47,7 @@
           </div>
 
           <div class="form-group">
-            <label for="currentChitNumber" class="required">Current Term</label>
+            <label for="currentChitNumber" class="required">Current Chit Term</label>
             <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" (ngModelChange)="calculateProfit()" name="currentChitNumber" placeholder="6">
           </div>
 
@@ -57,7 +57,7 @@
           </div>
 
           <div class="form-group wide">
-            <label for="discountAmount" class="required">Discount Amount</label>
+            <label for="discountAmount" class="required">Bid Discount Amount</label>
             <input type="number" id="discountAmount" [(ngModel)]="discountAmount" (ngModelChange)="calculateProfit()" name="discountAmount" placeholder="100000">
           </div>
         </div>
@@ -116,15 +116,14 @@
             <span>{{ profit.status }}</span>
             <strong>Rs.{{ profit.netProfit | number:'1.0-0' }}</strong>
           </div>
-          <small>{{ profit.profitPercentage | number:'1.2-2' }}% overall</small>
+          <div class="hero-stats">
+            <small>{{ profit.profitPercentage | number:'1.2-2' }}% overall</small>
+            <small>{{ getAnnualizedProfitPercentage() | number:'1.2-2' }}% annualized</small>
+            <small>{{ getProfitInterestRupee() | number:'1.2-2' }} rupee / month</small>
+          </div>
         </article>
 
         <section class="metric-strip">
-          <article>
-            <span>Annualized</span>
-            <strong>{{ getAnnualizedProfitPercentage() | number:'1.2-2' }}%</strong>
-            <small>{{ getProfitInterestRupee() | number:'1.2-2' }} rupee</small>
-          </article>
           <article>
             <span>Take Home</span>
             <strong>Rs.{{ profit.takeHomeAmount | number:'1.0-0' }}</strong>
@@ -141,11 +140,11 @@
           <h2>Bid Breakdown</h2>
           <div class="result-grid">
             <div>
-              <span>Discount</span>
+              <span>Bid Discount Amount</span>
               <strong>Rs.{{ profit.discountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
-              <span>Break-even</span>
+              <span>Max Bid Limit</span>
               <strong>Rs.{{ profit.breakEvenDiscountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
@@ -180,17 +179,17 @@
               <strong>Rs.{{ profit.monthlyInterest | number:'1.0-0' }}</strong>
             </div>
             <div>
-              <span>Interest / Term</span>
+              <span>Interest Per Term</span>
               <strong>Rs.{{ profit.interestPerTerm | number:'1.0-0' }}</strong>
             </div>
             <div>
-              <span>Extra / Term</span>
+              <span>Extra Pay Per Term</span>
               <strong [class.profit]="profit.extraPaymentPerTerm <= 0" [class.loss]="profit.extraPaymentPerTerm > 0">
                 Rs.{{ profit.extraPaymentPerTerm | number:'1.0-0' }}
               </strong>
             </div>
             <div>
-              <span>Total Extra</span>
+              <span>Total Extra Pay</span>
               <strong [class.profit]="profit.totalExtraPayment <= 0" [class.loss]="profit.totalExtraPayment > 0">
                 Rs.{{ profit.totalExtraPayment | number:'1.0-0' }}
               </strong>
