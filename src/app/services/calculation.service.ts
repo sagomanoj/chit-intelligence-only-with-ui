@@ -10,7 +10,7 @@ export interface ProfitRequest {
   pastDividend: number;
   pastInvestment: number;
   frequencyInMonths: number;
-  agentCommissionPercent: number;
+  agentCommissionAmount: number;
   enableReinvestment: boolean;
   interestPercent?: number;
   interestRupee?: number;
@@ -25,7 +25,6 @@ export interface ProfitResponse {
   takeHomeAmount: number;
   auctionAmount: number;
   discountAmount: number;
-  agentCommissionPercent: number;
   agentCommissionAmount: number;
   breakEvenDiscountAmount: number;
   maxAllowedDiscountAmount: number;
@@ -71,7 +70,7 @@ export class CalculationService {
     const installmentAmount = request.totalMembers > 0 ? request.chitValue / request.totalMembers : 0;
     const futureInvestment = installmentAmount * remainingTerms;
     const discountAmount = request.winningAmount;
-    const agentCommissionAmount = request.chitValue * request.agentCommissionPercent / 100;
+    const agentCommissionAmount = request.agentCommissionAmount;
     const takeHomeAmount = request.chitValue - discountAmount - agentCommissionAmount;
 
     const annualRate = this.resolveAnnualInterestRate(request.interestPercent, request.interestRupee);
@@ -104,7 +103,6 @@ export class CalculationService {
       takeHomeAmount: this.toCurrency(takeHomeAmount),
       auctionAmount: this.toCurrency(request.winningAmount),
       discountAmount: this.toCurrency(discountAmount),
-      agentCommissionPercent: request.agentCommissionPercent,
       agentCommissionAmount: this.toCurrency(agentCommissionAmount),
       breakEvenDiscountAmount: this.toCurrency(Math.max(0, breakEvenDiscountAmount)),
       maxAllowedDiscountAmount: this.toCurrency(maxAllowedDiscountAmount),

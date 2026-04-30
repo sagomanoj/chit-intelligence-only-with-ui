@@ -14,7 +14,7 @@ export class AuctionComponent implements OnInit {
   totalAmount: number = 0;
   participants: number = 0;
   frequency: number = 1;
-  agentCommissionPercent: number = 0;
+  agentCommissionAmount: number = 0;
   currentChitNumber: number = 1;
   pastInvestment: number = 0;
   discountAmount: number = 0;
@@ -59,8 +59,7 @@ export class AuctionComponent implements OnInit {
 
   getDiscountUpperBound(): number {
     const totalAmount = this.readNumberInput('totalAmount', this.totalAmount);
-    const commissionPercent = this.readNumberInput('agentCommissionPercent', this.agentCommissionPercent);
-    const commissionAmount = totalAmount * commissionPercent / 100;
+    const commissionAmount = this.readNumberInput('agentCommissionAmount', this.agentCommissionAmount);
     return Math.max(0, Math.floor(totalAmount - commissionAmount - 1));
   }
 
@@ -136,7 +135,7 @@ export class AuctionComponent implements OnInit {
     this.totalAmount = this.readNumberInput('totalAmount', this.totalAmount);
     this.participants = this.readNumberInput('participants', this.participants);
     this.frequency = this.readNumberInput('frequency', this.frequency);
-    this.agentCommissionPercent = this.readNumberInput('agentCommissionPercent', this.agentCommissionPercent);
+    this.agentCommissionAmount = this.readNumberInput('agentCommissionAmount', this.agentCommissionAmount);
     this.currentChitNumber = this.readNumberInput('currentChitNumber', this.currentChitNumber);
     this.pastInvestment = this.readNumberInput('pastInvestment', this.pastInvestment);
     this.discountAmount = this.readNumberInput('discountAmount', this.discountAmount);
@@ -171,13 +170,11 @@ export class AuctionComponent implements OnInit {
 
   private buildProfitRequest(): ProfitRequest | null {
     if (this.totalAmount <= 0 || this.participants <= 0 || this.discountAmount <= 0) {
-      alert('Please fill in all required fields');
       return null;
     }
 
-    const commissionAmount = this.totalAmount * this.agentCommissionPercent / 100;
+    const commissionAmount = this.agentCommissionAmount;
     if (this.discountAmount + commissionAmount >= this.totalAmount) {
-      alert('Discount plus agent commission should be less than the total chit amount');
       return null;
     }
 
@@ -190,7 +187,7 @@ export class AuctionComponent implements OnInit {
       pastDividend: 0,
       pastInvestment: this.pastInvestment,
       frequencyInMonths: this.frequency,
-      agentCommissionPercent: this.agentCommissionPercent,
+      agentCommissionAmount: this.agentCommissionAmount,
       enableReinvestment: this.reinvestEnabled,
       interestPercent: this.annualInterest || undefined,
       interestRupee: this.monthlyRupee || undefined
