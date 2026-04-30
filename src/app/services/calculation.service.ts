@@ -12,6 +12,7 @@ export interface ProfitRequest {
   frequencyInMonths: number;
   agentCommissionAmount: number;
   enableReinvestment: boolean;
+  excludeOwnShare: boolean;
   interestPercent?: number;
   interestRupee?: number;
 }
@@ -68,10 +69,16 @@ export class CalculationService {
     const frequencyInMonths = Math.max(1, request.frequencyInMonths);
     const remainingTerms = Math.max(0, request.totalMembers - request.currentTermNumber);
     const installmentAmount = request.totalMembers > 0 ? request.chitValue / request.totalMembers : 0;
-    const futureInvestment = installmentAmount * remainingTerms;
+    const baseFutureInvestment = installmentAmount * remainingTerms;
+    let futureInvestment = baseFutureInvestment;
     const discountAmount = request.winningAmount;
     const agentCommissionAmount = request.agentCommissionAmount;
-    const takeHomeAmount = request.chitValue - discountAmount - agentCommissionAmount;
+    let takeHomeAmount = request.chitValue - discountAmount - agentCommissionAmount;
+
+    if (request.excludeOwnShare && request.totalMembers > 0) {
+      takeHomeAmount -= installmentAmount;
+      futureInvestment = Math.max(0, futureInvestment - installmentAmount);
+    }
 
     const annualRate = this.resolveAnnualInterestRate(request.interestPercent, request.interestRupee);
     const interestRupee = annualRate / 12;
@@ -88,18 +95,28 @@ export class CalculationService {
     const remainingMonths = Math.max(1, remainingTerms * frequencyInMonths);
     const annualizedProfitPercentage = profitPercentage * 12 / remainingMonths;
     const profitInterestRupee = annualizedProfitPercentage / 12;
-    const breakEvenDiscountAmount = request.chitValue - agentCommissionAmount - totalInvestment;
+    
+    const originalTotalInvestment = request.pastInvestment + baseFutureInvestment;
+    const breakEvenDiscountAmount = request.chitValue - agentCommissionAmount - originalTotalInvestment;
+    
     const maxAllowedDiscountAmount = Math.max(0, request.chitValue - agentCommissionAmount - 1);
     const coverageStatus = !request.enableReinvestment
       ? 'NOT_APPLICABLE'
       : interestPerTerm >= installmentAmount ? 'FULLY_COVERED' : 'PARTIAL';
 
+    let status = 'PROFIT';
+    if (Math.abs(netProfit) < 0.01) {
+      status = 'NO PROFIT / NO LOSS';
+    } else if (netProfit < 0) {
+      status = 'LOSS';
+    }
+
     return of({
-      netProfit: this.toCurrency(netProfit),
+      netProfit: this.toCurrency(Math.abs(netProfit)),
       profitPercentage: this.toPercent(profitPercentage),
       annualizedProfitPercentage: this.toPercent(annualizedProfitPercentage),
       profitInterestRupee: this.toPercent(profitInterestRupee),
-      status: netProfit >= 0 ? 'PROFIT' : 'LOSS',
+      status: status,
       takeHomeAmount: this.toCurrency(takeHomeAmount),
       auctionAmount: this.toCurrency(request.winningAmount),
       discountAmount: this.toCurrency(discountAmount),

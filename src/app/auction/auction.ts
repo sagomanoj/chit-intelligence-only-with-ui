@@ -18,6 +18,7 @@ export class AuctionComponent implements OnInit {
   currentChitNumber: number = 1;
   pastInvestment: number = 0;
   discountAmount: number = 0;
+  excludeOwnShare: boolean = true;
 
   // Results
   profit: ProfitResponse | null = null;
@@ -40,7 +41,6 @@ export class AuctionComponent implements OnInit {
   }
 
   calculateProfit(): void {
-    this.syncInputsFromView();
     this.queueProfitCalculation(false);
   }
 
@@ -58,9 +58,13 @@ export class AuctionComponent implements OnInit {
   }
 
   getDiscountUpperBound(): number {
-    const totalAmount = this.readNumberInput('totalAmount', this.totalAmount);
-    const commissionAmount = this.readNumberInput('agentCommissionAmount', this.agentCommissionAmount);
+    const totalAmount = this.totalAmount || 0;
+    const commissionAmount = this.agentCommissionAmount || 0;
     return Math.max(0, Math.floor(totalAmount - commissionAmount - 1));
+  }
+
+  getShareAmount(): number {
+    return this.participants > 0 ? this.totalAmount / this.participants : 0;
   }
 
   getAnnualizedProfitPercentage(): number {
@@ -131,42 +135,7 @@ export class AuctionComponent implements OnInit {
     });
   }
 
-  private syncInputsFromView(): void {
-    this.totalAmount = this.readNumberInput('totalAmount', this.totalAmount);
-    this.participants = this.readNumberInput('participants', this.participants);
-    this.frequency = this.readNumberInput('frequency', this.frequency);
-    this.agentCommissionAmount = this.readNumberInput('agentCommissionAmount', this.agentCommissionAmount);
-    this.currentChitNumber = this.readNumberInput('currentChitNumber', this.currentChitNumber);
-    this.pastInvestment = this.readNumberInput('pastInvestment', this.pastInvestment);
-    this.discountAmount = this.readNumberInput('discountAmount', this.discountAmount);
-    this.annualInterest = this.readNullableNumberInput('annualInterest', this.annualInterest);
-    this.monthlyRupee = this.readNullableNumberInput('monthlyRupee', this.monthlyRupee);
-  }
 
-  private readNumberInput(id: string, fallback: number): number {
-    const value = this.readInputValue(id);
-    if (value === '') {
-      return fallback;
-    }
-
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-  }
-
-  private readNullableNumberInput(id: string, fallback: number | null): number | null {
-    const value = this.readInputValue(id);
-    if (value === '') {
-      return null;
-    }
-
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-  }
-
-  private readInputValue(id: string): string {
-    const element = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
-    return element?.value?.trim() ?? '';
-  }
 
   private buildProfitRequest(): ProfitRequest | null {
     if (this.totalAmount <= 0 || this.participants <= 0 || this.discountAmount <= 0) {
@@ -189,24 +158,32 @@ export class AuctionComponent implements OnInit {
       frequencyInMonths: this.frequency,
       agentCommissionAmount: this.agentCommissionAmount,
       enableReinvestment: this.reinvestEnabled,
+      excludeOwnShare: this.excludeOwnShare,
       interestPercent: this.annualInterest || undefined,
       interestRupee: this.monthlyRupee || undefined
     };
   }
 
-  onInterestChange(type: 'percent' | 'rupee', event: Event): void {
-    const inputValue = Number((event.target as HTMLInputElement).value);
-    if (!Number.isFinite(inputValue)) {
-      return;
-    }
+  onInterestModelChange(type: 'percent' | 'rupee', newValue: any): void {
+    const parsed = (newValue === null || newValue === '') ? null : Number(newValue);
 
     if (type === 'percent') {
-      this.annualInterest = inputValue;
-      this.monthlyRupee = inputValue / 12;
+      this.annualInterest = parsed;
+      if (parsed !== null && Number.isFinite(parsed)) {
+        this.monthlyRupee = Number((parsed / 12).toFixed(2));
+      } else {
+        this.monthlyRupee = null;
+      }
     } else {
-      this.monthlyRupee = inputValue;
-      this.annualInterest = inputValue * 12;
+      this.monthlyRupee = parsed;
+      if (parsed !== null && Number.isFinite(parsed)) {
+        this.annualInterest = Number((parsed * 12).toFixed(2));
+      } else {
+        this.annualInterest = null;
+      }
     }
+
+    this.calculateProfit();
   }
 
   calculateBidNow(): void {

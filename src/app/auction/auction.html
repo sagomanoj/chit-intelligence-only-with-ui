@@ -56,9 +56,17 @@
             <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" (ngModelChange)="calculateProfit()" name="pastInvestment" placeholder="195000">
           </div>
 
-          <div class="form-group wide">
-            <label for="discountAmount" class="required">Bid Discount Amount</label>
-            <input type="number" id="discountAmount" [(ngModel)]="discountAmount" (ngModelChange)="calculateProfit()" name="discountAmount" placeholder="100000">
+          <div class="form-group wide discount-bid-group">
+            <div class="input-wrapper">
+              <label for="discountAmount" class="required">Bid Discount Amount</label>
+              <input type="number" id="discountAmount" [(ngModel)]="discountAmount" (ngModelChange)="calculateProfit()" name="discountAmount" placeholder="100000">
+            </div>
+            <div class="checkbox-wrapper">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="excludeOwnShare" (ngModelChange)="calculateProfit()" name="excludeOwnShare">
+                Exclude current term share (Rs.{{ getShareAmount() | number:'1.0-0' }}) from Profit/Loss
+              </label>
+            </div>
           </div>
         </div>
 
@@ -91,13 +99,13 @@
         <div *ngIf="reinvestEnabled" class="form-grid two-column">
           <div class="form-group">
             <label for="annualInterest">Annual Interest (%)</label>
-            <input type="number" id="annualInterest" [(ngModel)]="annualInterest" name="annualInterest"
-                   (input)="onInterestChange('percent', $event); calculateProfit()" step="0.01" placeholder="24">
+            <input type="number" id="annualInterest" [ngModel]="annualInterest" name="annualInterest"
+                   (ngModelChange)="onInterestModelChange('percent', $event)" step="0.01" placeholder="24">
           </div>
           <div class="form-group">
             <label for="monthlyRupee">Interest (Rupee/100)</label>
-            <input type="number" id="monthlyRupee" [(ngModel)]="monthlyRupee" name="monthlyRupee"
-                   (input)="onInterestChange('rupee', $event); calculateProfit()" step="0.01" placeholder="2">
+            <input type="number" id="monthlyRupee" [ngModel]="monthlyRupee" name="monthlyRupee"
+                   (ngModelChange)="onInterestModelChange('rupee', $event)" step="0.01" placeholder="2">
           </div>
         </div>
       </article>
@@ -111,7 +119,7 @@
       </div>
 
       <ng-container *ngIf="profit">
-        <article class="hero-result" [class.loss-card]="profit.netProfit < 0">
+        <article class="hero-result" [class.loss-card]="profit.status === 'LOSS'" [class.neutral-card]="profit.status === 'NO PROFIT / NO LOSS'">
           <div>
             <span>{{ profit.status }}</span>
             <strong>Rs.{{ profit.netProfit | number:'1.0-0' }}</strong>
@@ -144,7 +152,7 @@
               <strong>Rs.{{ profit.discountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
-              <span>Max Bid Limit</span>
+              <span>Max Bid Limit(No profit/Loss)</span>
               <strong>Rs.{{ profit.breakEvenDiscountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
