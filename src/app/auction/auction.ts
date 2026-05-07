@@ -113,6 +113,9 @@ export class AuctionComponent implements OnInit {
   private runProfitCalculation(): void {
     const request = this.buildProfitRequest();
     if (!request) {
+      this.profit = null;
+      this.bidNowResult = null;
+      this.isCalculating = false;
       return;
     }
 

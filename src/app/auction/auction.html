@@ -3,9 +3,6 @@
     <div class="header-title-row">
       <h1 class="main-title"><span class="eyebrow">Chit Intelligence</span> Bid Profit Calculator</h1>
     </div>
-    <button type="button" (click)="calculateProfit()" class="calculate-btn primary small" [disabled]="isCalculating">
-      {{ isCalculating ? 'Calculating...' : 'Calculate' }}
-    </button>
   </header>
 
   <main class="dashboard-grid">
@@ -13,8 +10,8 @@
       <article class="panel input-panel">
         <div class="panel-header">
           <div>
-            <h2>Chit Details</h2>
-            <p>Enter values and move the discount slider to auto-calculate outcomes.</p>
+            <h2>Chit Fundamentals</h2>
+            <p>Enter the basic chit details to get started.</p>
           </div>
         </div>
 
@@ -40,12 +37,16 @@
               <option [ngValue]="6">6 months</option>
             </select>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label for="agentCommissionAmount" class="required">Commission Amount</label>
-            <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" (ngModelChange)="calculateProfit()" name="agentCommissionAmount" step="100" placeholder="0">
+        <div class="panel-header" style="margin-top: 24px;">
+          <div>
+            <h2>Your Position</h2>
+            <p>Details about your current term and investments.</p>
           </div>
+        </div>
 
+        <div class="form-grid">
           <div class="form-group">
             <label for="currentChitNumber" class="required">Current Chit Term</label>
             <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" (ngModelChange)="calculateProfit()" name="currentChitNumber" placeholder="6">
@@ -54,6 +55,11 @@
           <div class="form-group">
             <label for="pastInvestment" class="required">Past Investment</label>
             <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" (ngModelChange)="calculateProfit()" name="pastInvestment" placeholder="195000">
+          </div>
+          
+          <div class="form-group">
+            <label for="agentCommissionAmount" class="required">Commission Amount</label>
+            <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" (ngModelChange)="calculateProfit()" name="agentCommissionAmount" step="100" placeholder="0">
           </div>
 
           <div class="form-group wide discount-bid-group">
@@ -73,10 +79,10 @@
         <div class="discount-slider">
           <div class="slider-header">
             <span>Discount Bid Range</span>
-            <strong>Rs.{{ discountAmount | number:'1.0-0' }}</strong>
+            <strong>Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
           </div>
           <input type="range" id="discountSlider" min="0" [max]="getDiscountUpperBound()" step="1000"
-                 [(ngModel)]="discountAmount" name="discountSlider" (input)="onDiscountSliderChange($event)">
+                 [value]="discountAmount || 0" name="discountSlider" (input)="onDiscountSliderChange($event)">
           <div class="slider-meta">
             <span>Rs.0</span>
             <span>Max Rs.{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
@@ -111,7 +117,10 @@
       </article>
     </section>
 
-    <aside class="insight-rail">
+    <aside class="insight-rail" [class.is-calculating]="isCalculating">
+      <div class="loading-overlay" *ngIf="isCalculating">
+        <div class="spinner"></div>
+      </div>
       <div *ngIf="!profit" class="empty-state">
         <span>Ready</span>
         <strong>Run a bid check</strong>
