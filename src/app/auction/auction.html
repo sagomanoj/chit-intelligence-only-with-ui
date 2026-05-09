@@ -1,12 +1,8 @@
 <div class="calculator-shell">
   <header class="page-header">
-    <div>
-      <p class="eyebrow">Chit Intelligence</p>
-      <h1>Bid Profit Calculator</h1>
+    <div class="header-title-row">
+      <h1 class="main-title"><span class="eyebrow">Chit Intelligence</span> Bid Profit Calculator</h1>
     </div>
-    <button type="button" (click)="calculateProfit()" class="calculate-btn primary" [disabled]="isCalculating">
-      {{ isCalculating ? 'Calculating...' : 'Calculate Profit/Loss' }}
-    </button>
   </header>
 
   <main class="dashboard-grid">
@@ -14,25 +10,25 @@
       <article class="panel input-panel">
         <div class="panel-header">
           <div>
-            <h2>Chit Details</h2>
-            <p>Enter auction values and move the slider to test bid outcomes.</p>
+            <h2>Chit Fundamentals</h2>
+            <p>Enter the basic chit details to get started.</p>
           </div>
         </div>
 
         <div class="form-grid">
           <div class="form-group">
-            <label for="totalAmount">Total Amount</label>
-            <input type="number" id="totalAmount" [(ngModel)]="totalAmount" name="totalAmount" placeholder="700000">
+            <label for="totalAmount" class="required">Total Amount</label>
+            <input type="number" id="totalAmount" [(ngModel)]="totalAmount" (ngModelChange)="calculateProfit()" name="totalAmount" placeholder="700000">
           </div>
 
           <div class="form-group">
-            <label for="participants">Participants</label>
-            <input type="number" id="participants" [(ngModel)]="participants" name="participants" placeholder="14">
+            <label for="participants" class="required">Total Members</label>
+            <input type="number" id="participants" [(ngModel)]="participants" (ngModelChange)="calculateProfit()" name="participants" placeholder="14">
           </div>
 
           <div class="form-group">
-            <label for="frequency">Frequency</label>
-            <select id="frequency" [(ngModel)]="frequency" name="frequency">
+            <label for="frequency" class="required">Chit Frequency</label>
+            <select id="frequency" [(ngModel)]="frequency" (ngModelChange)="calculateProfit()" name="frequency">
               <option [ngValue]="1">1 month</option>
               <option [ngValue]="2">2 months</option>
               <option [ngValue]="3">3 months</option>
@@ -41,35 +37,52 @@
               <option [ngValue]="6">6 months</option>
             </select>
           </div>
+        </div>
 
+        <div class="panel-header" style="margin-top: 24px;">
+          <div>
+            <h2>Your Position</h2>
+            <p>Details about your current term and investments.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
           <div class="form-group">
-            <label for="agentCommissionPercent">Agent Commission</label>
-            <input type="number" id="agentCommissionPercent" [(ngModel)]="agentCommissionPercent" name="agentCommissionPercent" step="0.01" placeholder="0">
+            <label for="currentChitNumber" class="required">Current Chit Term</label>
+            <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" (ngModelChange)="calculateProfit()" name="currentChitNumber" placeholder="6">
           </div>
 
           <div class="form-group">
-            <label for="currentChitNumber">Current Term</label>
-            <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" name="currentChitNumber" placeholder="6">
+            <label for="pastInvestment" class="required">Past Investment</label>
+            <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" (ngModelChange)="calculateProfit()" name="pastInvestment" placeholder="195000">
           </div>
-
+          
           <div class="form-group">
-            <label for="pastInvestment">Past Investment</label>
-            <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" name="pastInvestment" placeholder="195000">
+            <label for="agentCommissionAmount" class="required">Commission Amount</label>
+            <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" (ngModelChange)="calculateProfit()" name="agentCommissionAmount" step="100" placeholder="0">
           </div>
 
-          <div class="form-group wide">
-            <label for="discountAmount">Discount Amount</label>
-            <input type="number" id="discountAmount" [(ngModel)]="discountAmount" name="discountAmount" placeholder="100000">
+          <div class="form-group wide discount-bid-group">
+            <div class="input-wrapper">
+              <label for="discountAmount" class="required">Bid Discount Amount</label>
+              <input type="number" id="discountAmount" [(ngModel)]="discountAmount" (ngModelChange)="calculateProfit()" name="discountAmount" placeholder="100000">
+            </div>
+            <div class="checkbox-wrapper">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="excludeOwnShare" (ngModelChange)="calculateProfit()" name="excludeOwnShare">
+                Exclude current term share (Rs.{{ getShareAmount() | number:'1.0-0' }}) from Profit/Loss
+              </label>
+            </div>
           </div>
         </div>
 
         <div class="discount-slider">
           <div class="slider-header">
             <span>Discount Bid Range</span>
-            <strong>Rs.{{ discountAmount | number:'1.0-0' }}</strong>
+            <strong>Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
           </div>
           <input type="range" id="discountSlider" min="0" [max]="getDiscountUpperBound()" step="1000"
-                 [(ngModel)]="discountAmount" name="discountSlider" (input)="onDiscountSliderChange($event)">
+                 [value]="discountAmount || 0" name="discountSlider" (input)="onDiscountSliderChange($event)">
           <div class="slider-meta">
             <span>Rs.0</span>
             <span>Max Rs.{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
@@ -84,27 +97,30 @@
             <p>Use monthly interest from take-home amount to offset future installments.</p>
           </div>
           <label class="switch">
-            <input type="checkbox" id="reinvestEnabled" [(ngModel)]="reinvestEnabled" name="reinvestEnabled">
+            <input type="checkbox" id="reinvestEnabled" [(ngModel)]="reinvestEnabled" (ngModelChange)="calculateProfit()" name="reinvestEnabled">
             <span></span>
           </label>
         </div>
 
         <div *ngIf="reinvestEnabled" class="form-grid two-column">
           <div class="form-group">
-            <label for="annualInterest">Annual Interest</label>
-            <input type="number" id="annualInterest" [(ngModel)]="annualInterest" name="annualInterest"
-                   (input)="onInterestChange('percent', $event)" step="0.01" placeholder="24">
+            <label for="annualInterest">Annual Interest (%)</label>
+            <input type="number" id="annualInterest" [ngModel]="annualInterest" name="annualInterest"
+                   (ngModelChange)="onInterestModelChange('percent', $event)" step="0.01" placeholder="24">
           </div>
           <div class="form-group">
-            <label for="monthlyRupee">Interest in Rupees</label>
-            <input type="number" id="monthlyRupee" [(ngModel)]="monthlyRupee" name="monthlyRupee"
-                   (input)="onInterestChange('rupee', $event)" step="0.01" placeholder="2">
+            <label for="monthlyRupee">Interest (Rupee/100)</label>
+            <input type="number" id="monthlyRupee" [ngModel]="monthlyRupee" name="monthlyRupee"
+                   (ngModelChange)="onInterestModelChange('rupee', $event)" step="0.01" placeholder="2">
           </div>
         </div>
       </article>
     </section>
 
-    <aside class="insight-rail">
+    <aside class="insight-rail" [class.is-calculating]="isCalculating">
+      <div class="loading-overlay" *ngIf="isCalculating">
+        <div class="spinner"></div>
+      </div>
       <div *ngIf="!profit" class="empty-state">
         <span>Ready</span>
         <strong>Run a bid check</strong>
@@ -112,20 +128,19 @@
       </div>
 
       <ng-container *ngIf="profit">
-        <article class="hero-result" [class.loss-card]="profit.netProfit < 0">
+        <article class="hero-result" [class.loss-card]="profit.status === 'LOSS'" [class.neutral-card]="profit.status === 'NO PROFIT / NO LOSS'">
           <div>
             <span>{{ profit.status }}</span>
             <strong>Rs.{{ profit.netProfit | number:'1.0-0' }}</strong>
           </div>
-          <small>{{ profit.profitPercentage | number:'1.2-2' }}% overall</small>
+          <div class="hero-stats">
+            <small>{{ profit.profitPercentage | number:'1.2-2' }}% overall</small>
+            <small>{{ getAnnualizedProfitPercentage() | number:'1.2-2' }}% annualized</small>
+            <small>{{ getProfitInterestRupee() | number:'1.2-2' }} rupee / month</small>
+          </div>
         </article>
 
         <section class="metric-strip">
-          <article>
-            <span>Annualized</span>
-            <strong>{{ getAnnualizedProfitPercentage() | number:'1.2-2' }}%</strong>
-            <small>{{ getProfitInterestRupee() | number:'1.2-2' }} rupee</small>
-          </article>
           <article>
             <span>Take Home</span>
             <strong>Rs.{{ profit.takeHomeAmount | number:'1.0-0' }}</strong>
@@ -142,11 +157,11 @@
           <h2>Bid Breakdown</h2>
           <div class="result-grid">
             <div>
-              <span>Discount</span>
+              <span>Bid Discount Amount</span>
               <strong>Rs.{{ profit.discountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
-              <span>Break-even</span>
+              <span>Max Bid Limit(No profit/Loss)</span>
               <strong>Rs.{{ profit.breakEvenDiscountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
@@ -181,17 +196,17 @@
               <strong>Rs.{{ profit.monthlyInterest | number:'1.0-0' }}</strong>
             </div>
             <div>
-              <span>Interest / Term</span>
+              <span>Interest Per Term</span>
               <strong>Rs.{{ profit.interestPerTerm | number:'1.0-0' }}</strong>
             </div>
             <div>
-              <span>Extra / Term</span>
+              <span>Extra Pay Per Term</span>
               <strong [class.profit]="profit.extraPaymentPerTerm <= 0" [class.loss]="profit.extraPaymentPerTerm > 0">
                 Rs.{{ profit.extraPaymentPerTerm | number:'1.0-0' }}
               </strong>
             </div>
             <div>
-              <span>Total Extra</span>
+              <span>Total Extra Pay</span>
               <strong [class.profit]="profit.totalExtraPayment <= 0" [class.loss]="profit.totalExtraPayment > 0">
                 Rs.{{ profit.totalExtraPayment | number:'1.0-0' }}
               </strong>
