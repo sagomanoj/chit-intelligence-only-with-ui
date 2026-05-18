@@ -11,13 +11,13 @@ import { CommonModule } from '@angular/common';
 })
 export class AuctionComponent implements OnInit {
   // Input fields
-  totalAmount: number = 0;
-  participants: number = 0;
+  totalAmount: number | null = null;
+  participants: number | null = null;
   frequency: number = 1;
-  agentCommissionAmount: number = 0;
-  currentChitNumber: number = 1;
-  pastInvestment: number = 0;
-  discountAmount: number = 0;
+  agentCommissionAmount: number | null = 0;
+  currentChitNumber: number | null = null;
+  pastInvestment: number | null = null;
+  discountAmount: number | null = null;
   excludeOwnShare: boolean = true;
 
   // Results
@@ -25,6 +25,8 @@ export class AuctionComponent implements OnInit {
   bidNowResult: ProfitResponse | null = null;
   waitResult: string | null = null;
   isCalculating: boolean = false;
+  showModalResults: boolean = false;
+  hasAttemptedSubmit: boolean = false;
 
   // Re-investment
   reinvestEnabled: boolean = true;
@@ -40,8 +42,51 @@ export class AuctionComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  toggleModalResults(): void {
+    this.showModalResults = !this.showModalResults;
+  }
+
   calculateProfit(): void {
     this.queueProfitCalculation(false);
+  }
+
+  validateAndCalculate(): void {
+    this.hasAttemptedSubmit = true;
+    if (this.isFormValid()) {
+      this.calculateProfit();
+      this.showModalResults = true;
+    } else {
+      setTimeout(() => {
+        const firstError = document.querySelector('.error');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 0);
+    }
+  }
+
+  isFormValid(): boolean {
+    return !!(
+      this.totalAmount &&
+      this.participants &&
+      this.discountAmount &&
+      this.currentChitNumber &&
+      this.pastInvestment !== null &&
+      this.agentCommissionAmount !== null
+    );
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    if (!this.hasAttemptedSubmit) return false;
+    switch (fieldName) {
+      case 'totalAmount': return !this.totalAmount;
+      case 'participants': return !this.participants;
+      case 'discountAmount': return !this.discountAmount;
+      case 'currentChitNumber': return !this.currentChitNumber;
+      case 'pastInvestment': return this.pastInvestment === null;
+      case 'agentCommissionAmount': return this.agentCommissionAmount === null;
+      default: return false;
+    }
   }
 
   onDiscountSliderChange(event: Event): void {
@@ -52,7 +97,7 @@ export class AuctionComponent implements OnInit {
 
     this.discountAmount = value;
 
-    if (this.profit) {
+    if (this.profit && this.isFormValid()) {
       this.queueProfitCalculation(true);
     }
   }
@@ -64,7 +109,7 @@ export class AuctionComponent implements OnInit {
   }
 
   getShareAmount(): number {
-    return this.participants > 0 ? this.totalAmount / this.participants : 0;
+    return (this.participants && this.participants > 0) ? (this.totalAmount || 0) / this.participants : 0;
   }
 
   getAnnualizedProfitPercentage(): number {
@@ -141,11 +186,15 @@ export class AuctionComponent implements OnInit {
 
 
   private buildProfitRequest(): ProfitRequest | null {
+    if (!this.totalAmount || !this.participants || !this.discountAmount || !this.currentChitNumber) {
+      return null;
+    }
+
     if (this.totalAmount <= 0 || this.participants <= 0 || this.discountAmount <= 0) {
       return null;
     }
 
-    const commissionAmount = this.agentCommissionAmount;
+    const commissionAmount = this.agentCommissionAmount || 0;
     if (this.discountAmount + commissionAmount >= this.totalAmount) {
       return null;
     }
@@ -157,9 +206,9 @@ export class AuctionComponent implements OnInit {
       totalMembers: this.participants,
       dividendDistributionType: 1,
       pastDividend: 0,
-      pastInvestment: this.pastInvestment,
+      pastInvestment: this.pastInvestment || 0,
       frequencyInMonths: this.frequency,
-      agentCommissionAmount: this.agentCommissionAmount,
+      agentCommissionAmount: this.agentCommissionAmount || 0,
       enableReinvestment: this.reinvestEnabled,
       excludeOwnShare: this.excludeOwnShare,
       interestPercent: this.annualInterest || undefined,
@@ -186,7 +235,9 @@ export class AuctionComponent implements OnInit {
       }
     }
 
-    this.calculateProfit();
+    if (this.profit && this.isFormValid()) {
+      this.calculateProfit();
+    }
   }
 
   calculateBidNow(): void {
@@ -195,7 +246,7 @@ export class AuctionComponent implements OnInit {
 
   calculateWait(): void {
     // Placeholder - calculate benefit of waiting
-    const potentialFutureDiscount = this.totalAmount * 0.15; // Assume 15% future discount
+    const potentialFutureDiscount = (this.totalAmount || 0) * 0.15; // Assume 15% future discount
     this.waitResult = `Potential additional profit: Rs.${potentialFutureDiscount.toLocaleString()}`;
   }
 }
