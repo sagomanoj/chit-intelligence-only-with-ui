@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CalculationService, ProfitRequest, ProfitResponse } from '../services/calculation.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Chit, ChitService } from '../services/chit.service';
 
 @Component({
   selector: 'app-auction',
@@ -10,6 +11,10 @@ import { CommonModule } from '@angular/common';
   styleUrl: './auction.css',
 })
 export class AuctionComponent implements OnInit {
+  savedChits: Chit[] = [];
+  selectedChitId = '';
+  selectedChit: Chit | null = null;
+
   // Input fields
   totalAmount: number | null = null;
   participants: number | null = null;
@@ -36,10 +41,12 @@ export class AuctionComponent implements OnInit {
 
   constructor(
     private calcService: CalculationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private chitService: ChitService
   ) { }
 
   ngOnInit(): void {
+    this.loadSavedChits();
   }
 
   toggleModalResults(): void {
@@ -48,6 +55,61 @@ export class AuctionComponent implements OnInit {
 
   calculateProfit(): void {
     this.queueProfitCalculation(false);
+  }
+
+  loadSavedChits(): void {
+    this.chitService.getChits().subscribe(chits => {
+      this.savedChits = chits;
+      const persistedSelection = this.chitService.getSelectedChitId();
+      if (persistedSelection) {
+        this.applySavedChit(persistedSelection, false);
+      } else if (this.savedChits.length === 1) {
+        this.applySavedChit(this.savedChits[0].id, false);
+      }
+    });
+  }
+
+  applySavedChit(chitId: string, persistSelection = true): void {
+    this.selectedChitId = chitId;
+    if (persistSelection) {
+      this.chitService.setSelectedChitId(chitId || null);
+    }
+
+    if (!chitId) {
+      this.selectedChit = null;
+      return;
+    }
+
+    this.chitService.getChit(chitId).subscribe(chit => {
+      if (!chit) {
+        this.selectedChit = null;
+        return;
+      }
+
+      this.selectedChit = chit;
+      this.totalAmount = chit.chitAmount;
+      this.participants = chit.totalMembers;
+      this.frequency = chit.frequencyInMonths;
+      this.currentChitNumber = Math.max(1, chit.currentTermNumber || 1);
+      this.pastInvestment = this.chitService.getPastInvestment(chit);
+      this.agentCommissionAmount = chit.chitType === 'AGENT_FIXED_AMOUNT_EACH_TERM'
+        ? (chit.agentCommissionAmount ?? 0)
+        : 0;
+      this.discountAmount = null;
+      this.excludeOwnShare = true;
+      this.reinvestEnabled = true;
+      this.hasAttemptedSubmit = false;
+      this.profit = null;
+      this.bidNowResult = null;
+      this.waitResult = null;
+      this.showModalResults = false;
+    });
+  }
+
+  clearSavedChit(): void {
+    this.selectedChitId = '';
+    this.selectedChit = null;
+    this.chitService.setSelectedChitId(null);
   }
 
   validateAndCalculate(): void {
@@ -67,24 +129,30 @@ export class AuctionComponent implements OnInit {
 
   isFormValid(): boolean {
     return !!(
-      this.totalAmount &&
-      this.participants &&
-      this.discountAmount &&
-      this.currentChitNumber &&
+      this.totalAmount !== null &&
+      this.totalAmount > 0 &&
+      this.participants !== null &&
+      this.participants > 0 &&
+      this.discountAmount !== null &&
+      this.discountAmount >= 0 &&
+      this.currentChitNumber !== null &&
+      this.currentChitNumber >= 1 &&
+      this.currentChitNumber <= this.participants &&
       this.pastInvestment !== null &&
-      this.agentCommissionAmount !== null
+      this.agentCommissionAmount !== null &&
+      this.agentCommissionAmount >= 0
     );
   }
 
   isFieldInvalid(fieldName: string): boolean {
     if (!this.hasAttemptedSubmit) return false;
     switch (fieldName) {
-      case 'totalAmount': return !this.totalAmount;
-      case 'participants': return !this.participants;
-      case 'discountAmount': return !this.discountAmount;
-      case 'currentChitNumber': return !this.currentChitNumber;
+      case 'totalAmount': return this.totalAmount === null || this.totalAmount <= 0;
+      case 'participants': return this.participants === null || this.participants <= 0;
+      case 'discountAmount': return this.discountAmount === null || this.discountAmount < 0;
+      case 'currentChitNumber': return this.currentChitNumber === null || this.currentChitNumber < 1 || (this.participants !== null && this.currentChitNumber > this.participants);
       case 'pastInvestment': return this.pastInvestment === null;
-      case 'agentCommissionAmount': return this.agentCommissionAmount === null;
+      case 'agentCommissionAmount': return this.agentCommissionAmount === null || this.agentCommissionAmount < 0;
       default: return false;
     }
   }
@@ -110,6 +178,10 @@ export class AuctionComponent implements OnInit {
 
   getShareAmount(): number {
     return (this.participants && this.participants > 0) ? (this.totalAmount || 0) / this.participants : 0;
+  }
+
+  getInstallmentAmount(): number {
+    return this.getShareAmount();
   }
 
   getAnnualizedProfitPercentage(): number {
@@ -138,7 +210,8 @@ export class AuctionComponent implements OnInit {
       return this.profit.profitInterestRupee ?? 0;
     }
 
-    return this.getAnnualizedProfitPercentage() / 12;
+    const remainingMonths = Math.max(1, this.profit.remainingTerms * this.profit.frequencyInMonths);
+    return this.profit.netProfit / remainingMonths;
   }
 
   private queueProfitCalculation(debounce: boolean): void {
@@ -186,11 +259,22 @@ export class AuctionComponent implements OnInit {
 
 
   private buildProfitRequest(): ProfitRequest | null {
-    if (!this.totalAmount || !this.participants || !this.discountAmount || !this.currentChitNumber) {
+    if (
+      this.totalAmount === null ||
+      this.participants === null ||
+      this.discountAmount === null ||
+      this.currentChitNumber === null
+    ) {
       return null;
     }
 
-    if (this.totalAmount <= 0 || this.participants <= 0 || this.discountAmount <= 0) {
+    if (
+      this.totalAmount <= 0 ||
+      this.participants <= 0 ||
+      this.discountAmount < 0 ||
+      this.currentChitNumber < 1 ||
+      this.currentChitNumber > this.participants
+    ) {
       return null;
     }
 
@@ -211,8 +295,8 @@ export class AuctionComponent implements OnInit {
       agentCommissionAmount: this.agentCommissionAmount || 0,
       enableReinvestment: this.reinvestEnabled,
       excludeOwnShare: this.excludeOwnShare,
-      interestPercent: this.annualInterest || undefined,
-      interestRupee: this.monthlyRupee || undefined
+      interestPercent: this.annualInterest ?? undefined,
+      interestRupee: this.monthlyRupee ?? undefined
     };
   }
 

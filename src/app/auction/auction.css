@@ -11,7 +11,7 @@
 .calculator-shell {
   width: min(1400px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 12px 0 84px;
+  padding: 12px 0 160px;
 }
 
 .page-header {
@@ -61,7 +61,7 @@ h2 {
 .dashboard-grid {
   display: flex;
   flex-direction: column;
-  max-width: 760px;
+  max-width: 1200px;
   margin: 0 auto;
   gap: 14px;
   padding-top: 10px;
@@ -69,7 +69,9 @@ h2 {
 
 .setup-stack {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 14px;
+  align-items: start;
 }
 
 .panel,
@@ -220,6 +222,46 @@ select.error {
   background: linear-gradient(135deg, #effaf5, #fbf7ee);
   border: 1px solid rgba(42, 65, 55, 0.1);
   border-radius: 8px;
+}
+
+.selected-summary {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(17, 111, 90, 0.07);
+  color: #11493a;
+}
+
+.selected-summary span {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.selected-summary strong {
+  font-size: 18px;
+}
+
+.discount-slider.in-modal {
+  margin-top: 0;
+  margin-bottom: 12px;
+  background: #ffffff;
+  border-color: rgba(42, 65, 55, 0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.slider-hint {
+  font-size: 13px;
+  color: #116f5a;
+  font-weight: 700;
+  margin-bottom: 12px;
+  text-align: center;
+  background: rgba(17, 111, 90, 0.06);
+  padding: 8px;
+  border-radius: 6px;
 }
 
 .slider-header,
@@ -580,7 +622,7 @@ input[type="range"] {
     justify-content: center;
     gap: 8px;
     position: fixed;
-    bottom: 24px;
+    bottom: 74px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 85;

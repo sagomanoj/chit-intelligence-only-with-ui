@@ -1,21 +1,224 @@
-<h1 *ngIf="chit">{{ chit.name }}</h1>
-<p *ngIf="chit">Value: {{ chit.chitValue }}</p>
-<p *ngIf="chit">Members: {{ chit.totalMembers }}</p>
+<section class="page-card" *ngIf="chit && editModel">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Saved Chits</p>
+      <h2>{{ chit.name }}</h2>
+      <p class="hero-copy">Review the chit, add term records, and keep your bidding history in one place.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="secondary-button" (click)="useInCalculator()">Use in calculator</button>
+      <button class="primary-button" *ngIf="!isEditing" (click)="beginEdit()">Edit chit</button>
+      <button class="secondary-button" *ngIf="isEditing" (click)="cancelEdit()">Cancel</button>
+      <button class="danger-button" (click)="deleteChit()">Delete</button>
+    </div>
+  </header>
 
-<h2>Terms</h2>
-<ul *ngIf="chit">
-  <li *ngFor="let term of chit.terms">
-    Term {{ term.termNumber }}: Winning {{ term.winningAmount }}, Discount {{ term.discountAmount }}
-  </li>
-</ul>
+  <p *ngIf="saveNotice" class="notice">{{ saveNotice }}</p>
 
-<h2>Add Term</h2>
-<form (ngSubmit)="addTerm()">
-  <label>Term Number: <input type="number" [(ngModel)]="newTerm.termNumber" name="termNumber" required></label><br>
-  <label>Winning Amount: <input type="number" [(ngModel)]="newTerm.winningAmount" name="winningAmount" required></label><br>
-  <label>Discount Amount: <input type="number" [(ngModel)]="newTerm.discountAmount" name="discountAmount" required></label><br>
-  <label>Is Self Prized: <input type="checkbox" [(ngModel)]="newTerm.isSelfPrized" name="isSelfPrized"></label><br>
-  <button type="submit">Add Term</button>
-</form>
+  <div class="summary-grid">
+    <article>
+      <span>Chit amount</span>
+      <strong>Rs.{{ chit.chitAmount | number:'1.0-0' }}</strong>
+    </article>
+    <article>
+      <span>Installment</span>
+      <strong>Rs.{{ chit.installmentAmount | number:'1.0-0' }}</strong>
+    </article>
+    <article>
+      <span>Status</span>
+      <strong>{{ chit.status }}</strong>
+    </article>
+    <article>
+      <span>Next scheduled date</span>
+      <strong>{{ chit.nextScheduledDate || '-' }}</strong>
+    </article>
+    <article>
+      <span>Past investment</span>
+      <strong>Rs.{{ getPastInvestment() | number:'1.0-0' }}</strong>
+    </article>
+    <article>
+      <span>Terms pending</span>
+      <strong>{{ chit.termsPending }}</strong>
+    </article>
+  </div>
 
-<button (click)="goToAuction()">Go to Auction</button>
+  <section class="panel" *ngIf="isEditing">
+    <div class="section-title">
+      <div>
+        <h3>Edit chit</h3>
+        <p>Update the master data. Save to return to the view mode.</p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="saveChit()" class="form-grid" novalidate>
+      <label class="field">
+        <span>Name <em>*</em></span>
+        <input type="text" [(ngModel)]="editModel.name" name="editName" [class.error]="isEditFieldInvalid('name')" />
+        <small *ngIf="isEditFieldInvalid('name')">Name is required.</small>
+      </label>
+
+      <label class="field">
+        <span>Chit Amount <em>*</em></span>
+        <input type="number" [(ngModel)]="editModel.chitAmount" name="editChitAmount" min="1" [class.error]="isEditFieldInvalid('chitAmount')" />
+        <small *ngIf="isEditFieldInvalid('chitAmount')">Amount must be greater than zero.</small>
+      </label>
+
+      <label class="field">
+        <span>Total Members <em>*</em></span>
+        <input type="number" [(ngModel)]="editModel.totalMembers" name="editTotalMembers" min="1" [class.error]="isEditFieldInvalid('totalMembers')" />
+        <small *ngIf="isEditFieldInvalid('totalMembers')">Members must be greater than zero.</small>
+      </label>
+
+      <label class="field">
+        <span>Frequency in Months <em>*</em></span>
+        <select [(ngModel)]="editModel.frequencyInMonths" name="editFrequency" [class.error]="isEditFieldInvalid('frequencyInMonths')">
+          <option *ngFor="let month of monthOptions" [ngValue]="month">{{ month }} month{{ month > 1 ? 's' : '' }}</option>
+        </select>
+        <small *ngIf="isEditFieldInvalid('frequencyInMonths')">Frequency is required.</small>
+      </label>
+
+      <label class="field">
+        <span>Start Date <em>*</em></span>
+        <input type="date" [(ngModel)]="editModel.startDate" name="editStartDate" [class.error]="isEditFieldInvalid('startDate')" />
+        <small *ngIf="isEditFieldInvalid('startDate')">Start date is required.</small>
+      </label>
+
+      <label class="field">
+        <span>Current Term Number <em>*</em></span>
+        <input type="number" [(ngModel)]="editModel.currentTermNumber" name="editCurrentTerm" min="0" [class.error]="isEditFieldInvalid('currentTermNumber')" />
+        <small *ngIf="isEditFieldInvalid('currentTermNumber')">Term must be between 0 and total members.</small>
+      </label>
+
+      <label class="field">
+        <span>Opening Past Investment <em>*</em></span>
+        <input type="number" [(ngModel)]="editModel.openingPastInvestment" name="editPastInvestment" min="0" [class.error]="isEditFieldInvalid('openingPastInvestment')" />
+        <small *ngIf="isEditFieldInvalid('openingPastInvestment')">Use 0 or a positive amount.</small>
+      </label>
+
+      <label class="field">
+        <span>Chit Type <em>*</em></span>
+        <select [(ngModel)]="editModel.chitType" name="editChitType">
+          <option *ngFor="let type of chitTypes" [ngValue]="type.value">{{ type.label }}</option>
+        </select>
+      </label>
+
+      <label *ngIf="showCommissionAmount()" class="field">
+        <span>Agent Commission Amount <em>*</em></span>
+        <input type="number" [(ngModel)]="editModel.agentCommissionAmount" name="editCommission" min="0" [class.error]="isEditFieldInvalid('agentCommissionAmount')" />
+        <small *ngIf="isEditFieldInvalid('agentCommissionAmount')">Commission must be 0 or more.</small>
+      </label>
+
+      <label class="field full-width">
+        <span>Notes</span>
+        <textarea rows="3" [(ngModel)]="editModel.notes" name="editNotes"></textarea>
+      </label>
+
+      <div class="actions full-width">
+        <button type="submit" class="primary-button">Save changes</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel" *ngIf="!isEditing">
+    <div class="section-title">
+      <div>
+        <h3>Quick summary</h3>
+        <p>The master chit details and current tracking values.</p>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <article>
+        <span>Chit type</span>
+        <strong>{{ chit.chitType }}</strong>
+      </article>
+      <article>
+        <span>Current term</span>
+        <strong>{{ chit.currentTermNumber }}</strong>
+      </article>
+      <article>
+        <span>Started on</span>
+        <strong>{{ chit.startDate }}</strong>
+      </article>
+      <article>
+        <span>Term taken</span>
+        <strong>{{ chit.isChitTaken ? 'Yes' : 'No' }}</strong>
+      </article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <h3>Add term record</h3>
+        <p>Record each term, whether the chit is taken or not.</p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="addTerm()" class="form-grid" novalidate>
+      <label class="field">
+        <span>Term number <em>*</em></span>
+        <input type="number" [(ngModel)]="newTerm.termNumber" name="termNumber" min="1" [class.error]="isTermFieldInvalid('termNumber')" />
+        <small *ngIf="isTermFieldInvalid('termNumber')">Term number is required.</small>
+      </label>
+
+      <label class="field">
+        <span>Term date <em>*</em></span>
+        <input type="date" [(ngModel)]="newTerm.termDate" name="termDate" [class.error]="isTermFieldInvalid('termDate')" />
+        <small *ngIf="isTermFieldInvalid('termDate')">Term date is required.</small>
+      </label>
+
+      <label class="field">
+        <span>Invested amount <em>*</em></span>
+        <input type="number" [(ngModel)]="newTerm.investedAmount" name="investedAmount" min="0" [class.error]="isTermFieldInvalid('investedAmount')" />
+        <small *ngIf="isTermFieldInvalid('investedAmount')">Enter the amount invested for this term.</small>
+      </label>
+
+      <label class="field inline">
+        <input type="checkbox" [(ngModel)]="newTerm.isChitTaken" name="isChitTaken" (change)="toggleTaken()" />
+        <span>Chit taken this term</span>
+      </label>
+
+      <label *ngIf="showTakenAmount()" class="field">
+        <span>Taken amount <em>*</em></span>
+        <input type="number" [(ngModel)]="newTerm.takenAmount" name="takenAmount" min="0" [class.error]="isTermFieldInvalid('takenAmount')" />
+        <small *ngIf="isTermFieldInvalid('takenAmount')">Taken amount is required when chit is taken.</small>
+      </label>
+
+      <label class="field full-width">
+        <span>Notes</span>
+        <textarea rows="3" [(ngModel)]="newTerm.notes" name="termNotes" placeholder="Optional notes for this term"></textarea>
+      </label>
+
+      <div class="actions full-width">
+        <button type="submit" class="primary-button">Add term</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <h3>Term history</h3>
+        <p>Every term record stays here for forecasting and profit/loss review.</p>
+      </div>
+    </div>
+
+    <div *ngIf="!chit.terms.length" class="empty-state">
+      <strong>No term records yet.</strong>
+      <p>Add the first term to begin tracking this chit.</p>
+    </div>
+
+    <div class="term-list" *ngIf="chit.terms.length">
+      <article class="term-item" *ngFor="let term of chit.terms">
+        <div class="term-head">
+          <strong>Term {{ term.termNumber }}</strong>
+          <span class="status" [class.taken]="term.isChitTaken">{{ term.isChitTaken ? 'CHIT TAKEN' : 'PAID' }}</span>
+        </div>
+        <p>Date: {{ term.termDate }}</p>
+        <p>Invested: Rs.{{ (term.investedAmount || 0) | number:'1.0-0' }}</p>
+        <p *ngIf="term.isChitTaken">Taken: Rs.{{ (term.takenAmount || 0) | number:'1.0-0' }}</p>
+        <p *ngIf="term.notes">Notes: {{ term.notes }}</p>
+      </article>
+    </div>
+  </section>
+</section>

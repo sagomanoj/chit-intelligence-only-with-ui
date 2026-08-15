@@ -1,7 +1,84 @@
-<h1>Chit Funds</h1>
-<button (click)="createChit()">Create New Chit</button>
-<ul>
-  <li *ngFor="let chit of chits">
-    <a (click)="viewChit(chit.id)">{{ chit.name }}</a>
-  </li>
-</ul>
+<section class="page-card">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Saved Chits</p>
+      <h2>Manage your chits</h2>
+      <p class="hero-copy">Open a saved chit to continue the journey, or send it straight into the calculator.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="primary-button" (click)="createChit()">Create chit</button>
+    </div>
+  </header>
+
+  <div class="overview-strip" *ngIf="chits.length">
+    <article>
+      <span>Total chits</span>
+      <strong>{{ chits.length }}</strong>
+    </article>
+    <article>
+      <span>Active</span>
+      <strong>{{ getActiveCount() }}</strong>
+    </article>
+    <article>
+      <span>Taken</span>
+      <strong>{{ getTakenCount() }}</strong>
+    </article>
+    <article>
+      <span>Completed</span>
+      <strong>{{ getCompletedCount() }}</strong>
+    </article>
+  </div>
+
+  <div *ngIf="chits.length === 0" class="empty-state">
+    <strong>No saved chits yet</strong>
+    <p>Create your first chit and use it later in the calculator.</p>
+    <button class="primary-button" (click)="createChit()">Create your first chit</button>
+  </div>
+
+  <div class="chit-grid" *ngIf="chits.length > 0">
+    <article class="chit-card" *ngFor="let chit of chits">
+      <div class="card-topline">
+        <div>
+          <h3>{{ chit.name }}</h3>
+          <p>{{ chit.chitType }}</p>
+        </div>
+        <span class="status" [class.active]="chit.status === 'ACTIVE'" [class.taken]="chit.status === 'TAKEN'" [class.completed]="chit.status === 'COMPLETED'">
+          {{ chit.status }}
+        </span>
+      </div>
+
+      <dl class="meta-grid">
+        <div>
+          <dt>Chit amount</dt>
+          <dd>Rs.{{ chit.chitAmount | number:'1.0-0' }}</dd>
+        </div>
+        <div>
+          <dt>Installment</dt>
+          <dd>Rs.{{ chit.installmentAmount | number:'1.0-0' }}</dd>
+        </div>
+        <div>
+          <dt>Members</dt>
+          <dd>{{ chit.totalMembers }}</dd>
+        </div>
+        <div>
+          <dt>Current term</dt>
+          <dd>{{ chit.currentTermNumber }}</dd>
+        </div>
+        <div>
+          <dt>Next schedule</dt>
+          <dd>{{ chit.nextScheduledDate || '-' }}</dd>
+        </div>
+        <div>
+          <dt>Taken</dt>
+          <dd>{{ chit.isChitTaken ? 'Yes' : 'No' }}</dd>
+        </div>
+      </dl>
+
+      <div class="card-footer">
+        <button class="secondary-button" (click)="viewChit(chit.id)">Open</button>
+        <button class="secondary-button" (click)="useInCalculator(chit.id)">Use in calculator</button>
+        <button class="danger-button" (click)="deleteChit(chit.id)">Delete</button>
+      </div>
+    </article>
+  </div>
+</section>

@@ -19,6 +19,34 @@
       <article class="panel input-panel">
         <div class="panel-header">
           <div>
+            <h2>Saved Chit</h2>
+            <p>Select a saved chit to prefill the calculator.</p>
+          </div>
+          <button class="calculate-btn small" type="button" *ngIf="selectedChitId" (click)="clearSavedChit()">Clear</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group wide">
+            <label for="savedChit">Saved chit</label>
+            <select id="savedChit" [(ngModel)]="selectedChitId" name="savedChit" (ngModelChange)="applySavedChit($event)">
+              <option value="">Manual entry</option>
+              <option *ngFor="let chit of savedChits" [ngValue]="chit.id">
+                {{ chit.name }} - Rs.{{ chit.chitAmount | number:'1.0-0' }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div *ngIf="selectedChit" class="selected-summary">
+          <span>{{ selectedChit.status }}</span>
+          <strong>Term {{ selectedChit.currentTermNumber }} of {{ selectedChit.totalMembers }}</strong>
+          <p>Start: {{ selectedChit.startDate }} | Next: {{ selectedChit.nextScheduledDate || '-' }}</p>
+        </div>
+      </article>
+
+      <article class="panel input-panel">
+        <div class="panel-header">
+          <div>
             <h2>Chit Fundamentals</h2>
             <p>Enter the basic chit details to get started.</p>
           </div>
@@ -44,11 +72,15 @@
               <option [ngValue]="4">4 months</option>
               <option [ngValue]="5">5 months</option>
               <option [ngValue]="6">6 months</option>
+              <option [ngValue]="7">7 months</option>
+              <option [ngValue]="8">8 months</option>
             </select>
           </div>
         </div>
+      </article>
 
-        <div class="panel-header" style="margin-top: 24px;">
+      <article class="panel input-panel">
+        <div class="panel-header">
           <div>
             <h2>Your Position</h2>
             <p>Details about your current term and investments.</p>
@@ -73,7 +105,7 @@
 
           <div class="form-group wide discount-bid-group">
             <div class="input-wrapper">
-              <label for="discountAmount" class="required">Bid Discount Amount</label>
+              <label for="discountAmount" class="required">Bid Auction/Discount Amount</label>
               <input type="number" id="discountAmount" [(ngModel)]="discountAmount" name="discountAmount" placeholder="100000" [class.error]="isFieldInvalid('discountAmount')">
             </div>
             <div class="checkbox-wrapper">
@@ -82,19 +114,6 @@
                 Exclude current term share (Rs.{{ getShareAmount() | number:'1.0-0' }}) from Profit/Loss
               </label>
             </div>
-          </div>
-        </div>
-
-        <div class="discount-slider">
-          <div class="slider-header">
-            <span>Discount Bid Range</span>
-            <strong>Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
-          </div>
-          <input type="range" id="discountSlider" min="0" [max]="getDiscountUpperBound()" step="1000"
-                 [value]="discountAmount || 0" name="discountSlider" (input)="onDiscountSliderChange($event)">
-          <div class="slider-meta">
-            <span>Rs.0</span>
-            <span>Max Rs.{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
           </div>
         </div>
       </article>
@@ -144,6 +163,20 @@
       </div>
 
       <ng-container *ngIf="profit">
+        <div class="discount-slider in-modal">
+          <p class="slider-hint">Tip: Adjust the bid slider to see the results immediately.</p>
+          <div class="slider-header">
+            <span>Discount Bid Range</span>
+            <strong>Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
+          </div>
+          <input type="range" id="discountSlider" min="0" [max]="getDiscountUpperBound()" step="1000"
+                 [value]="discountAmount || 0" name="discountSlider" (input)="onDiscountSliderChange($event)">
+          <div class="slider-meta">
+            <span>Rs.0</span>
+            <span>Max Rs.{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
+          </div>
+        </div>
+
         <article class="hero-result" [class.loss-card]="profit.status === 'LOSS'" [class.neutral-card]="profit.status === 'NO PROFIT / NO LOSS'">
           <div>
             <span>{{ profit.status }}</span>
@@ -152,7 +185,7 @@
           <div class="hero-stats">
             <small>{{ profit.profitPercentage | number:'1.2-2' }}% overall</small>
             <small>{{ getAnnualizedProfitPercentage() | number:'1.2-2' }}% annualized</small>
-            <small>{{ getProfitInterestRupee() | number:'1.2-2' }} rupee / month</small>
+            <small>Rs.{{ getProfitInterestRupee() | number:'1.2-2' }} / month</small>
           </div>
         </article>
 
@@ -173,7 +206,7 @@
           <h2>Bid Breakdown</h2>
           <div class="result-grid">
             <div>
-              <span>Bid Discount Amount</span>
+              <span>Bid Auction/Discount Amount</span>
               <strong>Rs.{{ profit.discountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>

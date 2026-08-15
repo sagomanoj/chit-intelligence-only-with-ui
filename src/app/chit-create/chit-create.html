@@ -1,16 +1,85 @@
-<h1>Create Chit</h1>
-<form (ngSubmit)="create()">
-  <label>Name: <input type="text" [(ngModel)]="chit.name" name="name" required></label><br>
-  <label>Chit Value: <input type="number" [(ngModel)]="chit.chitValue" name="chitValue" required></label><br>
-  <label>Total Members: <input type="number" [(ngModel)]="chit.totalMembers" name="totalMembers" required></label><br>
-  <label>Installment Amount: <input type="number" [(ngModel)]="chit.installmentAmount" name="installmentAmount" required></label><br>
-  <label>Organizer Payout Term: <input type="number" [(ngModel)]="chit.organizerPayoutTerm" name="organizerPayoutTerm" required></label><br>
-  <label>Dividend Distribution Type: 
-    <select [(ngModel)]="chit.dividendDistributionType" name="dividendDistributionType">
-      <option value="1">ALL_MEMBERS</option>
-      <option value="2">NON_PRIZED_ONLY</option>
-    </select>
-  </label><br>
-  <label>Start Date: <input type="date" [(ngModel)]="chit.startDate" name="startDate"></label><br>
-  <button type="submit">Create</button>
-</form>
+<section class="page-card">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Saved Chits</p>
+      <h2>Create chit</h2>
+      <p class="hero-copy">Store a chit once and bring it back into the calculator whenever you need to bid.</p>
+    </div>
+    <button class="ghost-button" type="button" routerLink="/chits">Back to saved chits</button>
+  </header>
+
+  <form (ngSubmit)="create()" #createForm="ngForm" novalidate class="glass-panel">
+    <div class="section-title">
+      <h3>Chit basics</h3>
+      <p>Fields marked with * are required.</p>
+    </div>
+
+    <div class="form-grid">
+      <label class="field">
+        <span>Name <em>*</em></span>
+        <input type="text" [(ngModel)]="chit.name" name="name" [class.error]="isFieldInvalid('name')" placeholder="Kumar monthly chit" />
+        <small *ngIf="isFieldInvalid('name')">Name is required.</small>
+      </label>
+
+      <label class="field">
+        <span>Chit Amount <em>*</em></span>
+        <input type="number" [(ngModel)]="chit.chitAmount" name="chitAmount" min="1" [class.error]="isFieldInvalid('chitAmount')" placeholder="500000" />
+        <small *ngIf="isFieldInvalid('chitAmount')">Enter an amount greater than zero.</small>
+      </label>
+
+      <label class="field">
+        <span>Total Members <em>*</em></span>
+        <input type="number" [(ngModel)]="chit.totalMembers" name="totalMembers" min="1" [class.error]="isFieldInvalid('totalMembers')" placeholder="20" />
+        <small *ngIf="isFieldInvalid('totalMembers')">Enter total members greater than zero.</small>
+      </label>
+
+      <label class="field">
+        <span>Frequency in Months <em>*</em></span>
+        <select [(ngModel)]="chit.frequencyInMonths" name="frequencyInMonths" [class.error]="isFieldInvalid('frequencyInMonths')">
+          <option *ngFor="let month of monthOptions" [ngValue]="month">{{ month }} month{{ month > 1 ? 's' : '' }}</option>
+        </select>
+        <small *ngIf="isFieldInvalid('frequencyInMonths')">Frequency is required.</small>
+      </label>
+
+      <label class="field">
+        <span>Start Date <em>*</em></span>
+        <input type="date" [(ngModel)]="chit.startDate" name="startDate" [class.error]="isFieldInvalid('startDate')" />
+        <small *ngIf="isFieldInvalid('startDate')">Start date is required.</small>
+      </label>
+
+      <label class="field">
+        <span>Current Term Number <em>*</em></span>
+        <input type="number" [(ngModel)]="chit.currentTermNumber" name="currentTermNumber" min="0" [class.error]="isFieldInvalid('currentTermNumber')" placeholder="0" />
+        <small *ngIf="isFieldInvalid('currentTermNumber')">Term number must be between 0 and total members.</small>
+      </label>
+
+      <label class="field">
+        <span>Opening Past Investment <em>*</em></span>
+        <input type="number" [(ngModel)]="chit.openingPastInvestment" name="openingPastInvestment" min="0" [class.error]="isFieldInvalid('openingPastInvestment')" placeholder="0" />
+        <small *ngIf="isFieldInvalid('openingPastInvestment')">Use 0 or a positive amount.</small>
+      </label>
+
+      <label class="field">
+        <span>Chit Type <em>*</em></span>
+        <select [(ngModel)]="chit.chitType" name="chitType">
+          <option *ngFor="let type of chitTypes" [ngValue]="type.value">{{ type.label }}</option>
+        </select>
+      </label>
+
+      <label *ngIf="showCommissionAmount()" class="field">
+        <span>Agent Commission Amount <em>*</em></span>
+        <input type="number" [(ngModel)]="chit.agentCommissionAmount" name="agentCommissionAmount" min="0" [class.error]="isFieldInvalid('agentCommissionAmount')" placeholder="0" />
+        <small *ngIf="isFieldInvalid('agentCommissionAmount')">Commission must be 0 or more.</small>
+      </label>
+
+      <label class="field full-width">
+        <span>Notes</span>
+        <textarea rows="3" [(ngModel)]="chit.notes" name="notes" placeholder="Optional notes about this chit"></textarea>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary-button" [disabled]="!isFormValid()">Save chit</button>
+    </div>
+  </form>
+</section>

@@ -94,7 +94,7 @@ export class CalculationService {
     const profitPercentage = totalInvestment > 0 ? netProfit / totalInvestment * 100 : 0;
     const remainingMonths = Math.max(1, remainingTerms * frequencyInMonths);
     const annualizedProfitPercentage = profitPercentage * 12 / remainingMonths;
-    const profitInterestRupee = annualizedProfitPercentage / 12;
+    const profitInterestRupee = netProfit / remainingMonths;
     
     const originalTotalInvestment = request.pastInvestment + baseFutureInvestment;
     const breakEvenDiscountAmount = request.chitValue - agentCommissionAmount - originalTotalInvestment;
@@ -112,10 +112,10 @@ export class CalculationService {
     }
 
     return of({
-      netProfit: this.toCurrency(Math.abs(netProfit)),
+      netProfit: this.toCurrency(netProfit),
       profitPercentage: this.toPercent(profitPercentage),
       annualizedProfitPercentage: this.toPercent(annualizedProfitPercentage),
-      profitInterestRupee: this.toPercent(profitInterestRupee),
+      profitInterestRupee: this.toCurrency(profitInterestRupee),
       status: status,
       takeHomeAmount: this.toCurrency(takeHomeAmount),
       auctionAmount: this.toCurrency(request.winningAmount),
@@ -146,7 +146,7 @@ export class CalculationService {
     const monthlyInterest = request.winningAmount * annualRate / 12 / 100;
     const totalInterest = monthlyInterest * request.remainingTerms;
     const remainingPayment = request.installmentAmount * request.remainingTerms;
-    const outOfPocket = remainingPayment - totalInterest;
+    const outOfPocket = Math.max(0, remainingPayment - totalInterest);
 
     return of({
       monthlyInterest: this.toCurrency(monthlyInterest),
@@ -165,7 +165,7 @@ export class CalculationService {
     const averageExpectedDiscount = 15;
 
     return of({
-      bestTimeToBid: currentDiscountPercent > averageExpectedDiscount ? 'NOW' : 'WAIT',
+      bestTimeToBid: currentDiscountPercent < averageExpectedDiscount ? 'NOW' : 'WAIT',
       expectedDiscountRange: '10% - 20%'
     });
   }
