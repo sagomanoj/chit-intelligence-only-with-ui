@@ -7,6 +7,10 @@
 
   <p class="helper-text">Please fill all required fields marked with an asterisk (*).</p>
 
+  <div *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }}
+  </div>
+
   <div class="modal-overlay" [class.modal-open]="showModalResults" (click)="toggleModalResults()"></div>
 
   <button class="mobile-results-toggle" *ngIf="profit || isCalculating" (click)="toggleModalResults()">
@@ -27,17 +31,17 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="totalAmount" class="required">Total Amount</label>
-            <input type="number" id="totalAmount" [(ngModel)]="totalAmount" name="totalAmount" placeholder="700000" [class.error]="isFieldInvalid('totalAmount')">
+            <input type="number" id="totalAmount" [(ngModel)]="totalAmount" (ngModelChange)="onInputChange()" name="totalAmount" placeholder="700000" [class.error]="isFieldInvalid('totalAmount')">
           </div>
 
           <div class="form-group">
             <label for="participants" class="required">Total Members</label>
-            <input type="number" id="participants" [(ngModel)]="participants" name="participants" placeholder="14" [class.error]="isFieldInvalid('participants')">
+            <input type="number" id="participants" [(ngModel)]="participants" (ngModelChange)="onInputChange()" name="participants" placeholder="14" [class.error]="isFieldInvalid('participants')">
           </div>
 
           <div class="form-group">
             <label for="frequency" class="required">Chit Frequency</label>
-            <select id="frequency" [(ngModel)]="frequency" name="frequency" [class.error]="isFieldInvalid('frequency')">
+            <select id="frequency" [(ngModel)]="frequency" (ngModelChange)="onInputChange()" name="frequency" [class.error]="isFieldInvalid('frequency')">
               <option [ngValue]="1">1 month</option>
               <option [ngValue]="2">2 months</option>
               <option [ngValue]="3">3 months</option>
@@ -58,27 +62,27 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="currentChitNumber" class="required">Current Chit Term</label>
-            <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" name="currentChitNumber" placeholder="6" [class.error]="isFieldInvalid('currentChitNumber')">
+            <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" (ngModelChange)="onInputChange()" name="currentChitNumber" placeholder="6" [class.error]="isFieldInvalid('currentChitNumber')">
           </div>
 
           <div class="form-group">
             <label for="pastInvestment" class="required">Past Investment</label>
-            <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" name="pastInvestment" placeholder="195000" [class.error]="isFieldInvalid('pastInvestment')">
+            <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" (ngModelChange)="onInputChange()" name="pastInvestment" placeholder="195000" [class.error]="isFieldInvalid('pastInvestment')">
           </div>
           
           <div class="form-group">
             <label for="agentCommissionAmount" class="required">Commission Amount</label>
-            <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" name="agentCommissionAmount" step="100" placeholder="0" [class.error]="isFieldInvalid('agentCommissionAmount')">
+            <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" (ngModelChange)="onInputChange()" name="agentCommissionAmount" step="100" placeholder="0" [class.error]="isFieldInvalid('agentCommissionAmount')">
           </div>
 
           <div class="form-group wide discount-bid-group">
             <div class="input-wrapper">
               <label for="discountAmount" class="required">Bid Discount Amount</label>
-              <input type="number" id="discountAmount" [(ngModel)]="discountAmount" name="discountAmount" placeholder="100000" [class.error]="isFieldInvalid('discountAmount')">
+              <input type="number" id="discountAmount" [(ngModel)]="discountAmount" (ngModelChange)="onInputChange()" name="discountAmount" placeholder="100000" [class.error]="isFieldInvalid('discountAmount')">
             </div>
             <div class="checkbox-wrapper">
               <label class="checkbox-label">
-                <input type="checkbox" [(ngModel)]="excludeOwnShare" name="excludeOwnShare">
+                <input type="checkbox" [(ngModel)]="excludeOwnShare" (ngModelChange)="onInputChange()" name="excludeOwnShare">
                 Exclude current term share (Rs.{{ getShareAmount() | number:'1.0-0' }}) from Profit/Loss
               </label>
             </div>
@@ -106,7 +110,7 @@
             <p>Use monthly interest from take-home amount to offset future installments.</p>
           </div>
           <label class="switch">
-            <input type="checkbox" id="reinvestEnabled" [(ngModel)]="reinvestEnabled" name="reinvestEnabled">
+            <input type="checkbox" id="reinvestEnabled" [(ngModel)]="reinvestEnabled" (ngModelChange)="onInputChange()" name="reinvestEnabled">
             <span></span>
           </label>
         </div>
@@ -131,6 +135,7 @@
         </button>
       </div>
     </section>
+
 
     <aside class="insight-rail" [class.is-calculating]="isCalculating" [class.modal-open]="showModalResults">
       <button class="close-modal-btn" (click)="toggleModalResults()">&times;</button>

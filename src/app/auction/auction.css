@@ -207,12 +207,24 @@ select.error {
   background: #fdf3f2;
 }
 
+.error-banner {
+  background: #fdf3f2;
+  color: #c23f31;
+  border: 1px solid #e0b4b4;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
 .helper-text {
   color: #5b6963;
   font-size: 13px;
   margin-bottom: 16px;
   font-weight: 600;
 }
+
 
 .discount-slider {
   margin-top: 16px;

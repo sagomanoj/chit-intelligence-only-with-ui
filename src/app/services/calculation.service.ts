@@ -66,43 +66,51 @@ export interface ReinvestmentResponse {
 })
 export class CalculationService {
   calculateProfit(request: ProfitRequest): Observable<ProfitResponse> {
-    const frequencyInMonths = Math.max(1, request.frequencyInMonths);
+    const frequencyInMonths = Math.max(1, request.frequencyInMonths || 1);
     const remainingTerms = Math.max(0, request.totalMembers - request.currentTermNumber);
     const installmentAmount = request.totalMembers > 0 ? request.chitValue / request.totalMembers : 0;
-    const baseFutureInvestment = installmentAmount * remainingTerms;
-    let futureInvestment = baseFutureInvestment;
-    const discountAmount = request.winningAmount;
-    const agentCommissionAmount = request.agentCommissionAmount;
+    const discountAmount = request.winningAmount || 0;
+    const agentCommissionAmount = request.agentCommissionAmount || 0;
+
     let takeHomeAmount = request.chitValue - discountAmount - agentCommissionAmount;
+    let futureInvestment = installmentAmount * remainingTerms;
+    let totalInvestment: number;
 
     if (request.excludeOwnShare && request.totalMembers > 0) {
-      takeHomeAmount -= installmentAmount;
-      futureInvestment = Math.max(0, futureInvestment - installmentAmount);
+      takeHomeAmount = Math.max(0, takeHomeAmount - installmentAmount);
+      totalInvestment = request.pastInvestment + futureInvestment;
+    } else {
+      totalInvestment = request.pastInvestment + installmentAmount + futureInvestment;
     }
 
     const annualRate = this.resolveAnnualInterestRate(request.interestPercent, request.interestRupee);
     const interestRupee = annualRate / 12;
-    const monthlyInterest = request.enableReinvestment ? takeHomeAmount * annualRate / 12 / 100 : 0;
+    const monthlyInterest = request.enableReinvestment ? (takeHomeAmount * annualRate) / 12 / 100 : 0;
     const interestPerTerm = monthlyInterest * frequencyInMonths;
     const totalReinvestmentInterest = interestPerTerm * remainingTerms;
     const extraPaymentPerTerm = request.enableReinvestment
       ? Math.max(0, installmentAmount - interestPerTerm)
       : installmentAmount;
     const totalExtraPayment = extraPaymentPerTerm * remainingTerms;
-    const totalInvestment = request.pastInvestment + futureInvestment;
     const netProfit = takeHomeAmount - totalInvestment;
-    const profitPercentage = totalInvestment > 0 ? netProfit / totalInvestment * 100 : 0;
+    const profitPercentage = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0;
+
     const remainingMonths = Math.max(1, remainingTerms * frequencyInMonths);
-    const annualizedProfitPercentage = profitPercentage * 12 / remainingMonths;
+    const totalMonths = Math.max(1, request.totalMembers * frequencyInMonths);
+    const annualizedProfitPercentage = remainingTerms > 0
+      ? (profitPercentage * 12) / remainingMonths
+      : (profitPercentage * 12) / totalMonths;
     const profitInterestRupee = annualizedProfitPercentage / 12;
-    
-    const originalTotalInvestment = request.pastInvestment + baseFutureInvestment;
-    const breakEvenDiscountAmount = request.chitValue - agentCommissionAmount - originalTotalInvestment;
-    
+
+    const totalExpectedInvestment = request.pastInvestment + (remainingTerms + 1) * installmentAmount;
+    const breakEvenDiscountAmount = request.chitValue - agentCommissionAmount - totalExpectedInvestment;
     const maxAllowedDiscountAmount = Math.max(0, request.chitValue - agentCommissionAmount - 1);
+
     const coverageStatus = !request.enableReinvestment
       ? 'NOT_APPLICABLE'
-      : interestPerTerm >= installmentAmount ? 'FULLY_COVERED' : 'PARTIAL';
+      : interestPerTerm >= installmentAmount
+        ? 'FULLY_COVERED'
+        : 'PARTIAL';
 
     let status = 'PROFIT';
     if (Math.abs(netProfit) < 0.01) {
@@ -118,7 +126,7 @@ export class CalculationService {
       profitInterestRupee: this.toPercent(profitInterestRupee),
       status: status,
       takeHomeAmount: this.toCurrency(takeHomeAmount),
-      auctionAmount: this.toCurrency(request.winningAmount),
+      auctionAmount: this.toCurrency(discountAmount),
       discountAmount: this.toCurrency(discountAmount),
       agentCommissionAmount: this.toCurrency(agentCommissionAmount),
       breakEvenDiscountAmount: this.toCurrency(Math.max(0, breakEvenDiscountAmount)),
@@ -143,7 +151,7 @@ export class CalculationService {
 
   calculateReinvestment(request: ReinvestmentRequest): Observable<ReinvestmentResponse> {
     const annualRate = this.resolveAnnualInterestRate(request.interestPercent, request.interestRupee);
-    const monthlyInterest = request.winningAmount * annualRate / 12 / 100;
+    const monthlyInterest = (request.winningAmount * annualRate) / 12 / 100;
     const totalInterest = monthlyInterest * request.remainingTerms;
     const remainingPayment = request.installmentAmount * request.remainingTerms;
     const outOfPocket = remainingPayment - totalInterest;
@@ -161,7 +169,7 @@ export class CalculationService {
   }
 
   getDetailedRecommendation(chitValue: number, currentAuctionAmount: number, currentTerm: number, totalMembers: number): Observable<{ bestTimeToBid: string; expectedDiscountRange: string }> {
-    const currentDiscountPercent = chitValue > 0 ? currentAuctionAmount / chitValue * 100 : 0;
+    const currentDiscountPercent = chitValue > 0 ? (currentAuctionAmount / chitValue) * 100 : 0;
     const averageExpectedDiscount = 15;
 
     return of({
@@ -171,12 +179,12 @@ export class CalculationService {
   }
 
   private resolveAnnualInterestRate(interestPercent?: number, interestRupee?: number): number {
-    if (interestRupee !== undefined) {
-      return interestRupee * 12;
+    if (interestPercent !== undefined && interestPercent !== null && !isNaN(interestPercent)) {
+      return interestPercent;
     }
 
-    if (interestPercent !== undefined) {
-      return interestPercent;
+    if (interestRupee !== undefined && interestRupee !== null && !isNaN(interestRupee)) {
+      return interestRupee * 12;
     }
 
     return 24;
@@ -190,3 +198,4 @@ export class CalculationService {
     return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 }
+

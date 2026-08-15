@@ -1,17 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { AuctionComponent } from './auction';
 
-import { Auction } from './auction';
-
-describe('Auction', () => {
-  let component: Auction;
-  let fixture: ComponentFixture<Auction>;
+describe('AuctionComponent', () => {
+  let component: AuctionComponent;
+  let fixture: ComponentFixture<AuctionComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Auction],
+      imports: [AuctionComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Auction);
+    fixture = TestBed.createComponent(AuctionComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
@@ -20,3 +19,4 @@ describe('Auction', () => {
     expect(component).toBeTruthy();
   });
 });
+

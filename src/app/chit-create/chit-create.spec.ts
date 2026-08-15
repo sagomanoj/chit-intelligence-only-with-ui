@@ -1,17 +1,31 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { ChitCreateComponent } from './chit-create';
+import { ChitService } from '../services/chit.service';
 
-import { ChitCreate } from './chit-create';
-
-describe('ChitCreate', () => {
-  let component: ChitCreate;
-  let fixture: ComponentFixture<ChitCreate>;
+describe('ChitCreateComponent', () => {
+  let component: ChitCreateComponent;
+  let fixture: ComponentFixture<ChitCreateComponent>;
 
   beforeEach(async () => {
+    const mockChitService = {
+      getChits: () => of([]),
+      getChit: () => of(null),
+      createChit: () => of(null),
+      addTerm: () => of(null),
+      getTerms: () => of([])
+    };
+
     await TestBed.configureTestingModule({
-      imports: [ChitCreate],
+      imports: [ChitCreateComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ChitService, useValue: mockChitService }
+      ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ChitCreate);
+    fixture = TestBed.createComponent(ChitCreateComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
@@ -20,3 +34,5 @@ describe('ChitCreate', () => {
     expect(component).toBeTruthy();
   });
 });
+
+
