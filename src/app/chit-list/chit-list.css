@@ -35,6 +35,28 @@ dl {
   color: #65736d;
 }
 
+.error-notice,
+.loading-state {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.error-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(178, 60, 50, 0.24);
+  background: #fdf5f4;
+  color: #8f2f27;
+}
+
+.loading-state {
+  background: rgba(17, 111, 90, 0.08);
+  color: #116f5a;
+}
+
 .hero-actions {
   display: flex;
   gap: 10px;

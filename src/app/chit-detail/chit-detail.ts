@@ -17,6 +17,7 @@ export class ChitDetailComponent implements OnInit {
   editSubmitted = false;
   termSubmitted = false;
   saveNotice = '';
+  errorMessage = '';
   readonly monthOptions = [1, 2, 3, 4, 5, 6, 7, 8];
   newTerm: ChitTermUpsertRequest = {
     termNumber: 0,
@@ -27,10 +28,18 @@ export class ChitDetailComponent implements OnInit {
     notes: ''
   };
 
-  readonly chitTypes: Array<{ value: ChitType; label: string }> = [
-    { value: 'NO_COMMISSION', label: 'No commission' },
-    { value: 'AGENT_FIXED_AMOUNT_EACH_TERM', label: 'Agent fixed amount each term' },
-    { value: 'AGENT_ONE_EXTRA_CHIT', label: 'Agent one extra chit' }
+  readonly chitTypes: Array<{ value: ChitType; label: string; help: string }> = [
+    { value: 'NO_COMMISSION', label: 'No commission', help: 'No agent commission deduction is applied.' },
+    {
+      value: 'AGENT_FIXED_AMOUNT_EACH_TERM',
+      label: 'Agent fixed amount each term',
+      help: 'The fixed amount is deducted at each auction; a winning member incurs it once in that auction calculation.'
+    },
+    {
+      value: 'AGENT_ONE_EXTRA_CHIT',
+      label: 'Agent one extra chit',
+      help: 'Include the agent reserved ticket in Total Members and the term count. No cash commission is deducted.'
+    }
   ];
 
   constructor(private route: ActivatedRoute, private chitService: ChitService, private router: Router) { }
@@ -53,6 +62,7 @@ export class ChitDetailComponent implements OnInit {
     this.isEditing = true;
     this.editSubmitted = false;
     this.saveNotice = '';
+    this.errorMessage = '';
   }
 
   cancelEdit(): void {
@@ -62,6 +72,7 @@ export class ChitDetailComponent implements OnInit {
 
     this.isEditing = false;
     this.editSubmitted = false;
+    this.errorMessage = '';
     this.editModel = this.toEditModel(this.chit);
   }
 
@@ -71,6 +82,7 @@ export class ChitDetailComponent implements OnInit {
     }
 
     this.editSubmitted = true;
+    this.errorMessage = '';
     if (!this.isEditValid()) {
       return;
     }
@@ -83,7 +95,7 @@ export class ChitDetailComponent implements OnInit {
         this.editSubmitted = false;
         this.saveNotice = 'Chit updated successfully.';
       },
-      error: error => alert(error?.message ?? 'Unable to update chit.')
+      error: error => this.errorMessage = this.getErrorMessage(error, 'Unable to update chit.')
     });
   }
 
@@ -92,8 +104,10 @@ export class ChitDetailComponent implements OnInit {
       return;
     }
 
-    this.chitService.deleteChit(this.chit.id).subscribe(() => {
-      this.router.navigate(['/chits']);
+    this.errorMessage = '';
+    this.chitService.deleteChit(this.chit.id).subscribe({
+      next: () => this.router.navigate(['/chits']),
+      error: error => this.errorMessage = this.getErrorMessage(error, 'Unable to delete chit.')
     });
   }
 
@@ -103,6 +117,7 @@ export class ChitDetailComponent implements OnInit {
     }
 
     this.termSubmitted = true;
+    this.errorMessage = '';
     if (!this.isTermValid()) {
       return;
     }
@@ -124,7 +139,7 @@ export class ChitDetailComponent implements OnInit {
         };
         this.loadChit(this.chit!.id);
       },
-      error: error => alert(error?.message ?? 'Unable to add term.')
+      error: error => this.errorMessage = this.getErrorMessage(error, 'Unable to add term.')
     });
   }
 
@@ -133,8 +148,13 @@ export class ChitDetailComponent implements OnInit {
       return;
     }
 
-    this.chitService.setSelectedChitId(this.chit.id);
-    this.router.navigate(['/calculator']);
+    this.errorMessage = '';
+    try {
+      this.chitService.setSelectedChitId(this.chit.id);
+      this.router.navigate(['/calculator']);
+    } catch (error) {
+      this.errorMessage = this.getErrorMessage(error, 'Unable to select this chit.');
+    }
   }
 
   toggleTaken(): void {
@@ -142,7 +162,7 @@ export class ChitDetailComponent implements OnInit {
       return;
     }
 
-    if (this.newTerm.isChitTaken && !this.newTerm.takenAmount) {
+    if (this.newTerm.isChitTaken && (!this.newTerm.takenAmount || this.newTerm.takenAmount <= 0)) {
       this.newTerm.takenAmount = this.chit.installmentAmount;
     }
   }
@@ -153,6 +173,18 @@ export class ChitDetailComponent implements OnInit {
 
   showTakenAmount(): boolean {
     return this.newTerm.isChitTaken;
+  }
+
+  getChitTypeHelp(): string {
+    return this.chitTypes.find(type => type.value === this.editModel?.chitType)?.help ?? '';
+  }
+
+  getExpectedNextTerm(): number {
+    return (this.chit?.currentTermNumber ?? 0) + 1;
+  }
+
+  getMinimumTotalMembers(): number {
+    return Math.max(1, this.chit?.currentTermNumber ?? 0);
   }
 
   getPastInvestment(): number {
@@ -168,19 +200,22 @@ export class ChitDetailComponent implements OnInit {
       case 'name':
         return !this.editModel.name.trim();
       case 'chitAmount':
-        return this.editModel.chitAmount <= 0;
+        return !Number.isFinite(this.editModel.chitAmount) || this.editModel.chitAmount <= 0;
       case 'totalMembers':
-        return this.editModel.totalMembers <= 0;
+        return !Number.isInteger(this.editModel.totalMembers) || this.editModel.totalMembers < this.getMinimumTotalMembers();
       case 'frequencyInMonths':
-        return this.editModel.frequencyInMonths <= 0 || this.editModel.frequencyInMonths > 8;
+        return !Number.isInteger(this.editModel.frequencyInMonths) || this.editModel.frequencyInMonths <= 0 || this.editModel.frequencyInMonths > 8;
       case 'startDate':
         return !this.editModel.startDate;
       case 'currentTermNumber':
-        return this.editModel.currentTermNumber < 0 || this.editModel.currentTermNumber > this.editModel.totalMembers;
+        return !Number.isInteger(this.editModel.currentTermNumber) || this.editModel.currentTermNumber < 0 ||
+          this.editModel.currentTermNumber > this.editModel.totalMembers ||
+          Boolean(this.chit?.terms.length && this.editModel.currentTermNumber !== this.chit.currentTermNumber);
       case 'openingPastInvestment':
-        return this.editModel.openingPastInvestment < 0;
+        return !Number.isFinite(this.editModel.openingPastInvestment) || this.editModel.openingPastInvestment < 0;
       case 'agentCommissionAmount':
-        return this.showCommissionAmount() && (this.editModel.agentCommissionAmount === undefined || this.editModel.agentCommissionAmount < 0);
+        return this.showCommissionAmount() && (this.editModel.agentCommissionAmount === undefined ||
+          !Number.isFinite(this.editModel.agentCommissionAmount) || this.editModel.agentCommissionAmount < 0);
       case 'notes':
       case 'chitType':
         return false;
@@ -196,13 +231,14 @@ export class ChitDetailComponent implements OnInit {
 
     switch (fieldName) {
       case 'termNumber':
-        return this.newTerm.termNumber <= 0;
+        return !Number.isInteger(this.newTerm.termNumber) || this.newTerm.termNumber !== this.getExpectedNextTerm();
       case 'termDate':
         return !this.newTerm.termDate;
       case 'investedAmount':
-        return this.newTerm.investedAmount === undefined || this.newTerm.investedAmount < 0;
+        return this.newTerm.investedAmount === undefined || !Number.isFinite(this.newTerm.investedAmount) || this.newTerm.investedAmount < 0;
       case 'takenAmount':
-        return this.newTerm.isChitTaken && (this.newTerm.takenAmount === undefined || this.newTerm.takenAmount < 0);
+        return this.newTerm.isChitTaken && (this.newTerm.takenAmount === undefined ||
+          !Number.isFinite(this.newTerm.takenAmount) || this.newTerm.takenAmount <= 0);
       case 'isChitTaken':
       case 'notes':
         return false;
@@ -218,46 +254,58 @@ export class ChitDetailComponent implements OnInit {
 
     return !!(
       this.editModel.name.trim() &&
-      this.editModel.chitAmount > 0 &&
-      this.editModel.totalMembers > 0 &&
-      this.editModel.frequencyInMonths > 0 &&
+      Number.isFinite(this.editModel.chitAmount) && this.editModel.chitAmount > 0 &&
+      Number.isInteger(this.editModel.totalMembers) && this.editModel.totalMembers >= this.getMinimumTotalMembers() &&
+      Number.isInteger(this.editModel.frequencyInMonths) && this.editModel.frequencyInMonths > 0 &&
       this.editModel.frequencyInMonths <= 8 &&
       this.editModel.startDate &&
-      this.editModel.currentTermNumber >= 0 &&
+      Number.isInteger(this.editModel.currentTermNumber) && this.editModel.currentTermNumber >= 0 &&
       this.editModel.currentTermNumber <= this.editModel.totalMembers &&
-      this.editModel.openingPastInvestment >= 0 &&
-      (!this.showCommissionAmount() || this.editModel.agentCommissionAmount !== undefined && this.editModel.agentCommissionAmount >= 0)
+      (!this.chit?.terms.length || this.editModel.currentTermNumber === this.chit.currentTermNumber) &&
+      Number.isFinite(this.editModel.openingPastInvestment) && this.editModel.openingPastInvestment >= 0 &&
+      (!this.showCommissionAmount() || this.editModel.agentCommissionAmount !== undefined &&
+        Number.isFinite(this.editModel.agentCommissionAmount) && this.editModel.agentCommissionAmount >= 0)
     );
   }
 
   private isTermValid(): boolean {
     return !!(
-      this.newTerm.termNumber > 0 &&
+      Number.isInteger(this.newTerm.termNumber) && this.newTerm.termNumber === this.getExpectedNextTerm() &&
       this.newTerm.termDate &&
       this.newTerm.investedAmount !== undefined &&
+      Number.isFinite(this.newTerm.investedAmount) &&
       this.newTerm.investedAmount >= 0 &&
-      (!this.newTerm.isChitTaken || this.newTerm.takenAmount !== undefined && this.newTerm.takenAmount >= 0)
+      (!this.newTerm.isChitTaken || this.newTerm.takenAmount !== undefined &&
+        Number.isFinite(this.newTerm.takenAmount) && this.newTerm.takenAmount > 0)
     );
   }
 
   private loadChit(id: string): void {
-    this.chitService.getChit(id).subscribe(chit => {
-      if (!chit) {
-        this.router.navigate(['/chits']);
-        return;
-      }
+    this.errorMessage = '';
+    this.chitService.getChit(id).subscribe({
+      next: chit => {
+        if (!chit) {
+          this.router.navigate(['/chits']);
+          return;
+        }
 
-      this.chit = chit;
-      this.editModel = this.toEditModel(chit);
-      this.newTerm = {
-        termNumber: chit.currentTermNumber + 1,
-        termDate: this.getSuggestedNextDate(chit),
-        isChitTaken: false,
-        investedAmount: chit.installmentAmount,
-        takenAmount: chit.installmentAmount,
-        notes: ''
-      };
+        this.chit = chit;
+        this.editModel = this.toEditModel(chit);
+        this.newTerm = {
+          termNumber: chit.currentTermNumber + 1,
+          termDate: this.getSuggestedNextDate(chit),
+          isChitTaken: false,
+          investedAmount: chit.installmentAmount,
+          takenAmount: chit.installmentAmount,
+          notes: ''
+        };
+      },
+      error: error => this.errorMessage = this.getErrorMessage(error, 'Unable to load this chit.')
     });
+  }
+
+  private getErrorMessage(error: unknown, fallback: string): string {
+    return error instanceof Error ? error.message : fallback;
   }
 
   private toEditModel(chit: Chit): ChitUpsertRequest {

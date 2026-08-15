@@ -209,6 +209,15 @@ select.error {
   background: #fdf3f2;
 }
 
+.field-error {
+  display: block;
+  margin-top: 4px;
+  color: #a93226;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .helper-text {
   color: #5b6963;
   font-size: 13px;

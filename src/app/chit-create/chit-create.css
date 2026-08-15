@@ -37,6 +37,15 @@ p {
   color: #65736d;
 }
 
+.error-notice {
+  padding: 10px 14px;
+  border: 1px solid rgba(178, 60, 50, 0.24);
+  border-radius: 8px;
+  background: #fdf5f4;
+  color: #8f2f27;
+  font-weight: 700;
+}
+
 .glass-panel {
   padding: 16px;
   border: 1px solid rgba(42, 65, 55, 0.12);
@@ -70,6 +79,12 @@ p {
   color: #b23c32;
   font-size: 12px;
   font-weight: 700;
+}
+
+.field .field-help {
+  color: #65736d;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 input,

@@ -11,6 +11,8 @@ import { Chit, ChitService } from '../services/chit.service';
 })
 export class ChitListComponent implements OnInit {
   chits: Chit[] = [];
+  isLoading = false;
+  errorMessage = '';
 
   constructor(private chitService: ChitService, private router: Router) { }
 
@@ -19,7 +21,18 @@ export class ChitListComponent implements OnInit {
   }
 
   loadChits(): void {
-    this.chitService.getChits().subscribe(chits => this.chits = chits);
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.chitService.getChits().subscribe({
+      next: chits => {
+        this.chits = chits;
+        this.isLoading = false;
+      },
+      error: error => {
+        this.isLoading = false;
+        this.errorMessage = this.getErrorMessage(error, 'Unable to load saved chits.');
+      }
+    });
   }
 
   viewChit(id: string): void {
@@ -27,8 +40,13 @@ export class ChitListComponent implements OnInit {
   }
 
   useInCalculator(id: string): void {
-    this.chitService.setSelectedChitId(id);
-    this.router.navigate(['/calculator']);
+    this.errorMessage = '';
+    try {
+      this.chitService.setSelectedChitId(id);
+      this.router.navigate(['/calculator']);
+    } catch (error) {
+      this.errorMessage = this.getErrorMessage(error, 'Unable to select this chit.');
+    }
   }
 
   createChit(): void {
@@ -52,6 +70,14 @@ export class ChitListComponent implements OnInit {
       return;
     }
 
-    this.chitService.deleteChit(id).subscribe(() => this.loadChits());
+    this.errorMessage = '';
+    this.chitService.deleteChit(id).subscribe({
+      next: () => this.loadChits(),
+      error: error => this.errorMessage = this.getErrorMessage(error, 'Unable to delete the chit.')
+    });
+  }
+
+  private getErrorMessage(error: unknown, fallback: string): string {
+    return error instanceof Error ? error.message : fallback;
   }
 }

@@ -41,6 +41,10 @@
           <span>{{ selectedChit.status }}</span>
           <strong>Term {{ selectedChit.currentTermNumber }} of {{ selectedChit.totalMembers }}</strong>
           <p>Start: {{ selectedChit.startDate }} | Next: {{ selectedChit.nextScheduledDate || '-' }}</p>
+          <p *ngIf="!isSelectedChitCompleted()">Calculator term: {{ currentChitNumber }}</p>
+          <small *ngIf="isSelectedChitCompleted()" class="field-error">
+            This chit is completed. Clear the saved chit to calculate using manual values.
+          </small>
         </div>
       </article>
 
@@ -55,12 +59,14 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="totalAmount" class="required">Total Amount</label>
-            <input type="number" id="totalAmount" [(ngModel)]="totalAmount" name="totalAmount" placeholder="700000" [class.error]="isFieldInvalid('totalAmount')">
+            <input type="number" id="totalAmount" [(ngModel)]="totalAmount" name="totalAmount" min="0.01" placeholder="700000" [class.error]="isFieldInvalid('totalAmount')">
+            <small *ngIf="isFieldInvalid('totalAmount')" class="field-error">Enter an amount greater than zero.</small>
           </div>
 
           <div class="form-group">
             <label for="participants" class="required">Total Members</label>
-            <input type="number" id="participants" [(ngModel)]="participants" name="participants" placeholder="14" [class.error]="isFieldInvalid('participants')">
+            <input type="number" id="participants" [(ngModel)]="participants" name="participants" min="1" step="1" placeholder="14" [class.error]="isFieldInvalid('participants')">
+            <small *ngIf="isFieldInvalid('participants')" class="field-error">Enter a positive whole number.</small>
           </div>
 
           <div class="form-group">
@@ -90,23 +96,30 @@
         <div class="form-grid">
           <div class="form-group">
             <label for="currentChitNumber" class="required">Current Chit Term</label>
-            <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" name="currentChitNumber" placeholder="6" [class.error]="isFieldInvalid('currentChitNumber')">
+            <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" name="currentChitNumber" min="1" step="1" [max]="participants || null" placeholder="6" [class.error]="isFieldInvalid('currentChitNumber')">
+            <small *ngIf="isFieldInvalid('currentChitNumber')" class="field-error">Enter a whole term number within the member count.</small>
           </div>
 
           <div class="form-group">
             <label for="pastInvestment" class="required">Past Investment</label>
-            <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" name="pastInvestment" placeholder="195000" [class.error]="isFieldInvalid('pastInvestment')">
+            <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" name="pastInvestment" min="0" placeholder="195000" [class.error]="isFieldInvalid('pastInvestment')">
+            <small *ngIf="isFieldInvalid('pastInvestment')" class="field-error">Enter zero or a positive amount.</small>
           </div>
           
           <div class="form-group">
             <label for="agentCommissionAmount" class="required">Commission Amount</label>
-            <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" name="agentCommissionAmount" step="100" placeholder="0" [class.error]="isFieldInvalid('agentCommissionAmount')">
+            <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" name="agentCommissionAmount" min="0" step="100" placeholder="0" [class.error]="isFieldInvalid('agentCommissionAmount')">
+            <small *ngIf="isFieldInvalid('agentCommissionAmount') && !isBidCombinationInvalid()" class="field-error">Enter zero or a positive amount.</small>
           </div>
 
           <div class="form-group wide discount-bid-group">
             <div class="input-wrapper">
               <label for="discountAmount" class="required">Bid Auction/Discount Amount</label>
-              <input type="number" id="discountAmount" [(ngModel)]="discountAmount" name="discountAmount" placeholder="100000" [class.error]="isFieldInvalid('discountAmount')">
+              <input type="number" id="discountAmount" [(ngModel)]="discountAmount" name="discountAmount" min="0" [max]="getDiscountUpperBound()" placeholder="100000" [class.error]="isFieldInvalid('discountAmount')">
+              <small *ngIf="isFieldInvalid('discountAmount') && !isBidCombinationInvalid()" class="field-error">Enter zero or a positive amount.</small>
+              <small *ngIf="hasAttemptedSubmit && isBidCombinationInvalid()" class="field-error">
+                Discount, commission, and the excluded share must total less than the chit amount.
+              </small>
             </div>
             <div class="checkbox-wrapper">
               <label class="checkbox-label">
@@ -134,18 +147,22 @@
           <div class="form-group">
             <label for="annualInterest">Annual Interest (%)</label>
             <input type="number" id="annualInterest" [ngModel]="annualInterest" name="annualInterest"
-                   (ngModelChange)="onInterestModelChange('percent', $event)" step="0.01" placeholder="24">
+                   (ngModelChange)="onInterestModelChange('percent', $event)" min="0" step="0.01" placeholder="24"
+                   [class.error]="isFieldInvalid('annualInterest')">
+            <small *ngIf="isFieldInvalid('annualInterest')" class="field-error">Enter zero or a positive annual rate.</small>
           </div>
           <div class="form-group">
             <label for="monthlyRupee">Interest (Rupee/100)</label>
             <input type="number" id="monthlyRupee" [ngModel]="monthlyRupee" name="monthlyRupee"
-                   (ngModelChange)="onInterestModelChange('rupee', $event)" step="0.01" placeholder="2">
+                   (ngModelChange)="onInterestModelChange('rupee', $event)" min="0" step="0.01" placeholder="2"
+                   [class.error]="isFieldInvalid('monthlyRupee')">
+            <small *ngIf="isFieldInvalid('monthlyRupee')" class="field-error">Enter zero or a positive monthly rate.</small>
           </div>
         </div>
       </article>
 
       <div class="submit-action-container">
-        <button class="calculate-btn primary large-submit" (click)="validateAndCalculate()" [disabled]="isCalculating">
+        <button class="calculate-btn primary large-submit" (click)="validateAndCalculate()" [disabled]="isCalculating || isSelectedChitCompleted()">
           Calculate & View Results
         </button>
       </div>

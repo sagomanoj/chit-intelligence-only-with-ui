@@ -1,3 +1,5 @@
+<p *ngIf="errorMessage" class="error-notice" role="alert">{{ errorMessage }}</p>
+
 <section class="page-card" *ngIf="chit && editModel">
   <header class="hero">
     <div>
@@ -65,8 +67,8 @@
 
       <label class="field">
         <span>Total Members <em>*</em></span>
-        <input type="number" [(ngModel)]="editModel.totalMembers" name="editTotalMembers" min="1" [class.error]="isEditFieldInvalid('totalMembers')" />
-        <small *ngIf="isEditFieldInvalid('totalMembers')">Members must be greater than zero.</small>
+        <input type="number" [(ngModel)]="editModel.totalMembers" name="editTotalMembers" [min]="getMinimumTotalMembers()" step="1" [class.error]="isEditFieldInvalid('totalMembers')" />
+        <small *ngIf="isEditFieldInvalid('totalMembers')">Use a whole number that does not exclude a completed term.</small>
       </label>
 
       <label class="field">
@@ -85,8 +87,9 @@
 
       <label class="field">
         <span>Current Term Number <em>*</em></span>
-        <input type="number" [(ngModel)]="editModel.currentTermNumber" name="editCurrentTerm" min="0" [class.error]="isEditFieldInvalid('currentTermNumber')" />
-        <small *ngIf="isEditFieldInvalid('currentTermNumber')">Term must be between 0 and total members.</small>
+        <input type="number" [(ngModel)]="editModel.currentTermNumber" name="editCurrentTerm" min="0" step="1" [readonly]="chit.terms.length > 0" [class.error]="isEditFieldInvalid('currentTermNumber')" />
+        <small *ngIf="isEditFieldInvalid('currentTermNumber')">Use a whole number between 0 and total members.</small>
+        <p *ngIf="chit.terms.length" class="field-help">Current term is advanced by term records and cannot be edited here.</p>
       </label>
 
       <label class="field">
@@ -100,6 +103,7 @@
         <select [(ngModel)]="editModel.chitType" name="editChitType">
           <option *ngFor="let type of chitTypes" [ngValue]="type.value">{{ type.label }}</option>
         </select>
+        <p class="field-help">{{ getChitTypeHelp() }}</p>
       </label>
 
       <label *ngIf="showCommissionAmount()" class="field">
@@ -154,11 +158,13 @@
       </div>
     </div>
 
-    <form (ngSubmit)="addTerm()" class="form-grid" novalidate>
+    <p *ngIf="chit.currentTermNumber >= chit.totalMembers" class="notice">All terms for this chit are complete.</p>
+
+    <form *ngIf="chit.currentTermNumber < chit.totalMembers" (ngSubmit)="addTerm()" class="form-grid" novalidate>
       <label class="field">
         <span>Term number <em>*</em></span>
-        <input type="number" [(ngModel)]="newTerm.termNumber" name="termNumber" min="1" [class.error]="isTermFieldInvalid('termNumber')" />
-        <small *ngIf="isTermFieldInvalid('termNumber')">Term number is required.</small>
+        <input type="number" [(ngModel)]="newTerm.termNumber" name="termNumber" min="1" step="1" readonly [class.error]="isTermFieldInvalid('termNumber')" />
+        <small *ngIf="isTermFieldInvalid('termNumber')">The next record must be term {{ getExpectedNextTerm() }}.</small>
       </label>
 
       <label class="field">
@@ -180,8 +186,8 @@
 
       <label *ngIf="showTakenAmount()" class="field">
         <span>Taken amount <em>*</em></span>
-        <input type="number" [(ngModel)]="newTerm.takenAmount" name="takenAmount" min="0" [class.error]="isTermFieldInvalid('takenAmount')" />
-        <small *ngIf="isTermFieldInvalid('takenAmount')">Taken amount is required when chit is taken.</small>
+        <input type="number" [(ngModel)]="newTerm.takenAmount" name="takenAmount" min="1" [class.error]="isTermFieldInvalid('takenAmount')" />
+        <small *ngIf="isTermFieldInvalid('takenAmount')">Taken amount must be greater than zero.</small>
       </label>
 
       <label class="field full-width">

@@ -8,6 +8,8 @@
     <button class="ghost-button" type="button" routerLink="/chits">Back to saved chits</button>
   </header>
 
+  <p *ngIf="errorMessage" class="error-notice" role="alert">{{ errorMessage }}</p>
+
   <form (ngSubmit)="create()" #createForm="ngForm" novalidate class="glass-panel">
     <div class="section-title">
       <h3>Chit basics</h3>
@@ -29,8 +31,8 @@
 
       <label class="field">
         <span>Total Members <em>*</em></span>
-        <input type="number" [(ngModel)]="chit.totalMembers" name="totalMembers" min="1" [class.error]="isFieldInvalid('totalMembers')" placeholder="20" />
-        <small *ngIf="isFieldInvalid('totalMembers')">Enter total members greater than zero.</small>
+        <input type="number" [(ngModel)]="chit.totalMembers" name="totalMembers" min="1" step="1" [class.error]="isFieldInvalid('totalMembers')" placeholder="20" />
+        <small *ngIf="isFieldInvalid('totalMembers')">Enter a whole number greater than zero.</small>
       </label>
 
       <label class="field">
@@ -49,8 +51,8 @@
 
       <label class="field">
         <span>Current Term Number <em>*</em></span>
-        <input type="number" [(ngModel)]="chit.currentTermNumber" name="currentTermNumber" min="0" [class.error]="isFieldInvalid('currentTermNumber')" placeholder="0" />
-        <small *ngIf="isFieldInvalid('currentTermNumber')">Term number must be between 0 and total members.</small>
+        <input type="number" [(ngModel)]="chit.currentTermNumber" name="currentTermNumber" min="0" step="1" [class.error]="isFieldInvalid('currentTermNumber')" placeholder="0" />
+        <small *ngIf="isFieldInvalid('currentTermNumber')">Use a whole number between 0 and total members.</small>
       </label>
 
       <label class="field">
@@ -64,6 +66,7 @@
         <select [(ngModel)]="chit.chitType" name="chitType">
           <option *ngFor="let type of chitTypes" [ngValue]="type.value">{{ type.label }}</option>
         </select>
+        <p class="field-help">{{ getChitTypeHelp() }}</p>
       </label>
 
       <label *ngIf="showCommissionAmount()" class="field">
@@ -79,7 +82,7 @@
     </div>
 
     <div class="actions">
-      <button type="submit" class="primary-button" [disabled]="!isFormValid()">Save chit</button>
+      <button type="submit" class="primary-button" [disabled]="isSaving">{{ isSaving ? 'Saving...' : 'Save chit' }}</button>
     </div>
   </form>
 </section>

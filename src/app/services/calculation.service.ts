@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 
 export interface ProfitRequest {
   chitValue: number;
@@ -66,18 +66,21 @@ export interface ReinvestmentResponse {
 })
 export class CalculationService {
   calculateProfit(request: ProfitRequest): Observable<ProfitResponse> {
-    const frequencyInMonths = Math.max(1, request.frequencyInMonths);
-    const remainingTerms = Math.max(0, request.totalMembers - request.currentTermNumber);
-    const installmentAmount = request.totalMembers > 0 ? request.chitValue / request.totalMembers : 0;
+    const validationError = this.getProfitRequestValidationError(request);
+    if (validationError) {
+      return throwError(() => new Error(validationError));
+    }
+
+    const frequencyInMonths = request.frequencyInMonths;
+    const remainingTerms = request.totalMembers - request.currentTermNumber;
+    const installmentAmount = request.chitValue / request.totalMembers;
     const baseFutureInvestment = installmentAmount * remainingTerms;
-    let futureInvestment = baseFutureInvestment;
     const discountAmount = request.winningAmount;
     const agentCommissionAmount = request.agentCommissionAmount;
     let takeHomeAmount = request.chitValue - discountAmount - agentCommissionAmount;
 
-    if (request.excludeOwnShare && request.totalMembers > 0) {
+    if (request.excludeOwnShare) {
       takeHomeAmount -= installmentAmount;
-      futureInvestment = Math.max(0, futureInvestment - installmentAmount);
     }
 
     const annualRate = this.resolveAnnualInterestRate(request.interestPercent, request.interestRupee);
@@ -89,6 +92,9 @@ export class CalculationService {
       ? Math.max(0, installmentAmount - interestPerTerm)
       : installmentAmount;
     const totalExtraPayment = extraPaymentPerTerm * remainingTerms;
+    const futureInvestment = request.enableReinvestment
+      ? totalExtraPayment
+      : baseFutureInvestment;
     const totalInvestment = request.pastInvestment + futureInvestment;
     const netProfit = takeHomeAmount - totalInvestment;
     const profitPercentage = totalInvestment > 0 ? netProfit / totalInvestment * 100 : 0;
@@ -96,10 +102,23 @@ export class CalculationService {
     const annualizedProfitPercentage = profitPercentage * 12 / remainingMonths;
     const profitInterestRupee = netProfit / remainingMonths;
     
-    const originalTotalInvestment = request.pastInvestment + baseFutureInvestment;
-    const breakEvenDiscountAmount = request.chitValue - agentCommissionAmount - originalTotalInvestment;
+    const ownShareAmount = request.excludeOwnShare ? installmentAmount : 0;
+    const requiredTakeHomeAtBreakEven = this.getRequiredTakeHomeAtBreakEven(
+      request.pastInvestment,
+      installmentAmount,
+      remainingTerms,
+      request.enableReinvestment ? annualRate : 0,
+      frequencyInMonths
+    );
+    const breakEvenDiscountAmount = request.chitValue
+      - agentCommissionAmount
+      - ownShareAmount
+      - requiredTakeHomeAtBreakEven;
     
-    const maxAllowedDiscountAmount = Math.max(0, request.chitValue - agentCommissionAmount - 1);
+    const maxAllowedDiscountAmount = Math.max(
+      0,
+      request.chitValue - agentCommissionAmount - ownShareAmount - 1
+    );
     const coverageStatus = !request.enableReinvestment
       ? 'NOT_APPLICABLE'
       : interestPerTerm >= installmentAmount ? 'FULLY_COVERED' : 'PARTIAL';
@@ -142,6 +161,11 @@ export class CalculationService {
   }
 
   calculateReinvestment(request: ReinvestmentRequest): Observable<ReinvestmentResponse> {
+    const validationError = this.getReinvestmentRequestValidationError(request);
+    if (validationError) {
+      return throwError(() => new Error(validationError));
+    }
+
     const annualRate = this.resolveAnnualInterestRate(request.interestPercent, request.interestRupee);
     const monthlyInterest = request.winningAmount * annualRate / 12 / 100;
     const totalInterest = monthlyInterest * request.remainingTerms;
@@ -171,15 +195,117 @@ export class CalculationService {
   }
 
   private resolveAnnualInterestRate(interestPercent?: number, interestRupee?: number): number {
-    if (interestRupee !== undefined) {
-      return interestRupee * 12;
-    }
-
     if (interestPercent !== undefined) {
       return interestPercent;
     }
 
+    if (interestRupee !== undefined) {
+      return interestRupee * 12;
+    }
+
     return 24;
+  }
+
+  private getProfitRequestValidationError(request: ProfitRequest): string | null {
+    if (!this.isFiniteNumber(request.chitValue) || request.chitValue <= 0) {
+      return 'Chit value must be greater than zero.';
+    }
+
+    if (!this.isFiniteNumber(request.winningAmount) || request.winningAmount < 0) {
+      return 'Discount amount cannot be negative.';
+    }
+
+    if (!Number.isInteger(request.totalMembers) || request.totalMembers <= 0) {
+      return 'Total members must be a positive whole number.';
+    }
+
+    if (
+      !Number.isInteger(request.currentTermNumber) ||
+      request.currentTermNumber < 1 ||
+      request.currentTermNumber > request.totalMembers
+    ) {
+      return 'Current term must be a whole number within the chit term range.';
+    }
+
+    if (!Number.isInteger(request.frequencyInMonths) || request.frequencyInMonths <= 0) {
+      return 'Frequency must be a positive whole number of months.';
+    }
+
+    if (!this.isFiniteNumber(request.pastInvestment) || request.pastInvestment < 0) {
+      return 'Past investment cannot be negative.';
+    }
+
+    if (!this.isFiniteNumber(request.agentCommissionAmount) || request.agentCommissionAmount < 0) {
+      return 'Commission amount cannot be negative.';
+    }
+
+    const installmentAmount = request.chitValue / request.totalMembers;
+    const ownShareAmount = request.excludeOwnShare ? installmentAmount : 0;
+    if (request.winningAmount + request.agentCommissionAmount + ownShareAmount >= request.chitValue) {
+      return 'Discount, commission, and excluded own share must be less than the chit value.';
+    }
+
+    if (request.enableReinvestment) {
+      return this.getInterestValidationError(request.interestPercent, request.interestRupee);
+    }
+
+    return null;
+  }
+
+  private getReinvestmentRequestValidationError(request: ReinvestmentRequest): string | null {
+    if (!this.isFiniteNumber(request.winningAmount) || request.winningAmount < 0) {
+      return 'Winning amount cannot be negative.';
+    }
+
+    if (!Number.isInteger(request.remainingTerms) || request.remainingTerms < 0) {
+      return 'Remaining terms must be a non-negative whole number.';
+    }
+
+    if (!this.isFiniteNumber(request.installmentAmount) || request.installmentAmount < 0) {
+      return 'Installment amount cannot be negative.';
+    }
+
+    return this.getInterestValidationError(request.interestPercent, request.interestRupee);
+  }
+
+  private getInterestValidationError(interestPercent?: number, interestRupee?: number): string | null {
+    if (interestPercent === undefined && interestRupee === undefined) {
+      return 'An interest rate is required when reinvestment is enabled.';
+    }
+
+    if (interestPercent !== undefined && (!this.isFiniteNumber(interestPercent) || interestPercent < 0)) {
+      return 'Annual interest must be a non-negative number.';
+    }
+
+    if (interestRupee !== undefined && (!this.isFiniteNumber(interestRupee) || interestRupee < 0)) {
+      return 'Monthly interest must be a non-negative number.';
+    }
+
+    return null;
+  }
+
+  private getRequiredTakeHomeAtBreakEven(
+    pastInvestment: number,
+    installmentAmount: number,
+    remainingTerms: number,
+    annualRate: number,
+    frequencyInMonths: number
+  ): number {
+    if (remainingTerms === 0 || annualRate === 0) {
+      return pastInvestment + installmentAmount * remainingTerms;
+    }
+
+    const interestFactorPerTerm = annualRate / 12 / 100 * frequencyInMonths;
+    if (pastInvestment * interestFactorPerTerm >= installmentAmount) {
+      return pastInvestment;
+    }
+
+    return (pastInvestment + installmentAmount * remainingTerms)
+      / (1 + interestFactorPerTerm * remainingTerms);
+  }
+
+  private isFiniteNumber(value: number): boolean {
+    return typeof value === 'number' && Number.isFinite(value);
   }
 
   private toCurrency(value: number): number {

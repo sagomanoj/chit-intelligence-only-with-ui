@@ -10,6 +10,13 @@
     </div>
   </header>
 
+  <p *ngIf="errorMessage" class="error-notice" role="alert">
+    {{ errorMessage }}
+    <button class="secondary-button" type="button" (click)="loadChits()">Retry</button>
+  </p>
+
+  <p *ngIf="isLoading" class="loading-state">Loading saved chits...</p>
+
   <div class="overview-strip" *ngIf="chits.length">
     <article>
       <span>Total chits</span>
@@ -29,7 +36,7 @@
     </article>
   </div>
 
-  <div *ngIf="chits.length === 0" class="empty-state">
+  <div *ngIf="!isLoading && !errorMessage && chits.length === 0" class="empty-state">
     <strong>No saved chits yet</strong>
     <p>Create your first chit and use it later in the calculator.</p>
     <button class="primary-button" (click)="createChit()">Create your first chit</button>

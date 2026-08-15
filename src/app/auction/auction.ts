@@ -90,7 +90,8 @@ export class AuctionComponent implements OnInit {
       this.totalAmount = chit.chitAmount;
       this.participants = chit.totalMembers;
       this.frequency = chit.frequencyInMonths;
-      this.currentChitNumber = Math.max(1, chit.currentTermNumber || 1);
+      const latestCompletedTerm = Math.max(0, Math.floor(chit.currentTermNumber || 0));
+      this.currentChitNumber = Math.min(chit.totalMembers, latestCompletedTerm + 1);
       this.pastInvestment = this.chitService.getPastInvestment(chit);
       this.agentCommissionAmount = chit.chitType === 'AGENT_FIXED_AMOUNT_EACH_TERM'
         ? (chit.agentCommissionAmount ?? 0)
@@ -128,33 +129,58 @@ export class AuctionComponent implements OnInit {
   }
 
   isFormValid(): boolean {
-    return !!(
-      this.totalAmount !== null &&
-      this.totalAmount > 0 &&
-      this.participants !== null &&
-      this.participants > 0 &&
-      this.discountAmount !== null &&
-      this.discountAmount >= 0 &&
-      this.currentChitNumber !== null &&
-      this.currentChitNumber >= 1 &&
+    return (
+      !this.isSelectedChitCompleted() &&
+      this.isPositiveNumber(this.totalAmount) &&
+      this.isPositiveInteger(this.participants) &&
+      this.isPositiveInteger(this.frequency) &&
+      this.isNonNegativeNumber(this.discountAmount) &&
+      this.isPositiveInteger(this.currentChitNumber) &&
       this.currentChitNumber <= this.participants &&
-      this.pastInvestment !== null &&
-      this.agentCommissionAmount !== null &&
-      this.agentCommissionAmount >= 0
+      this.isNonNegativeNumber(this.pastInvestment) &&
+      this.isNonNegativeNumber(this.agentCommissionAmount) &&
+      !this.isBidCombinationInvalid() &&
+      this.isInterestValid()
     );
   }
 
   isFieldInvalid(fieldName: string): boolean {
     if (!this.hasAttemptedSubmit) return false;
     switch (fieldName) {
-      case 'totalAmount': return this.totalAmount === null || this.totalAmount <= 0;
-      case 'participants': return this.participants === null || this.participants <= 0;
-      case 'discountAmount': return this.discountAmount === null || this.discountAmount < 0;
-      case 'currentChitNumber': return this.currentChitNumber === null || this.currentChitNumber < 1 || (this.participants !== null && this.currentChitNumber > this.participants);
-      case 'pastInvestment': return this.pastInvestment === null;
-      case 'agentCommissionAmount': return this.agentCommissionAmount === null || this.agentCommissionAmount < 0;
+      case 'totalAmount': return !this.isPositiveNumber(this.totalAmount);
+      case 'participants': return !this.isPositiveInteger(this.participants);
+      case 'frequency': return !this.isPositiveInteger(this.frequency);
+      case 'discountAmount': return !this.isNonNegativeNumber(this.discountAmount) || this.isBidCombinationInvalid();
+      case 'currentChitNumber':
+        return !this.isPositiveInteger(this.currentChitNumber)
+          || (this.isPositiveInteger(this.participants) && this.currentChitNumber > this.participants);
+      case 'pastInvestment': return !this.isNonNegativeNumber(this.pastInvestment);
+      case 'agentCommissionAmount':
+        return !this.isNonNegativeNumber(this.agentCommissionAmount) || this.isBidCombinationInvalid();
+      case 'annualInterest':
+        return this.reinvestEnabled && !this.isNonNegativeNumber(this.annualInterest);
+      case 'monthlyRupee':
+        return this.reinvestEnabled && !this.isNonNegativeNumber(this.monthlyRupee);
       default: return false;
     }
+  }
+
+  isBidCombinationInvalid(): boolean {
+    if (
+      !this.isPositiveNumber(this.totalAmount) ||
+      !this.isPositiveInteger(this.participants) ||
+      !this.isNonNegativeNumber(this.discountAmount) ||
+      !this.isNonNegativeNumber(this.agentCommissionAmount)
+    ) {
+      return false;
+    }
+
+    const ownShareAmount = this.excludeOwnShare ? this.totalAmount / this.participants : 0;
+    return this.discountAmount + this.agentCommissionAmount + ownShareAmount >= this.totalAmount;
+  }
+
+  isSelectedChitCompleted(): boolean {
+    return this.selectedChit?.status === 'COMPLETED';
   }
 
   onDiscountSliderChange(event: Event): void {
@@ -173,7 +199,8 @@ export class AuctionComponent implements OnInit {
   getDiscountUpperBound(): number {
     const totalAmount = this.totalAmount || 0;
     const commissionAmount = this.agentCommissionAmount || 0;
-    return Math.max(0, Math.floor(totalAmount - commissionAmount - 1));
+    const ownShareAmount = this.excludeOwnShare ? this.getShareAmount() : 0;
+    return Math.max(0, Math.floor(totalAmount - commissionAmount - ownShareAmount - 1));
   }
 
   getShareAmount(): number {
@@ -248,9 +275,12 @@ export class AuctionComponent implements OnInit {
         this.isCalculating = false;
         this.cdr.detectChanges();
       },
-      error: () => {
+      error: error => {
         this.isCalculating = false;
-        alert('Unable to calculate profit/loss. Please check whether the backend is running.');
+        const message = error instanceof Error
+          ? error.message
+          : 'Unable to calculate profit/loss. Please verify the entered values.';
+        alert(message);
         this.cdr.detectChanges();
       }
     });
@@ -260,26 +290,14 @@ export class AuctionComponent implements OnInit {
 
   private buildProfitRequest(): ProfitRequest | null {
     if (
+      !this.isFormValid() ||
       this.totalAmount === null ||
       this.participants === null ||
       this.discountAmount === null ||
-      this.currentChitNumber === null
+      this.currentChitNumber === null ||
+      this.pastInvestment === null ||
+      this.agentCommissionAmount === null
     ) {
-      return null;
-    }
-
-    if (
-      this.totalAmount <= 0 ||
-      this.participants <= 0 ||
-      this.discountAmount < 0 ||
-      this.currentChitNumber < 1 ||
-      this.currentChitNumber > this.participants
-    ) {
-      return null;
-    }
-
-    const commissionAmount = this.agentCommissionAmount || 0;
-    if (this.discountAmount + commissionAmount >= this.totalAmount) {
       return null;
     }
 
@@ -290,13 +308,13 @@ export class AuctionComponent implements OnInit {
       totalMembers: this.participants,
       dividendDistributionType: 1,
       pastDividend: 0,
-      pastInvestment: this.pastInvestment || 0,
+      pastInvestment: this.pastInvestment,
       frequencyInMonths: this.frequency,
-      agentCommissionAmount: this.agentCommissionAmount || 0,
+      agentCommissionAmount: this.agentCommissionAmount,
       enableReinvestment: this.reinvestEnabled,
       excludeOwnShare: this.excludeOwnShare,
-      interestPercent: this.annualInterest ?? undefined,
-      interestRupee: this.monthlyRupee ?? undefined
+      interestPercent: this.reinvestEnabled ? (this.annualInterest ?? undefined) : undefined,
+      interestRupee: this.reinvestEnabled ? (this.monthlyRupee ?? undefined) : undefined
     };
   }
 
@@ -322,6 +340,26 @@ export class AuctionComponent implements OnInit {
     if (this.profit && this.isFormValid()) {
       this.calculateProfit();
     }
+  }
+
+  private isInterestValid(): boolean {
+    return !this.reinvestEnabled
+      || (
+        this.isNonNegativeNumber(this.annualInterest)
+        && this.isNonNegativeNumber(this.monthlyRupee)
+      );
+  }
+
+  private isPositiveNumber(value: number | null): value is number {
+    return value !== null && Number.isFinite(value) && value > 0;
+  }
+
+  private isPositiveInteger(value: number | null): value is number {
+    return value !== null && Number.isInteger(value) && value > 0;
+  }
+
+  private isNonNegativeNumber(value: number | null): value is number {
+    return value !== null && Number.isFinite(value) && value >= 0;
   }
 
   calculateBidNow(): void {
