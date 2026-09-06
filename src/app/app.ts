@@ -1,12 +1,12 @@
 import { Component, signal, OnInit, OnDestroy } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 import { Keyboard } from '@capacitor/keyboard';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -26,10 +26,10 @@ export class App implements OnInit, OnDestroy {
         let interstitialAdId = '';
         if (Capacitor.getPlatform() === 'ios') {
           adId = 'ca-app-pub-3940256099942544/2934735716';
-          interstitialAdId = 'ca-app-pub-3940256099942544/4411468910'; // Google Test ID for iOS
+          interstitialAdId = 'ca-app-pub-3940256099942544/4411468910';
         } else if (Capacitor.getPlatform() === 'android') {
           adId = 'ca-app-pub-1256592546820339/3969248365';
-          interstitialAdId = 'ca-app-pub-3940256099942544/1033173712'; // Google Test ID for Android
+          interstitialAdId = 'ca-app-pub-3940256099942544/1033173712';
         }
 
         if (adId) {
@@ -78,4 +78,3 @@ export class App implements OnInit, OnDestroy {
     }
   }
 }
-

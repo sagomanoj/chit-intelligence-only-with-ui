@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { Chit, ChitTerm } from './local-storage.service';
 
 export interface ProfitRequest {
   chitValue: number;
@@ -149,6 +150,39 @@ export class CalculationService {
     });
   }
 
+  buildProfitRequestFromChit(
+    chit: Chit,
+    terms: ChitTerm[],
+    targetTermNumber?: number,
+    winningAmount?: number
+  ): ProfitRequest {
+    const sortedTerms = [...terms].sort((a, b) => a.termNumber - b.termNumber);
+    const nextTerm = targetTermNumber || (sortedTerms.length + 1);
+    
+    // Past terms are those prior to target term
+    const priorTerms = sortedTerms.filter(t => t.termNumber < nextTerm);
+    const pastInvestment = priorTerms.reduce((sum, t) => sum + t.netInstallmentPaid, 0);
+    const pastDividend = priorTerms.reduce((sum, t) => sum + t.dividendPerMember, 0);
+
+    const defaultWinning = winningAmount ?? (chit.chitValue * 0.15); // default 15% discount for calculation
+
+    return {
+      chitValue: chit.chitValue,
+      winningAmount: defaultWinning,
+      currentTermNumber: Math.min(nextTerm, chit.totalMembers),
+      totalMembers: chit.totalMembers,
+      dividendDistributionType: chit.dividendDistributionType || 1,
+      pastDividend,
+      pastInvestment,
+      frequencyInMonths: chit.frequencyInMonths || 1,
+      agentCommissionAmount: chit.agentCommissionAmount || (chit.chitValue * (chit.agentCommissionPercent || 5) / 100),
+      enableReinvestment: chit.reinvestmentDefaults?.enableReinvestment ?? true,
+      excludeOwnShare: true,
+      interestPercent: chit.reinvestmentDefaults?.annualInterest ?? 24,
+      interestRupee: chit.reinvestmentDefaults?.monthlyRupee ?? 2
+    };
+  }
+
   calculateReinvestment(request: ReinvestmentRequest): Observable<ReinvestmentResponse> {
     const annualRate = this.resolveAnnualInterestRate(request.interestPercent, request.interestRupee);
     const monthlyInterest = (request.winningAmount * annualRate) / 12 / 100;
@@ -166,16 +200,6 @@ export class CalculationService {
 
   getRecommendation(currentProfit: number, futureProfit: number): Observable<{ recommendation: string }> {
     return of({ recommendation: currentProfit > futureProfit ? 'BID NOW' : 'WAIT' });
-  }
-
-  getDetailedRecommendation(chitValue: number, currentAuctionAmount: number, currentTerm: number, totalMembers: number): Observable<{ bestTimeToBid: string; expectedDiscountRange: string }> {
-    const currentDiscountPercent = chitValue > 0 ? (currentAuctionAmount / chitValue) * 100 : 0;
-    const averageExpectedDiscount = 15;
-
-    return of({
-      bestTimeToBid: currentDiscountPercent > averageExpectedDiscount ? 'NOW' : 'WAIT',
-      expectedDiscountRange: '10% - 20%'
-    });
   }
 
   private resolveAnnualInterestRate(interestPercent?: number, interestRupee?: number): number {
@@ -198,4 +222,3 @@ export class CalculationService {
     return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 }
-

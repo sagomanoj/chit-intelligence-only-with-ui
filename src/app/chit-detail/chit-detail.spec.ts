@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
@@ -11,10 +12,11 @@ describe('ChitDetailComponent', () => {
   beforeEach(async () => {
     const mockChitService = {
       getChits: () => of([]),
-      getChit: () => of(null),
+      getChit: () => of(undefined),
       createChit: () => of(null),
       addTerm: () => of(null),
-      getTerms: () => of([])
+      getTerms: () => of([]),
+      getChitSummary: () => null
     };
 
     await TestBed.configureTestingModule({
@@ -34,5 +36,3 @@ describe('ChitDetailComponent', () => {
     expect(component).toBeTruthy();
   });
 });
-
-

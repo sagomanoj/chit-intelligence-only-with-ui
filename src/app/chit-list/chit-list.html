@@ -1,7 +1,138 @@
-<h1>Chit Funds</h1>
-<button (click)="createChit()">Create New Chit</button>
-<ul>
-  <li *ngFor="let chit of chits">
-    <a (click)="viewChit(chit.id)">{{ chit.name }}</a>
-  </li>
-</ul>
+<div class="chit-container">
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">My Chit Groups</h1>
+      <p class="subtitle">Manage chit terms, track transactions, and run term profit calculations locally.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="exportData()" title="Download local data as JSON backup">
+        📥 Export JSON Backup
+      </button>
+      <label class="btn btn-secondary file-upload-btn" title="Restore data from JSON file">
+        📤 Import JSON Backup
+        <input type="file" (change)="onFileSelected($event)" accept=".json" hidden />
+      </label>
+      <button class="btn btn-primary" (click)="createChit()">
+        ➕ Create New Chit
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="importSuccess" class="alert alert-success">
+    {{ importSuccess }}
+  </div>
+  <div *ngIf="importError" class="alert alert-danger">
+    {{ importError }}
+  </div>
+
+  <div class="search-filter-section">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search chits by name..."
+        [(ngModel)]="searchQuery"
+      />
+      <button class="clear-search-btn" *ngIf="searchQuery" (click)="searchQuery = ''">✕</button>
+    </div>
+
+    <div class="tab-filters">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'ALL'"
+        (click)="setTab('ALL')"
+      >
+        All <span class="tab-count">{{ chitSummaries.length }}</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'ONGOING'"
+        (click)="setTab('ONGOING')"
+      >
+        Ongoing <span class="tab-count">{{ ongoingCount }}</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'COMPLETED'"
+        (click)="setTab('COMPLETED')"
+      >
+        Completed <span class="tab-count">{{ completedCount }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="chit-grid" *ngIf="filteredChits.length > 0; else emptyState">
+    <div class="chit-card" *ngFor="let item of filteredChits" (click)="viewChit(item.chit.id)">
+      <div class="card-header">
+        <div>
+          <h3 class="chit-name">{{ item.chit.name }}</h3>
+          <span class="status-badge" [class.badge-completed]="item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers">
+            {{ (item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers) ? 'COMPLETED' : 'ONGOING' }}
+          </span>
+        </div>
+        <div class="pool-amount">
+          <span class="amount-label">Chit Value</span>
+          <span class="amount-value">₹{{ item.chit.chitValue | number }}</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="metric-row">
+          <div class="metric">
+            <span class="label">Installment Per Term</span>
+            <span class="val">₹{{ item.chit.installmentAmount | number }}</span>
+          </div>
+          <div class="metric">
+            <span class="label">Terms Completed</span>
+            <span class="val">{{ item.termsCompleted }} / {{ item.chit.totalMembers }}</span>
+          </div>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar" [style.width.%]="item.progressPercent"></div>
+        </div>
+        <div class="progress-label">{{ item.progressPercent }}% Complete</div>
+
+        <div class="financial-summary">
+          <div class="fin-box">
+            <span class="fin-title">Total Invested</span>
+            <span class="fin-val text-primary">₹{{ item.totalInvested | number }}</span>
+          </div>
+          <div class="fin-box">
+            <span class="fin-title">Dividends Earned</span>
+            <span class="fin-val text-success">₹{{ item.totalDividendEarned | number }}</span>
+          </div>
+          <div class="fin-box" *ngIf="item.isSelfPrized">
+            <span class="fin-title">Payout Received</span>
+            <span class="fin-val text-accent">₹{{ item.payoutReceived | number }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-actions" (click)="$event.stopPropagation()">
+        <button class="btn-action btn-calc" (click)="openCalculator(item.chit.id)">
+          🧮 Open Calculator
+        </button>
+        <button class="btn-action btn-detail" (click)="viewChit(item.chit.id)">
+          📋 View Term History
+        </button>
+        <button class="btn-action btn-edit" (click)="editChit($event, item.chit.id)">
+          ✏️ Edit
+        </button>
+        <button class="btn-action btn-delete" (click)="deleteChit($event, item.chit.id, item.chit.name)">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-card">
+      <div class="empty-icon">📁</div>
+      <h3>No Chit Groups Found</h3>
+      <p>Get started by creating your first Chit Fund group or import existing data from a JSON file.</p>
+      <button class="btn btn-primary" (click)="createChit()">➕ Create First Chit</button>
+    </div>
+  </ng-template>
+</div>

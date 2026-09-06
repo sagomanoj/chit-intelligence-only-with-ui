@@ -1,5 +1,7 @@
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AuctionComponent } from './auction';
+import { provideRouter } from '@angular/router';
 
 describe('AuctionComponent', () => {
   let component: AuctionComponent;
@@ -8,6 +10,7 @@ describe('AuctionComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AuctionComponent],
+      providers: [provideRouter([])]
     }).compileComponents();
 
     fixture = TestBed.createComponent(AuctionComponent);
@@ -19,4 +22,3 @@ describe('AuctionComponent', () => {
     expect(component).toBeTruthy();
   });
 });
-

@@ -1,5 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CalculationService, ProfitRequest, ProfitResponse } from '../services/calculation.service';
+import { ChitService, Chit, ChitTerm } from '../services/chit.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -10,6 +12,11 @@ import { CommonModule } from '@angular/common';
   styleUrl: './auction.css',
 })
 export class AuctionComponent implements OnInit {
+  // Active Chit Context (if navigated from chit)
+  chitId: string | null = null;
+  chit: Chit | null = null;
+  terms: ChitTerm[] = [];
+
   // Input fields
   totalAmount: number | null = null;
   participants: number | null = null;
@@ -28,6 +35,7 @@ export class AuctionComponent implements OnInit {
   showModalResults: boolean = false;
   hasAttemptedSubmit: boolean = false;
   errorMessage: string | null = null;
+  saveSuccessMessage: string | null = null;
 
   // Re-investment
   reinvestEnabled: boolean = true;
@@ -37,10 +45,45 @@ export class AuctionComponent implements OnInit {
 
   constructor(
     private calcService: CalculationService,
+    private chitService: ChitService,
+    private route: ActivatedRoute,
+    private router: Router,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (id) {
+        this.chitId = id;
+        this.loadChitContext(id);
+      }
+    });
+  }
+
+  loadChitContext(id: string): void {
+    this.chitService.getChit(id).subscribe(chit => {
+      if (chit) {
+        this.chit = chit;
+        this.chitService.getTerms(id).subscribe(terms => {
+          this.terms = terms;
+          const request = this.calcService.buildProfitRequestFromChit(chit, this.terms);
+
+          this.totalAmount = request.chitValue;
+          this.participants = request.totalMembers;
+          this.frequency = request.frequencyInMonths;
+          this.agentCommissionAmount = request.agentCommissionAmount;
+          this.currentChitNumber = request.currentTermNumber;
+          this.pastInvestment = request.pastInvestment;
+          this.discountAmount = request.winningAmount;
+          this.reinvestEnabled = request.enableReinvestment;
+          this.annualInterest = request.interestPercent ?? 24;
+          this.monthlyRupee = request.interestRupee ?? 2;
+
+          this.runProfitCalculation();
+        });
+      }
+    });
   }
 
   toggleModalResults(): void {
@@ -76,6 +119,34 @@ export class AuctionComponent implements OnInit {
         }
       }, 0);
     }
+  }
+
+  saveAsTermRecord(): void {
+    if (!this.chitId || !this.discountAmount || !this.currentChitNumber) return;
+
+    const isSelfPrized = confirm(`Mark Term ${this.currentChitNumber} payout as WON by YOU? Click OK for YES, Cancel for NO.`);
+
+    const termData = {
+      chitId: this.chitId,
+      termNumber: this.currentChitNumber,
+      auctionDate: new Date().toISOString().split('T')[0],
+      winningBidAmount: this.discountAmount,
+      agentCommission: this.agentCommissionAmount || 0,
+      totalDividend: 0,
+      dividendPerMember: 0,
+      netInstallmentPaid: 0,
+      isSelfPrized,
+      payoutReceived: 0,
+      notes: `Saved from calculator (Discount: ₹${this.discountAmount})`
+    };
+
+    this.chitService.addTerm(termData).subscribe(() => {
+      this.saveSuccessMessage = `Term ${this.currentChitNumber} record saved successfully!`;
+      setTimeout(() => {
+        this.saveSuccessMessage = null;
+        this.router.navigate(['/chits', this.chitId]);
+      }, 1500);
+    });
   }
 
   isFormValid(): boolean {
@@ -277,5 +348,12 @@ export class AuctionComponent implements OnInit {
     const potentialFutureDiscount = (this.totalAmount || 0) * 0.15;
     this.waitResult = `Potential additional profit: Rs.${potentialFutureDiscount.toLocaleString()}`;
   }
-}
 
+  goBackToChit(): void {
+    if (this.chitId) {
+      this.router.navigate(['/chits', this.chitId]);
+    } else {
+      this.router.navigate(['/chits']);
+    }
+  }
+}

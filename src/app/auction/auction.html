@@ -1,5 +1,22 @@
 <div class="calculator-shell">
-  <header class="page-header">
+  <!-- Chit Context Banner when opened for a specific Chit -->
+  <div class="chit-context-banner" *ngIf="chit">
+    <div class="context-info">
+      <span class="context-tag">CHIT CALCULATOR</span>
+      <h2 class="context-title">{{ chit.name }}</h2>
+      <span class="context-sub">Pre-filled for Term #{{ currentChitNumber }} | Past Investment: ₹{{ (pastInvestment || 0) | number }}</span>
+    </div>
+    <div class="context-actions">
+      <button class="btn btn-outline" (click)="goBackToChit()">← Back to Chit</button>
+      <button class="btn btn-save" *ngIf="profit" (click)="saveAsTermRecord()">💾 Save as Term {{ currentChitNumber }} Record</button>
+    </div>
+  </div>
+
+  <div *ngIf="saveSuccessMessage" class="alert-banner alert-success-banner">
+    {{ saveSuccessMessage }}
+  </div>
+
+  <header class="page-header" *ngIf="!chit">
     <div class="header-title-row">
       <h1 class="main-title"><span class="eyebrow">Chit Intelligence</span> Bid Profit Calculator</h1>
     </div>
@@ -132,6 +149,9 @@
       <div class="submit-action-container">
         <button class="calculate-btn primary large-submit" (click)="validateAndCalculate()" [disabled]="isCalculating">
           Calculate & View Results
+        </button>
+        <button class="calculate-btn btn-save-main" *ngIf="chitId && profit" (click)="saveAsTermRecord()">
+          💾 Save as Term {{ currentChitNumber }} Record
         </button>
       </div>
     </section>
