@@ -177,7 +177,7 @@ export class AuctionComponent implements OnInit {
     }
 
     if (debounce) {
-      this.sliderCalculationTimer = setTimeout(() => this.runProfitCalculation(), 250);
+      this.sliderCalculationTimer = setTimeout(() => this.runProfitCalculation(), 80);
       return;
     }
 
@@ -194,8 +194,6 @@ export class AuctionComponent implements OnInit {
     }
 
     this.isCalculating = true;
-    this.profit = null;
-    this.bidNowResult = null;
 
     this.calcService.calculateProfit(request).subscribe({
       next: res => {

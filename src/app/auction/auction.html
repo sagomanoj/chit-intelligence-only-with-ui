@@ -149,6 +149,22 @@
       </div>
 
       <ng-container *ngIf="profit">
+        <article class="result-slider-card">
+          <div class="result-slider-header">
+            <div class="result-slider-title">
+              <span class="slider-badge">Live Adjuster</span>
+              <h3>Bid Discount Adjuster</h3>
+            </div>
+            <strong class="result-slider-value">Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
+          </div>
+          <input type="range" class="result-slider-input" min="0" [max]="getDiscountUpperBound()" step="1000"
+                 [value]="discountAmount || 0" (input)="onDiscountSliderChange($event)">
+          <div class="result-slider-meta">
+            <span>Rs.0</span>
+            <span>Max Limit: Rs.{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
+          </div>
+        </article>
+
         <article class="hero-result" [class.loss-card]="profit.status === 'LOSS'" [class.neutral-card]="profit.status === 'NO PROFIT / NO LOSS'">
           <div>
             <span>{{ profit.status }}</span>
@@ -204,14 +220,21 @@
           </div>
         </section>
 
-        <section *ngIf="profit.reinvestmentEnabled" class="compact-panel reinvest-results">
+        <section class="compact-panel reinvest-results">
           <div class="panel-title-row">
-            <h2>Re-investment</h2>
-            <span [class.profit]="profit.coverageStatus === 'FULLY_COVERED'" [class.loss]="profit.coverageStatus === 'PARTIAL'">
-              {{ profit.coverageStatus }}
-            </span>
+            <h2>Re-investment Category</h2>
+            <div class="reinvest-header-actions">
+              <span *ngIf="profit.reinvestmentEnabled" [class.profit]="profit.coverageStatus === 'FULLY_COVERED'" [class.loss]="profit.coverageStatus === 'PARTIAL'">
+                {{ profit.coverageStatus }}
+              </span>
+              <label class="switch">
+                <input type="checkbox" id="reinvestEnabledResult" [(ngModel)]="reinvestEnabled" (ngModelChange)="onInputChange()" name="reinvestEnabledResult">
+                <span></span>
+              </label>
+            </div>
           </div>
-          <div class="result-grid">
+
+          <div *ngIf="profit.reinvestmentEnabled" class="result-grid">
             <div>
               <span>Monthly Interest</span>
               <strong>Rs.{{ profit.monthlyInterest | number:'1.0-0' }}</strong>
@@ -232,6 +255,9 @@
                 Rs.{{ profit.totalExtraPayment | number:'1.0-0' }}
               </strong>
             </div>
+          </div>
+          <div *ngIf="!profit.reinvestmentEnabled" class="reinvest-disabled-note">
+            <small>Re-investment calculation is turned off. Toggle switch to calculate monthly interest and installment coverage.</small>
           </div>
         </section>
       </ng-container>
