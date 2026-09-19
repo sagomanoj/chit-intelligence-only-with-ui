@@ -1,0 +1,343 @@
+<div class="dashboard-container">
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">Financial Dashboard</h1>
+      <p class="subtitle">Track monthly cash outflows, dividend returns, and upcoming chit auctions.</p>
+    </div>
+  </div>
+
+  <!-- KPI Overview Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">Total Portfolio Value</span>
+      <span class="kpi-value text-success">₹{{ totalPortfolioValue | number }}</span>
+      <span class="kpi-sub">Sum of all chit pool values</span>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-label">Current Month Outflow</span>
+      <span class="kpi-value text-primary" *ngIf="currentMonthMinOutflow !== currentMonthMaxOutflow">
+        ₹{{ currentMonthMinOutflow | number }} - ₹{{ currentMonthMaxOutflow | number }}
+      </span>
+      <span class="kpi-value text-primary" *ngIf="currentMonthMinOutflow === currentMonthMaxOutflow">
+        ₹{{ currentMonthMinOutflow | number }}
+      </span>
+      <span class="kpi-sub">Projected out-of-pocket commitment</span>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-label">Realized Dividends Saved</span>
+      <span class="kpi-value text-success">₹{{ totalDividendsRealized | number }}</span>
+      <span class="kpi-sub">Total savings across recorded terms</span>
+    </div>
+
+    <div class="kpi-card">
+      <span class="kpi-label">Prize Money Claimed</span>
+      <span class="kpi-value text-accent">₹{{ totalPrizeMoneyWon | number }}</span>
+      <span class="kpi-sub">Self-prized payouts received</span>
+    </div>
+  </div>
+
+  <!-- Dividend Discount Buffer Range Controls -->
+  <div class="buffer-control-card">
+    <div class="buffer-header">
+      <div class="buffer-title">
+        <span class="icon">💡</span>
+        <h3>Future Term Dividend Buffer Range (%)</h3>
+      </div>
+      <p class="buffer-sub">
+        In chit funds, future auction discounts lower your actual out-of-pocket commitment.
+        Set your estimated discount buffer range (Min % to Max %) to calculate projected minimum and maximum cash outflows for upcoming un-bid terms.
+      </p>
+    </div>
+
+    <div class="buffer-body">
+      <div class="buffer-inputs">
+        <div class="buffer-field">
+          <label>Min Buffer % (Max Outflow)</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="minBufferPercent"
+            (ngModelChange)="onBufferRangeChange()"
+            min="0"
+            max="50"
+          />
+        </div>
+        <div class="buffer-separator">—</div>
+        <div class="buffer-field">
+          <label>Max Buffer % (Min Outflow)</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="maxBufferPercent"
+            (ngModelChange)="onBufferRangeChange()"
+            min="0"
+            max="50"
+          />
+        </div>
+
+        <div class="preset-pills">
+          <span class="preset-label">Quick Presets:</span>
+          <button type="button" class="pill-btn" [class.active]="minBufferPercent === 10 && maxBufferPercent === 20" (click)="setBufferPreset(10, 20)">10–20% (Conservative)</button>
+          <button type="button" class="pill-btn" [class.active]="minBufferPercent === 20 && maxBufferPercent === 30" (click)="setBufferPreset(20, 30)">20–30% (Standard)</button>
+          <button type="button" class="pill-btn" [class.active]="minBufferPercent === 25 && maxBufferPercent === 35" (click)="setBufferPreset(25, 35)">25–35% (Optimistic)</button>
+        </div>
+      </div>
+
+      <!-- Live Calculation Impact Explainer -->
+      <div class="buffer-preview-box">
+        <div class="preview-title">
+          <span class="preview-badge">Impact Example</span>
+          <span>For a <strong>₹{{ sampleInstallment | number }}</strong> monthly chit installment:</span>
+        </div>
+        <div class="preview-metrics">
+          <div class="metric-item">
+            <span class="m-label">Est. Dividend Discount:</span>
+            <span class="m-val text-success">
+              ₹{{ sampleMinDiscount | number }} – ₹{{ sampleMaxDiscount | number }} ({{ minBufferPercent }}%–{{ maxBufferPercent }}%)
+            </span>
+          </div>
+          <div class="metric-item">
+            <span class="m-label">Your Net Out-of-Pocket Payment:</span>
+            <span class="m-val text-primary text-bold">
+              ₹{{ sampleMinOutflow | number }} – ₹{{ sampleMaxOutflow | number }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Schedule Projection Carousel -->
+  <div class="schedule-section">
+    <div class="section-title">
+      <div>
+        <h2>📅 Monthly Cash Outflow Projection Schedule</h2>
+        <p class="section-sub text-muted">Use arrows or timeline dots to navigate month-by-month commitments.</p>
+      </div>
+      <div class="schedule-header-actions" *ngIf="monthGroups.length > 0">
+        <button class="btn-jump-current" (click)="goToCurrentMonth()">
+          📍 Jump to Current Month
+        </button>
+        <span class="count-badge">Month {{ selectedMonthIndex + 1 }} of {{ monthGroups.length }}</span>
+      </div>
+    </div>
+
+    <div class="carousel-container" *ngIf="monthGroups.length > 0 && activeMonthGroup; else noSchedule">
+      <!-- Carousel Main Focus View -->
+      <div class="carousel-wrapper">
+        <button
+          class="nav-arrow nav-prev"
+          [disabled]="selectedMonthIndex === 0"
+          (click)="prevMonth()"
+          title="Previous Month"
+        >
+          ‹
+        </button>
+
+        <div class="carousel-card-focused" [class.is-current]="activeMonthGroup.isCurrentMonth">
+          <div class="card-top-bar">
+            <div class="month-title-group">
+              <h3 class="focused-month-name">{{ activeMonthGroup.monthLabel }}</h3>
+              <span class="current-badge-lg" *ngIf="activeMonthGroup.isCurrentMonth">📍 CURRENT MONTH</span>
+            </div>
+            <div class="month-kpis">
+              <span class="kpi-tag">Scheduled Chits: <strong>{{ activeMonthGroup.items.length }}</strong></span>
+              <span class="kpi-tag text-success" *ngIf="activeMonthGroup.recordedCount > 0">
+                Recorded: {{ activeMonthGroup.recordedCount }}
+              </span>
+            </div>
+          </div>
+
+          <div class="outflow-summary-banner">
+            <div class="banner-left">
+              <span class="summary-lbl">Expected Monthly Outflow</span>
+              <div class="summary-amount text-primary" *ngIf="activeMonthGroup.minTotalPayment !== activeMonthGroup.maxTotalPayment">
+                ₹{{ activeMonthGroup.minTotalPayment | number }} – ₹{{ activeMonthGroup.maxTotalPayment | number }}
+              </div>
+              <div class="summary-amount text-primary" *ngIf="activeMonthGroup.minTotalPayment === activeMonthGroup.maxTotalPayment">
+                ₹{{ activeMonthGroup.minTotalPayment | number }}
+              </div>
+            </div>
+            <div class="banner-right">
+              <div class="progress-info">
+                <span>Peak Load: <strong>{{ getOutflowPercent(activeMonthGroup) }}%</strong></span>
+              </div>
+              <div class="outflow-bar-container">
+                <div class="outflow-bar-fill" [style.width.%]="getOutflowPercent(activeMonthGroup)"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inline Chit Breakdown Table for Focused Month -->
+          <div class="inline-breakdown-container">
+            <h4 class="breakdown-title">Chit Commitment Breakdown</h4>
+            <div class="table-responsive">
+              <table class="detail-table">
+                <thead>
+                  <tr>
+                    <th>Chit Name</th>
+                    <th>Term</th>
+                    <th>Scheduled Date</th>
+                    <th>Status / Condition</th>
+                    <th>Expected Outflow</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of activeMonthGroup.items">
+                    <td class="chit-cell">
+                      <strong>{{ item.chitName }}</strong>
+                    </td>
+                    <td>Term {{ item.termNumber }} / {{ item.totalMembers }}</td>
+                    <td>{{ item.scheduledDate | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                      <span class="status-tag tag-recorded" *ngIf="item.isRecorded">
+                        ✅ Recorded (Actual)
+                      </span>
+                      <span class="status-tag tag-won" *ngIf="!item.isRecorded && item.isSelfPrizedInThisTerm">
+                        🏆 Prize Winner (₹0 Outflow)
+                      </span>
+                      <span class="status-tag tag-prior-won" *ngIf="!item.isRecorded && item.isSelfPrizedInPriorTerm">
+                        🔒 Won Previously (Full Installment)
+                      </span>
+                      <span class="status-tag tag-upcoming" *ngIf="!item.isRecorded && !item.isSelfPrizedInThisTerm && !item.isSelfPrizedInPriorTerm">
+                        ⏳ Upcoming ({{ minBufferPercent }}%–{{ maxBufferPercent }}% Buffer)
+                      </span>
+                    </td>
+                    <td class="amount-cell">
+                      <span *ngIf="item.minExpectedPayment !== item.maxExpectedPayment" class="text-primary text-bold">
+                        ₹{{ item.minExpectedPayment | number }} – ₹{{ item.maxExpectedPayment | number }}
+                      </span>
+                      <span *ngIf="item.minExpectedPayment === item.maxExpectedPayment" class="text-bold" [class.text-success]="item.minExpectedPayment === 0">
+                        ₹{{ item.minExpectedPayment | number }}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn-sm" (click)="viewChit(item.chitId)">View Chit ➔</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <button
+          class="nav-arrow nav-next"
+          [disabled]="selectedMonthIndex === monthGroups.length - 1"
+          (click)="nextMonth()"
+          title="Next Month"
+        >
+          ›
+        </button>
+      </div>
+
+      <!-- Timeline Dot Navigation Pagination Bar -->
+      <div class="timeline-navigation-container">
+        <button class="dot-step-btn" (click)="prevMonth()" [disabled]="selectedMonthIndex === 0">
+          ‹ Prev
+        </button>
+
+        <div class="dots-wrapper">
+          <div
+            class="timeline-dot-item"
+            *ngFor="let g of monthGroups; let i = index"
+            [class.active-dot]="i === selectedMonthIndex"
+            [class.current-month-dot]="g.isCurrentMonth"
+            (click)="goToMonth(i)"
+            [title]="g.monthLabel + (g.isCurrentMonth ? ' (Current Month)' : '')"
+          >
+            <span class="dot-indicator"></span>
+            <span class="dot-label">{{ g.monthLabel.split(' ')[0] }}</span>
+          </div>
+        </div>
+
+        <button class="dot-step-btn" (click)="nextMonth()" [disabled]="selectedMonthIndex === monthGroups.length - 1">
+          Next ›
+        </button>
+      </div>
+    </div>
+
+    <ng-template #noSchedule>
+      <div class="no-data-card">
+        <p>No active chit schedules found. Get started by creating a chit fund group!</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Month Breakdown Modal (Optional full details popup) -->
+  <div class="modal-backdrop" *ngIf="showMonthModal && selectedMonthGroup" (click)="closeMonthModal()">
+    <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3>📅 Payment Breakdown for {{ selectedMonthGroup.monthLabel }}</h3>
+          <p class="modal-sub">
+            Total Expected Outflow:
+            <strong>
+              ₹{{ selectedMonthGroup.minTotalPayment | number }}
+              <span *ngIf="selectedMonthGroup.minTotalPayment !== selectedMonthGroup.maxTotalPayment">
+                – ₹{{ selectedMonthGroup.maxTotalPayment | number }}
+              </span>
+            </strong>
+          </p>
+        </div>
+        <button class="btn-close" (click)="closeMonthModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Chit Name</th>
+              <th>Term</th>
+              <th>Date</th>
+              <th>Status / Condition</th>
+              <th>Expected Outflow</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedMonthGroup.items">
+              <td class="chit-cell">
+                <strong>{{ item.chitName }}</strong>
+              </td>
+              <td>Term {{ item.termNumber }} / {{ item.totalMembers }}</td>
+              <td>{{ item.scheduledDate | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="status-tag tag-recorded" *ngIf="item.isRecorded">
+                  ✅ Recorded (Actual)
+                </span>
+                <span class="status-tag tag-won" *ngIf="!item.isRecorded && item.isSelfPrizedInThisTerm">
+                  🏆 Prize Winner (₹0 Outflow)
+                </span>
+                <span class="status-tag tag-prior-won" *ngIf="!item.isRecorded && item.isSelfPrizedInPriorTerm">
+                  🔒 Won Previously (Full Installment)
+                </span>
+                <span class="status-tag tag-upcoming" *ngIf="!item.isRecorded && !item.isSelfPrizedInThisTerm && !item.isSelfPrizedInPriorTerm">
+                  ⏳ Upcoming ({{ minBufferPercent }}%–{{ maxBufferPercent }}% Buffer)
+                </span>
+              </td>
+              <td class="amount-cell">
+                <span *ngIf="item.minExpectedPayment !== item.maxExpectedPayment" class="text-primary text-bold">
+                  ₹{{ item.minExpectedPayment | number }} – ₹{{ item.maxExpectedPayment | number }}
+                </span>
+                <span *ngIf="item.minExpectedPayment === item.maxExpectedPayment" class="text-bold" [class.text-success]="item.minExpectedPayment === 0">
+                  ₹{{ item.minExpectedPayment | number }}
+                </span>
+              </td>
+              <td>
+                <button class="btn-sm" (click)="viewChit(item.chitId)">View Chit ➔</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeMonthModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
