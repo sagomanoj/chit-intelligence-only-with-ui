@@ -71,6 +71,7 @@ export class DashboardComponent implements OnInit {
   selectedMonthIndex: number = 0;
   selectedMonthGroup: MonthScheduleGroup | null = null;
   showMonthModal: boolean = false;
+  showBufferModal: boolean = false;
 
   // KPI Overview
   totalPortfolioValue: number = 0;
@@ -336,6 +337,14 @@ export class DashboardComponent implements OnInit {
   closeMonthModal(): void {
     this.showMonthModal = false;
     this.selectedMonthGroup = null;
+  }
+
+  openBufferModal(): void {
+    this.showBufferModal = true;
+  }
+
+  closeBufferModal(): void {
+    this.showBufferModal = false;
   }
 
   viewChit(id: string): void {

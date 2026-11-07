@@ -153,3 +153,41 @@
   padding-top: 1.25rem;
   border-top: 1px solid #f1f5f9;
 }
+
+@media (max-width: 640px) {
+  .create-container {
+    padding: 1.25rem 0.85rem;
+  }
+
+  .header-row {
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+  }
+
+  .form-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .full-width {
+    grid-column: span 1;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+}

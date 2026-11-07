@@ -38,77 +38,6 @@
     </div>
   </div>
 
-  <!-- Dividend Discount Buffer Range Controls -->
-  <div class="buffer-control-card">
-    <div class="buffer-header">
-      <div class="buffer-title">
-        <span class="icon">💡</span>
-        <h3>Future Term Dividend Buffer Range (%)</h3>
-      </div>
-      <p class="buffer-sub">
-        In chit funds, future auction discounts lower your actual out-of-pocket commitment.
-        Set your estimated discount buffer range (Min % to Max %) to calculate projected minimum and maximum cash outflows for upcoming un-bid terms.
-      </p>
-    </div>
-
-    <div class="buffer-body">
-      <div class="buffer-inputs">
-        <div class="buffer-field">
-          <label>Min Buffer % (Max Outflow)</label>
-          <input
-            type="number"
-            class="form-control"
-            [(ngModel)]="minBufferPercent"
-            (ngModelChange)="onBufferRangeChange()"
-            min="0"
-            max="50"
-          />
-        </div>
-        <div class="buffer-separator">—</div>
-        <div class="buffer-field">
-          <label>Max Buffer % (Min Outflow)</label>
-          <input
-            type="number"
-            class="form-control"
-            [(ngModel)]="maxBufferPercent"
-            (ngModelChange)="onBufferRangeChange()"
-            min="0"
-            max="50"
-          />
-        </div>
-
-        <div class="preset-pills">
-          <span class="preset-label">Quick Presets:</span>
-          <button type="button" class="pill-btn" [class.active]="minBufferPercent === 10 && maxBufferPercent === 20" (click)="setBufferPreset(10, 20)">10–20% (Conservative)</button>
-          <button type="button" class="pill-btn" [class.active]="minBufferPercent === 20 && maxBufferPercent === 30" (click)="setBufferPreset(20, 30)">20–30% (Standard)</button>
-          <button type="button" class="pill-btn" [class.active]="minBufferPercent === 25 && maxBufferPercent === 35" (click)="setBufferPreset(25, 35)">25–35% (Optimistic)</button>
-        </div>
-      </div>
-
-      <!-- Live Calculation Impact Explainer -->
-      <div class="buffer-preview-box">
-        <div class="preview-title">
-          <span class="preview-badge">Impact Example</span>
-          <span>For a <strong>₹{{ sampleInstallment | number }}</strong> monthly chit installment:</span>
-        </div>
-        <div class="preview-metrics">
-          <div class="metric-item">
-            <span class="m-label">Est. Dividend Discount:</span>
-            <span class="m-val text-success">
-              ₹{{ sampleMinDiscount | number }} – ₹{{ sampleMaxDiscount | number }} ({{ minBufferPercent }}%–{{ maxBufferPercent }}%)
-            </span>
-          </div>
-          <div class="metric-item">
-            <span class="m-label">Your Net Out-of-Pocket Payment:</span>
-            <span class="m-val text-primary text-bold">
-              ₹{{ sampleMinOutflow | number }} – ₹{{ sampleMaxOutflow | number }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Monthly Schedule Projection Carousel -->
   <div class="schedule-section">
     <div class="section-title">
@@ -116,11 +45,19 @@
         <h2>📅 Monthly Cash Outflow Projection Schedule</h2>
         <p class="section-sub text-muted">Use arrows or timeline dots to navigate month-by-month commitments.</p>
       </div>
-      <div class="schedule-header-actions" *ngIf="monthGroups.length > 0">
-        <button class="btn-jump-current" (click)="goToCurrentMonth()">
+      <div class="schedule-header-actions">
+        <!-- Compact Inline Buffer Indicator -->
+        <div class="buffer-compact-badge" (click)="openBufferModal()" title="Click to edit dividend buffer projection %">
+          <span class="badge-icon">💡</span>
+          <span class="badge-lbl">Dividend Buffer:</span>
+          <strong class="badge-val">{{ minBufferPercent }}% – {{ maxBufferPercent }}%</strong>
+          <button type="button" class="btn-buffer-edit">✏️ Edit</button>
+        </div>
+
+        <button class="btn-jump-current" *ngIf="monthGroups.length > 0" (click)="goToCurrentMonth()">
           📍 Jump to Current Month
         </button>
-        <span class="count-badge">Month {{ selectedMonthIndex + 1 }} of {{ monthGroups.length }}</span>
+        <span class="count-badge" *ngIf="monthGroups.length > 0">Month {{ selectedMonthIndex + 1 }} of {{ monthGroups.length }}</span>
       </div>
     </div>
 
@@ -128,7 +65,7 @@
       <!-- Carousel Main Focus View -->
       <div class="carousel-wrapper">
         <button
-          class="nav-arrow nav-prev"
+          class="nav-arrow nav-prev desktop-nav-arrow"
           [disabled]="selectedMonthIndex === 0"
           (click)="prevMonth()"
           title="Previous Month"
@@ -141,6 +78,10 @@
             <div class="month-title-group">
               <h3 class="focused-month-name">{{ activeMonthGroup.monthLabel }}</h3>
               <span class="current-badge-lg" *ngIf="activeMonthGroup.isCurrentMonth">📍 CURRENT MONTH</span>
+              <div class="mobile-month-arrows">
+                <button type="button" class="mobile-arrow-btn" [disabled]="selectedMonthIndex === 0" (click)="prevMonth()">‹</button>
+                <button type="button" class="mobile-arrow-btn" [disabled]="selectedMonthIndex === monthGroups.length - 1" (click)="nextMonth()">›</button>
+              </div>
             </div>
             <div class="month-kpis">
               <span class="kpi-tag">Scheduled Chits: <strong>{{ activeMonthGroup.items.length }}</strong></span>
@@ -225,7 +166,7 @@
         </div>
 
         <button
-          class="nav-arrow nav-next"
+          class="nav-arrow nav-next desktop-nav-arrow"
           [disabled]="selectedMonthIndex === monthGroups.length - 1"
           (click)="nextMonth()"
           title="Next Month"
@@ -337,6 +278,90 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeMonthModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buffer Configuration Modal -->
+  <div class="modal-backdrop" *ngIf="showBufferModal" (click)="closeBufferModal()">
+    <div class="modal-card modal-md" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="buffer-modal-header-content">
+          <span class="modal-icon">💡</span>
+          <div>
+            <h3>Future Term Dividend Buffer Range (%)</h3>
+            <p class="modal-sub">Configure estimated auction discount range for upcoming un-bid terms</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="closeBufferModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="buffer-modal-desc">
+          In chit funds, future auction discounts lower your actual out-of-pocket commitment.
+          Set your estimated discount buffer range (Min % to Max %) to calculate projected minimum and maximum cash outflows for upcoming un-bid terms.
+        </p>
+
+        <div class="buffer-inputs-grid">
+          <div class="buffer-field">
+            <label>Min Buffer % (Max Outflow)</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="minBufferPercent"
+              (ngModelChange)="onBufferRangeChange()"
+              min="0"
+              max="50"
+            />
+          </div>
+          <div class="buffer-separator">—</div>
+          <div class="buffer-field">
+            <label>Max Buffer % (Min Outflow)</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="maxBufferPercent"
+              (ngModelChange)="onBufferRangeChange()"
+              min="0"
+              max="50"
+            />
+          </div>
+        </div>
+
+        <div class="preset-section">
+          <span class="preset-label">Quick Presets:</span>
+          <div class="preset-pills">
+            <button type="button" class="pill-btn" [class.active]="minBufferPercent === 10 && maxBufferPercent === 20" (click)="setBufferPreset(10, 20)">10–20% (Conservative)</button>
+            <button type="button" class="pill-btn" [class.active]="minBufferPercent === 20 && maxBufferPercent === 30" (click)="setBufferPreset(20, 30)">20–30% (Standard)</button>
+            <button type="button" class="pill-btn" [class.active]="minBufferPercent === 25 && maxBufferPercent === 35" (click)="setBufferPreset(25, 35)">25–35% (Optimistic)</button>
+          </div>
+        </div>
+
+        <!-- Live Calculation Impact Explainer -->
+        <div class="buffer-preview-box">
+          <div class="preview-title">
+            <span class="preview-badge">Impact Example</span>
+            <span>For a <strong>₹{{ sampleInstallment | number }}</strong> monthly chit installment:</span>
+          </div>
+          <div class="preview-metrics">
+            <div class="metric-item">
+              <span class="m-label">Est. Dividend Discount:</span>
+              <span class="m-val text-success">
+                ₹{{ sampleMinDiscount | number }} – ₹{{ sampleMaxDiscount | number }} ({{ minBufferPercent }}%–{{ maxBufferPercent }}%)
+              </span>
+            </div>
+            <div class="metric-item">
+              <span class="m-label">Net Payment:</span>
+              <span class="m-val text-primary text-bold">
+                ₹{{ sampleMinOutflow | number }} – ₹{{ sampleMaxOutflow | number }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="closeBufferModal()">Apply & Close</button>
       </div>
     </div>
   </div>

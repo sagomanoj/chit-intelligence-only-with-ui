@@ -434,3 +434,115 @@
   padding-top: 1rem;
   border-top: 1px solid #f1f5f9;
 }
+
+@media (max-width: 640px) {
+  .chit-detail-container {
+    padding: 1rem 0.75rem;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .top-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .action-buttons {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .action-buttons .btn {
+    flex: 1;
+    min-width: 100px;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.6rem;
+  }
+
+  .chit-header-card {
+    padding: 1.15rem 0.85rem;
+  }
+
+  .header-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+
+  .chit-title {
+    font-size: 1.5rem;
+  }
+
+  .header-value {
+    text-align: left;
+  }
+
+  .header-value .val {
+    font-size: 1.5rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .kpi-card {
+    padding: 0.75rem 0.65rem;
+  }
+
+  .kpi-value {
+    font-size: 1.1rem;
+  }
+
+  .terms-section {
+    padding: 1rem 0.75rem;
+    border-radius: 12px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    margin-top: 0.5rem;
+    border-radius: 8px;
+  }
+
+  .terms-table {
+    min-width: 700px;
+    font-size: 0.82rem;
+  }
+
+  .terms-table th, .terms-table td {
+    padding: 0.6rem 0.5rem;
+  }
+
+  .modal-card {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    padding: 1.15rem 0.85rem !important;
+    box-sizing: border-box;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .already-taken-banner {
+    grid-column: span 1;
+  }
+}
+
