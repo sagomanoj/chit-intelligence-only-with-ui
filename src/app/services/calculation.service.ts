@@ -175,7 +175,11 @@ export class CalculationService {
       pastDividend,
       pastInvestment,
       frequencyInMonths: chit.frequencyInMonths || 1,
-      agentCommissionAmount: chit.agentCommissionAmount || (chit.chitValue * (chit.agentCommissionPercent || 5) / 100),
+      agentCommissionAmount: (chit.agentCommissionAmount !== undefined && chit.agentCommissionAmount !== null)
+        ? Number(chit.agentCommissionAmount)
+        : (chit.agentCommissionPercent !== undefined && chit.agentCommissionPercent !== null)
+          ? Number((chit.chitValue * chit.agentCommissionPercent) / 100)
+          : Number(chit.chitValue * 0.05),
       enableReinvestment: chit.reinvestmentDefaults?.enableReinvestment ?? true,
       excludeOwnShare: true,
       interestPercent: chit.reinvestmentDefaults?.annualInterest ?? 24,

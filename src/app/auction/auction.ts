@@ -131,10 +131,10 @@ export class AuctionComponent implements OnInit {
       termNumber: this.currentChitNumber,
       auctionDate: new Date().toISOString().split('T')[0],
       winningBidAmount: this.discountAmount,
-      agentCommission: this.agentCommissionAmount || 0,
+      agentCommission: this.agentCommissionAmount ?? 0,
       totalDividend: 0,
       dividendPerMember: 0,
-      netInstallmentPaid: 0,
+      netInstallmentPaid: isSelfPrized ? 0 : this.getAmountToBePaid(),
       isSelfPrized,
       payoutReceived: 0,
       notes: `Saved from calculator (Discount: ₹${this.discountAmount})`
@@ -210,6 +210,47 @@ export class AuctionComponent implements OnInit {
 
   getShareAmount(): number {
     return (this.participants && this.participants > 0) ? (this.totalAmount || 0) / this.participants : 0;
+  }
+
+  getEligibleMembersCount(): number {
+    if (!this.participants || this.participants <= 0) return 0;
+    const currentTerm = this.currentChitNumber || 1;
+    return Math.max(0, this.participants - currentTerm);
+  }
+
+  getDividendPerMember(): number {
+    const eligible = this.getEligibleMembersCount();
+    if (eligible <= 0) return 0;
+    const commission = this.agentCommissionAmount || 0;
+    const discount = this.discountAmount || 0;
+    const dividendPool = Math.max(0, discount - commission);
+    return Math.round(dividendPool / eligible);
+  }
+
+  getAmountToBePaid(): number {
+    if (!this.totalAmount || !this.participants || this.participants <= 0) {
+      return 0;
+    }
+    const installment = this.totalAmount / this.participants;
+    const dividend = this.getDividendPerMember();
+    return Math.max(0, Math.round(installment - dividend));
+  }
+
+  onAmountToBePaidChange(newAmount: any): void {
+    if (!this.totalAmount || !this.participants || this.participants <= 0) return;
+    const val = (newAmount === null || newAmount === undefined || newAmount === '') ? null : Number(newAmount);
+    if (val === null || !Number.isFinite(val) || val < 0) return;
+
+    const installment = this.totalAmount / this.participants;
+    const dividendPerMember = Math.max(0, installment - val);
+    const eligible = this.getEligibleMembersCount();
+    const dividendPool = dividendPerMember * eligible;
+    const commission = this.agentCommissionAmount || 0;
+    const calculatedDiscount = Math.round(dividendPool + commission);
+
+    const maxDiscount = this.getDiscountUpperBound();
+    this.discountAmount = Math.min(maxDiscount, Math.max(0, calculatedDiscount));
+    this.onInputChange();
   }
 
   getAnnualizedProfitPercentage(): number {
