@@ -444,16 +444,35 @@
 }
 
 .dot-step-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   background: white;
   border: 1px solid #cbd5e1;
   color: #334155;
-  padding: 0.3rem 0.75rem;
+  padding: 6px 12px;
+  min-height: 32px;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
+  line-height: 1;
   transition: all 0.15s ease;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.dot-step-btn .step-arrow {
+  font-size: 1.15rem;
+  line-height: 0.8;
+  display: inline-flex;
+  align-items: center;
+  margin-top: -1px;
+}
+
+.dot-step-btn .step-text {
+  line-height: 1;
 }
 
 .dot-step-btn:hover:not(:disabled) {
@@ -634,6 +653,117 @@
 
 .btn-sm:hover { background: #e2e8f0; }
 
+/* Desktop vs Mobile Toggle for Commitment Breakdown */
+.desktop-commitment-table {
+  display: block;
+}
+
+.mobile-commitment-list {
+  display: none;
+}
+
+/* Mobile Commitment Cards */
+.commitment-mobile-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.card-recorded {
+  border-left: 4px solid #16a34a;
+}
+
+.card-won {
+  border-left: 4px solid #eab308;
+  background: #fefce8;
+}
+
+.commitment-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.commitment-name-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.commitment-name {
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 750;
+}
+
+.commitment-term {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.commitment-date {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.commitment-card-mid {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.commitment-card-bot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.commitment-amount-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.amount-lbl {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.amount-num {
+  font-size: 1.15rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.btn-commitment-view {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+
+.btn-commitment-view:hover {
+  background: #dbeafe;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -654,6 +784,21 @@
 }
 
 .btn-secondary:hover { background: #e2e8f0; }
+
+@media (max-width: 768px) {
+  .desktop-commitment-table {
+    display: none !important;
+  }
+
+  .mobile-commitment-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0.5rem;
+  }
+}
 
 @media (max-width: 640px) {
   .dashboard-container {
@@ -781,12 +926,14 @@
     width: 32px;
     height: 32px;
     border-radius: 6px;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-weight: 700;
+    line-height: 1;
+    padding: 0;
   }
 
   .mobile-arrow-btn:disabled {
@@ -815,28 +962,31 @@
     margin-top: 1rem;
   }
 
-  .table-responsive {
+  .desktop-commitment-table {
+    display: none !important;
+  }
+
+  .mobile-commitment-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
     width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    display: block;
+    box-sizing: border-box;
     margin-top: 0.5rem;
-    border-radius: 8px;
-  }
-
-  .detail-table {
-    min-width: 580px;
-    font-size: 0.82rem;
-  }
-
-  .detail-table th, .detail-table td {
-    padding: 0.6rem 0.5rem;
   }
 
   .timeline-navigation-container {
-    padding: 0.5rem 0;
-    gap: 0.5rem;
+    padding: 0.45rem 0.65rem;
+    gap: 0.45rem;
+    border-radius: 14px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .dot-step-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    min-height: 30px;
   }
 
   .dots-wrapper {

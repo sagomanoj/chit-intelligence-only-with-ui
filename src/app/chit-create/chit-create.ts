@@ -32,6 +32,7 @@ export class ChitCreateComponent implements OnInit {
     dividendDistributionType: number;
     startDate?: string;
     status: 'ACTIVE' | 'COMPLETED' | 'DRAFT';
+    excludeCurrentTermShare: boolean;
     reinvestmentDefaults?: {
       enableReinvestment: boolean;
       annualInterest?: number;
@@ -49,6 +50,7 @@ export class ChitCreateComponent implements OnInit {
     dividendDistributionType: 2, // NON_PRIZED_ONLY
     startDate: new Date().toISOString().split('T')[0],
     status: 'ACTIVE',
+    excludeCurrentTermShare: true,
     reinvestmentDefaults: {
       enableReinvestment: true,
       annualInterest: 24,
@@ -69,7 +71,10 @@ export class ChitCreateComponent implements OnInit {
       this.chitId = id;
       this.chitService.getChit(id).subscribe(existingChit => {
         if (existingChit) {
-          this.chit = { ...existingChit };
+          this.chit = {
+            ...existingChit,
+            excludeCurrentTermShare: existingChit.excludeCurrentTermShare !== false
+          };
         } else {
           alert('Chit group not found.');
           this.router.navigate(['/chits']);
@@ -125,6 +130,7 @@ export class ChitCreateComponent implements OnInit {
       dividendDistributionType: this.chit.dividendDistributionType,
       startDate: this.chit.startDate,
       status: this.chit.status,
+      excludeCurrentTermShare: this.chit.excludeCurrentTermShare !== false,
       reinvestmentDefaults: this.chit.reinvestmentDefaults
     };
 

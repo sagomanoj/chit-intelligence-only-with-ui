@@ -23,6 +23,7 @@ export interface Chit {
   organizerPayoutTerm: number;
   startDate?: string;
   status: 'ACTIVE' | 'COMPLETED' | 'DRAFT';
+  excludeCurrentTermShare?: boolean; // Default true: Exclude current term share from profit & payout
   reinvestmentDefaults?: {
     enableReinvestment: boolean;
     annualInterest?: number;
@@ -128,6 +129,7 @@ export class LocalStorageService implements IStorageProvider {
       organizerPayoutTerm: 1,
       startDate: new Date().toISOString().split('T')[0],
       status: 'ACTIVE',
+      excludeCurrentTermShare: true,
       reinvestmentDefaults: {
         enableReinvestment: true,
         annualInterest: 24,
@@ -215,22 +217,38 @@ export class LocalStorageService implements IStorageProvider {
     const now = new Date().toISOString();
     let savedChit: Chit;
 
+    const excludeCurrentTermShare = chit.excludeCurrentTermShare !== undefined ? chit.excludeCurrentTermShare : true;
+
     if (chit.id) {
       const index = current.chits.findIndex(c => c.id === chit.id);
       if (index >= 0) {
         savedChit = {
           ...current.chits[index],
           ...chit,
+          excludeCurrentTermShare,
           updatedAt: now
         } as Chit;
         current.chits[index] = savedChit;
+
+        // Recalculate payoutReceived for any self-prized terms under this chit to stay in sync
+        current.termTransactions = current.termTransactions.map(t => {
+          if (t.chitId === savedChit.id && t.isSelfPrized) {
+            const comm = t.agentCommission ?? savedChit.agentCommissionAmount;
+            const base = savedChit.chitValue - t.winningBidAmount - comm;
+            return {
+              ...t,
+              payoutReceived: excludeCurrentTermShare ? Math.max(0, base - savedChit.installmentAmount) : base
+            };
+          }
+          return t;
+        });
       } else {
-        savedChit = { ...chit, id: chit.id, createdAt: now, updatedAt: now } as Chit;
+        savedChit = { ...chit, id: chit.id, excludeCurrentTermShare, createdAt: now, updatedAt: now } as Chit;
         current.chits.push(savedChit);
       }
     } else {
       const id = 'chit-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
-      savedChit = { ...chit, id, createdAt: now, updatedAt: now } as Chit;
+      savedChit = { ...chit, id, excludeCurrentTermShare, createdAt: now, updatedAt: now } as Chit;
       current.chits.push(savedChit);
     }
 
@@ -287,7 +305,11 @@ export class LocalStorageService implements IStorageProvider {
       : (term.netInstallmentPaid !== undefined && term.netInstallmentPaid !== null
         ? term.netInstallmentPaid
         : Math.max(0, chit.installmentAmount - dividendPerMember));
-    const payoutReceived = term.isSelfPrized ? (chit.chitValue - term.winningBidAmount - agentCommission) : 0;
+    const excludeShare = (chit.excludeCurrentTermShare !== undefined) ? chit.excludeCurrentTermShare : true;
+    const basePayout = chit.chitValue - term.winningBidAmount - agentCommission;
+    const payoutReceived = term.isSelfPrized
+      ? (excludeShare ? Math.max(0, basePayout - chit.installmentAmount) : basePayout)
+      : 0;
 
     let savedTerm: ChitTerm;
 
@@ -406,5 +428,12 @@ export class LocalStorageService implements IStorageProvider {
       console.error('Import failed:', e);
       throw e;
     }
+  }
+
+  resetToSampleData(): void {
+    if (typeof localStorage !== 'undefined' && typeof localStorage.removeItem === 'function') {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    this.seedSampleDataIfEmpty();
   }
 }

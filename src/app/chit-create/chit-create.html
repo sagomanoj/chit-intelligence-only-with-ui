@@ -115,6 +115,19 @@
           </div>
           <input type="date" class="form-control" [(ngModel)]="chit.startDate" name="startDate">
         </div>
+
+        <div class="form-group full-width checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="chit.excludeCurrentTermShare" name="excludeCurrentTermShare">
+            <span>
+              <strong>Exclude current term share (₹{{ (chit.installmentAmount || 0) | number }}) from Profit/Loss & Payout</strong>
+            </span>
+            <span class="info-icon" (click)="toggleTooltip('excludeCurrentTermShare')" title="Click for info">ℹ️</span>
+          </label>
+          <div class="tooltip-box" *ngIf="activeTooltip === 'excludeCurrentTermShare'">
+            When checked (default), the winner's current term share (installment amount) is excluded / deducted from the self-prized payout and profit calculation. If unchecked, the current term share is included in the payout.
+          </div>
+        </div>
       </div>
 
       <div class="form-actions">

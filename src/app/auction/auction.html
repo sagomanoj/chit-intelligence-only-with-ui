@@ -30,9 +30,9 @@
 
   <div class="modal-overlay" [class.modal-open]="showModalResults" (click)="toggleModalResults()"></div>
 
-  <button class="mobile-results-toggle" *ngIf="profit || isCalculating" (click)="toggleModalResults()">
+  <button class="mobile-results-toggle" *ngIf="(profit || isCalculating) && !showModalResults" (click)="toggleModalResults()">
     <span *ngIf="isCalculating" class="spinner-small"></span>
-    <span *ngIf="!isCalculating">View Result: Rs.{{ profit?.netProfit | number:'1.0-0' }}</span>
+    <span *ngIf="!isCalculating">📊 View Result: Rs.{{ profit?.netProfit | number:'1.0-0' }}</span>
   </button>
 
   <main class="dashboard-grid">
@@ -92,31 +92,27 @@
             <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" (ngModelChange)="onInputChange()" name="agentCommissionAmount" step="100" placeholder="0" [class.error]="isFieldInvalid('agentCommissionAmount')">
           </div>
 
-          <div class="form-group wide discount-bid-group">
-            <div class="input-wrapper">
-              <label for="discountAmount" class="required">Bid Discount Amount</label>
-              <input type="number" id="discountAmount" [(ngModel)]="discountAmount" (ngModelChange)="onInputChange()" name="discountAmount" placeholder="100000" [class.error]="isFieldInvalid('discountAmount')">
-            </div>
+          <div class="form-group">
+            <label for="discountAmount" class="required">Bid Discount Amount</label>
+            <input type="number" id="discountAmount" [(ngModel)]="discountAmount" (ngModelChange)="onInputChange()" name="discountAmount" placeholder="100000" [class.error]="isFieldInvalid('discountAmount')">
+          </div>
 
-            <div class="input-wrapper amount-to-pay-wrapper">
-              <label for="amountToBePaid" class="amount-to-pay-label">
-                <span>Amount to be paid</span>
-                <span class="highlight-badge">Auto</span>
-              </label>
-              <div class="amount-to-pay-field">
-                <input type="number" id="amountToBePaid" [ngModel]="getAmountToBePaid()" (ngModelChange)="onAmountToBePaidChange($event)" name="amountToBePaid" placeholder="0" class="amount-to-pay-input">
-              </div>
-              <span class="amount-to-pay-sub" *ngIf="participants && currentChitNumber">
-                ₹{{ getDividendPerMember() | number:'1.0-0' }} div for {{ getEligibleMembersCount() }} unprized
-              </span>
+          <div class="form-group amount-to-pay-group">
+            <div class="label-with-badge">
+              <label for="amountToBePaid">Amount to be paid</label>
+              <span class="highlight-badge">Auto</span>
             </div>
+            <input type="number" id="amountToBePaid" [ngModel]="getAmountToBePaid()" (ngModelChange)="onAmountToBePaidChange($event)" name="amountToBePaid" placeholder="0" class="amount-to-pay-input">
+            <span class="amount-to-pay-sub" *ngIf="participants && currentChitNumber">
+              ₹{{ getDividendPerMember() | number:'1.0-0' }} div for {{ getEligibleMembersCount() }} unprized
+            </span>
+          </div>
 
-            <div class="checkbox-wrapper">
-              <label class="checkbox-label">
-                <input type="checkbox" [(ngModel)]="excludeOwnShare" (ngModelChange)="onInputChange()" name="excludeOwnShare">
-                Exclude current term share (Rs.{{ getShareAmount() | number:'1.0-0' }}) from Profit/Loss
-              </label>
-            </div>
+          <div class="form-group wide checkbox-row">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="excludeOwnShare" (ngModelChange)="onInputChange()" name="excludeOwnShare">
+              <span>Exclude current term share (Rs.{{ getShareAmount() | number:'1.0-0' }}) from Profit/Loss</span>
+            </label>
           </div>
         </div>
 
@@ -192,7 +188,10 @@
               <span class="slider-badge">Live Adjuster</span>
               <h3>Bid Discount Adjuster</h3>
             </div>
-            <strong class="result-slider-value">Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
+            <div class="slider-header-values">
+              <strong class="result-slider-value">Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
+              <span class="slider-pay-tag">Pay: ₹{{ getAmountToBePaid() | number:'1.0-0' }}</span>
+            </div>
           </div>
           <input type="range" class="result-slider-input" min="0" [max]="getDiscountUpperBound()" step="1000"
                  [value]="discountAmount || 0" (input)="onDiscountSliderChange($event)">
@@ -214,11 +213,16 @@
           </div>
         </article>
 
-        <section class="metric-strip">
+        <section class="metric-strip three-col">
           <article>
             <span>Take Home</span>
             <strong>Rs.{{ profit.takeHomeAmount | number:'1.0-0' }}</strong>
             <small>after discount</small>
+          </article>
+          <article class="highlight-metric-card">
+            <span>Amount to Pay</span>
+            <strong class="text-pay">Rs.{{ getAmountToBePaid() | number:'1.0-0' }}</strong>
+            <small>₹{{ getDividendPerMember() | number:'1.0-0' }} div/member</small>
           </article>
           <article>
             <span>Investment</span>
@@ -230,6 +234,14 @@
         <section class="compact-panel">
           <h2>Bid Breakdown</h2>
           <div class="result-grid">
+            <div class="result-highlight-cell">
+              <span>Amount to be Paid</span>
+              <strong class="text-pay">Rs.{{ getAmountToBePaid() | number:'1.0-0' }}</strong>
+            </div>
+            <div>
+              <span>Dividend Per Member</span>
+              <strong>Rs.{{ getDividendPerMember() | number:'1.0-0' }}</strong>
+            </div>
             <div>
               <span>Bid Discount Amount</span>
               <strong>Rs.{{ profit.discountAmount | number:'1.0-0' }}</strong>
@@ -297,6 +309,12 @@
             <small>Re-investment calculation is turned off. Toggle switch to calculate monthly interest and installment coverage.</small>
           </div>
         </section>
+
+        <div class="modal-save-container" *ngIf="chitId && profit">
+          <button class="calculate-btn btn-save-modal" (click)="saveAsTermRecord()">
+            💾 Save as Term {{ currentChitNumber }} Record
+          </button>
+        </div>
       </ng-container>
     </aside>
   </main>

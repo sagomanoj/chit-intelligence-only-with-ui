@@ -77,6 +77,7 @@ export class AuctionComponent implements OnInit {
           this.pastInvestment = request.pastInvestment;
           this.discountAmount = request.winningAmount;
           this.reinvestEnabled = request.enableReinvestment;
+          this.excludeOwnShare = request.excludeOwnShare;
           this.annualInterest = request.interestPercent ?? 24;
           this.monthlyRupee = request.interestRupee ?? 2;
 

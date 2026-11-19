@@ -1,12 +1,15 @@
 import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { AdMob, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 import { Keyboard } from '@capacitor/keyboard';
+import { ChitService } from './services/chit.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, FormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -14,6 +17,70 @@ export class App implements OnInit, OnDestroy {
   protected readonly title = signal('ChitIntelligenceFrontend');
   private keyboardShowHandle: PluginListenerHandle | null = null;
   private keyboardHideHandle: PluginListenerHandle | null = null;
+
+  showSettingsModal = false;
+  importSuccess: string | null = null;
+  importError: string | null = null;
+
+  constructor(private chitService: ChitService) {}
+
+  openSettings(): void {
+    this.importSuccess = null;
+    this.importError = null;
+    this.showSettingsModal = true;
+  }
+
+  closeSettings(): void {
+    this.showSettingsModal = false;
+  }
+
+  exportData(): void {
+    const jsonStr = this.chitService.exportData();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chit_intelligence_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    this.importSuccess = 'Backup JSON downloaded successfully!';
+    setTimeout(() => this.importSuccess = null, 4000);
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const success = this.chitService.importData(content);
+          if (success) {
+            this.importSuccess = 'Data successfully imported from backup file!';
+            this.importError = null;
+            setTimeout(() => this.importSuccess = null, 4000);
+          }
+        } catch (err: any) {
+          this.importError = err.message || 'Failed to import JSON file. Please check file structure.';
+          this.importSuccess = null;
+        }
+      };
+      reader.readAsText(file);
+    }
+  }
+
+  resetSampleData(): void {
+    if (confirm('Are you sure you want to reset all data back to original sample records? All custom chits will be replaced.')) {
+      this.chitService.resetToSampleData();
+      this.importSuccess = 'Data has been reset to default sample records.';
+      setTimeout(() => {
+        this.importSuccess = null;
+        this.closeSettings();
+        window.location.reload();
+      }, 1500);
+    }
+  }
 
   async ngOnInit() {
     if (Capacitor.isNativePlatform()) {

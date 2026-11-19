@@ -183,42 +183,142 @@
   color: #2563eb;
 }
 
+.btn-toggle-all {
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-toggle-all:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
 .chit-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 .chit-card {
   background: white;
   border-radius: 14px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  padding: 1.5rem;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-.chit-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.1);
-  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  padding: 0;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card-header {
+.chit-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.card-compact-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.25rem;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  background: #ffffff;
+  transition: background 0.15s ease;
+}
+
+.card-compact-header:hover {
+  background: #f8fafc;
+}
+
+.chit-card.is-expanded .card-compact-header {
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
 .chit-name {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
+  font-weight: 750;
+  color: #0f172a;
+  margin: 0;
+}
+
+.compact-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.meta-dot {
+  color: #cbd5e1;
+}
+
+.compact-progress-tag {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 1px 6px;
+  border-radius: 4px;
   font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 0.4rem 0;
+  font-size: 0.72rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.btn-chevron {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chit-card:hover .btn-chevron {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.card-expandable-content {
+  padding: 1.25rem;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
 }
 
 .status-badge {
@@ -331,19 +431,30 @@
   transition: background 0.15s ease;
 }
 .btn-calc {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.28);
+  border: 1px solid rgba(79, 70, 229, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-calc:hover {
-  background: #dbeafe;
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
 }
 .btn-detail {
-  background: #f8fafc;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.28);
+  border: 1px solid rgba(3, 105, 161, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-detail:hover {
-  background: #f1f5f9;
+  background: linear-gradient(135deg, #0369a1, #075985);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+  transform: translateY(-1px);
 }
 .btn-edit {
   background: #f0fdf4;

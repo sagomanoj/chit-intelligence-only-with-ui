@@ -60,4 +60,8 @@ export class ChitService {
   importData(jsonContent: string): boolean {
     return this.storage.importDataFromJson(jsonContent);
   }
+
+  resetToSampleData(): void {
+    this.storage.resetToSampleData();
+  }
 }

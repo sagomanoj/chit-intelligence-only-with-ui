@@ -181,7 +181,7 @@ export class CalculationService {
           ? Number((chit.chitValue * chit.agentCommissionPercent) / 100)
           : Number(chit.chitValue * 0.05),
       enableReinvestment: chit.reinvestmentDefaults?.enableReinvestment ?? true,
-      excludeOwnShare: true,
+      excludeOwnShare: chit.excludeCurrentTermShare !== undefined ? chit.excludeCurrentTermShare : true,
       interestPercent: chit.reinvestmentDefaults?.annualInterest ?? 24,
       interestRupee: chit.reinvestmentDefaults?.monthlyRupee ?? 2
     };

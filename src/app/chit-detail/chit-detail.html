@@ -79,101 +79,168 @@
       <span class="terms-count">{{ terms.length }} Terms Recorded</span>
     </div>
 
-    <div class="table-responsive" *ngIf="terms.length > 0; else noTerms">
-      <table class="terms-table">
-        <thead>
-          <tr>
-            <th>
-              Term #
-              <span class="info-icon" (click)="toggleTooltip('colTerm')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTerm'">
-                Sequence number of the auction term (1 to Total Members).
-              </div>
-            </th>
-            <th>
-              Auction Date
-              <span class="info-icon" (click)="toggleTooltip('colDate')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colDate'">
-                Date when the auction was conducted for this term.
-              </div>
-            </th>
-            <th>
-              Dividend Per Member
-              <span class="info-icon" (click)="toggleTooltip('colDiv')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colDiv'">
-                Net auction dividend discount distributed to each eligible non-prized member.
-              </div>
-            </th>
-            <th>
-              Net Installment Paid
-              <span class="info-icon" (click)="toggleTooltip('colNet')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colNet'">
-                Actual out-of-pocket investment paid by a non-prized member after deducting dividend discount.
-              </div>
-            </th>
-            <th>
-              Winning Bid (Discount)
-              <span class="info-icon" (click)="toggleTooltip('colBid')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colBid'">
-                Discount amount foregone by the auction winner to claim prize money early.
-              </div>
-            </th>
-            <th>
-              Agent Commission
-              <span class="info-icon" (click)="toggleTooltip('colComm')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colComm'">
-                Foreman fee retained by organizer from the winning bid discount.
-              </div>
-            </th>
-            <th>
-              Total Dividend
-              <span class="info-icon" (click)="toggleTooltip('colTotDiv')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTotDiv'">
-                Net discount pool distributed back to non-prized members (Winning Bid - Agent Commission).
-              </div>
-            </th>
-            <th>
-              Prize Winner
-              <span class="info-icon" (click)="toggleTooltip('colWinner')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colWinner'">
-                Participant who won and claimed the chit payout in this term.
-              </div>
-            </th>
-            <th>
-              Actions
-              <span class="info-icon" (click)="toggleTooltip('colActions')" title="Click for info">ℹ️</span>
-              <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colActions'">
-                Edit or delete this term transaction record.
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let t of terms" [class.highlight-self-prized]="t.isSelfPrized">
-            <td class="td-term">
-              <span class="term-number">Term {{ t.termNumber }}</span>
-              <span class="self-tag" *ngIf="t.isSelfPrized">YOU WON</span>
-            </td>
-            <td>{{ t.auctionDate | date:'dd/MM/yyyy' }}</td>
-            <td class="text-success text-semibold">₹{{ t.dividendPerMember | number }}</td>
-            <td class="text-primary text-bold">₹{{ t.netInstallmentPaid | number }}</td>
-            <td class="text-semibold">₹{{ t.winningBidAmount | number }}</td>
-            <td class="text-muted">₹{{ t.agentCommission | number }}</td>
-            <td class="text-success">
-              <span *ngIf="t.winningBidAmount !== t.totalDividend">₹{{ t.totalDividend | number }}</span>
-              <span *ngIf="t.winningBidAmount === t.totalDividend" class="text-muted">-</span>
-            </td>
-            <td>
-              <span *ngIf="t.winnerName">{{ t.winnerName }}</span>
-              <span *ngIf="!t.winnerName" class="text-muted">-</span>
-            </td>
-            <td class="td-actions">
+    <div *ngIf="terms.length > 0; else noTerms">
+      <!-- Desktop Table View (visible on desktop > 768px) -->
+      <div class="table-responsive desktop-terms-table">
+        <table class="terms-table">
+          <thead>
+            <tr>
+              <th>
+                Term #
+                <span class="info-icon" (click)="toggleTooltip('colTerm')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTerm'">
+                  Sequence number of the auction term (1 to Total Members).
+                </div>
+              </th>
+              <th>
+                Auction Date
+                <span class="info-icon" (click)="toggleTooltip('colDate')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colDate'">
+                  Date when the auction was conducted for this term.
+                </div>
+              </th>
+              <th>
+                Dividend Per Member
+                <span class="info-icon" (click)="toggleTooltip('colDiv')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colDiv'">
+                  Net auction dividend discount distributed to each eligible non-prized member.
+                </div>
+              </th>
+              <th>
+                Net Installment Paid
+                <span class="info-icon" (click)="toggleTooltip('colNet')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colNet'">
+                  Actual out-of-pocket investment paid by a non-prized member after deducting dividend discount.
+                </div>
+              </th>
+              <th>
+                Winning Bid (Discount)
+                <span class="info-icon" (click)="toggleTooltip('colBid')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colBid'">
+                  Discount amount foregone by the auction winner to claim prize money early.
+                </div>
+              </th>
+              <th>
+                Agent Commission
+                <span class="info-icon" (click)="toggleTooltip('colComm')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colComm'">
+                  Foreman fee retained by organizer from the winning bid discount.
+                </div>
+              </th>
+              <th>
+                Total Dividend
+                <span class="info-icon" (click)="toggleTooltip('colTotDiv')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTotDiv'">
+                  Net discount pool distributed back to non-prized members (Winning Bid - Agent Commission).
+                </div>
+              </th>
+              <th>
+                Prize Winner
+                <span class="info-icon" (click)="toggleTooltip('colWinner')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colWinner'">
+                  Participant who won and claimed the chit payout in this term.
+                </div>
+              </th>
+              <th>
+                Actions
+                <span class="info-icon" (click)="toggleTooltip('colActions')" title="Click for info">ℹ️</span>
+                <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colActions'">
+                  Edit or delete this term transaction record.
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of terms" [class.highlight-self-prized]="t.isSelfPrized">
+              <td class="td-term">
+                <span class="term-number">Term {{ t.termNumber }}</span>
+                <span class="self-tag" *ngIf="t.isSelfPrized">YOU WON</span>
+              </td>
+              <td>{{ t.auctionDate | date:'dd/MM/yyyy' }}</td>
+              <td class="text-success text-semibold">₹{{ t.dividendPerMember | number }}</td>
+              <td class="text-primary text-bold">₹{{ t.netInstallmentPaid | number }}</td>
+              <td class="text-semibold">₹{{ t.winningBidAmount | number }}</td>
+              <td class="text-muted">₹{{ t.agentCommission | number }}</td>
+              <td class="text-success">
+                <span *ngIf="t.winningBidAmount !== t.totalDividend">₹{{ t.totalDividend | number }}</span>
+                <span *ngIf="t.winningBidAmount === t.totalDividend" class="text-muted">-</span>
+              </td>
+              <td>
+                <span *ngIf="t.winnerName">{{ t.winnerName }}</span>
+                <span *ngIf="!t.winnerName" class="text-muted">-</span>
+              </td>
+              <td class="td-actions">
+                <button class="btn-icon" (click)="openEditTermModal(t)" title="Edit Term">✏️</button>
+                <button class="btn-icon btn-icon-danger" (click)="deleteTerm(t.id, t.termNumber)" title="Delete Term">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards View (Visible on screens <= 768px, no horizontal scroll needed) -->
+      <div class="mobile-terms-list">
+        <div class="term-mobile-card" *ngFor="let t of terms" [class.term-card-self]="t.isSelfPrized">
+          <!-- Card Header -->
+          <div class="term-card-header">
+            <div class="term-card-title-group">
+              <span class="term-card-badge">Term {{ t.termNumber }}</span>
+              <span class="term-card-date">{{ t.auctionDate | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="term-card-tags">
+              <span class="self-tag" *ngIf="t.isSelfPrized">🏆 YOU WON</span>
+              <span class="winner-pill" *ngIf="!t.isSelfPrized && t.winnerName">Winner: {{ t.winnerName }}</span>
+            </div>
+            <div class="term-card-actions">
               <button class="btn-icon" (click)="openEditTermModal(t)" title="Edit Term">✏️</button>
               <button class="btn-icon btn-icon-danger" (click)="deleteTerm(t.id, t.termNumber)" title="Delete Term">🗑️</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+
+          <!-- Self Prized Payout Banner if won -->
+          <div class="term-card-payout" *ngIf="t.isSelfPrized">
+            <span class="payout-lbl">Prize Money Claimed:</span>
+            <strong class="payout-val">₹{{ (t.payoutReceived || ((chit.chitValue - t.winningBidAmount - (t.agentCommission || 0)) - ((chit.excludeCurrentTermShare ?? true) ? chit.installmentAmount : 0))) | number }}</strong>
+          </div>
+
+          <!-- Key Financial Row -->
+          <div class="term-card-kpi-row">
+            <div class="term-kpi-col">
+              <span class="kpi-lbl">Paid Out-of-Pocket</span>
+              <strong class="kpi-amt text-primary">₹{{ t.netInstallmentPaid | number }}</strong>
+            </div>
+            <div class="term-kpi-col">
+              <span class="kpi-lbl">Dividend Discount</span>
+              <strong class="kpi-amt text-success">₹{{ t.dividendPerMember | number }}</strong>
+            </div>
+          </div>
+
+          <!-- Detailed Key-Value Grid -->
+          <div class="term-card-grid">
+            <div class="term-grid-item">
+              <span>Winning Bid (Discount)</span>
+              <strong>₹{{ t.winningBidAmount | number }}</strong>
+            </div>
+            <div class="term-grid-item">
+              <span>Total Pool Dividend</span>
+              <strong>₹{{ t.totalDividend | number }}</strong>
+            </div>
+            <div class="term-grid-item" *ngIf="t.agentCommission !== undefined && t.agentCommission !== null">
+              <span>Commission</span>
+              <strong>₹{{ t.agentCommission | number }}</strong>
+            </div>
+            <div class="term-grid-item" *ngIf="!t.isSelfPrized">
+              <span>Auction Winner</span>
+              <strong>{{ t.winnerName || '-' }}</strong>
+            </div>
+          </div>
+
+          <!-- Notes if any -->
+          <div class="term-card-notes" *ngIf="t.notes">
+            <small>📝 {{ t.notes }}</small>
+          </div>
+        </div>
+      </div>
     </div>
 
     <ng-template #noTerms>

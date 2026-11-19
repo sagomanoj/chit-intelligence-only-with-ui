@@ -114,7 +114,9 @@
           <!-- Inline Chit Breakdown Table for Focused Month -->
           <div class="inline-breakdown-container">
             <h4 class="breakdown-title">Chit Commitment Breakdown</h4>
-            <div class="table-responsive">
+
+            <!-- Desktop Table View (visible on desktop > 768px) -->
+            <div class="table-responsive desktop-commitment-table">
               <table class="detail-table">
                 <thead>
                   <tr>
@@ -162,6 +164,49 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- Mobile Commitment Cards (visible on <= 768px, no horizontal scroll) -->
+            <div class="mobile-commitment-list">
+              <div class="commitment-mobile-card" *ngFor="let item of activeMonthGroup.items" [class.card-recorded]="item.isRecorded" [class.card-won]="item.isSelfPrizedInThisTerm">
+                <div class="commitment-card-top">
+                  <div class="commitment-name-box">
+                    <strong class="commitment-name">{{ item.chitName }}</strong>
+                    <span class="commitment-term">Term {{ item.termNumber }} / {{ item.totalMembers }}</span>
+                  </div>
+                  <span class="commitment-date">📅 {{ item.scheduledDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+
+                <div class="commitment-card-mid">
+                  <span class="status-tag tag-recorded" *ngIf="item.isRecorded">
+                    ✅ Recorded (Actual)
+                  </span>
+                  <span class="status-tag tag-won" *ngIf="!item.isRecorded && item.isSelfPrizedInThisTerm">
+                    🏆 Prize Winner (₹0 Outflow)
+                  </span>
+                  <span class="status-tag tag-prior-won" *ngIf="!item.isRecorded && item.isSelfPrizedInPriorTerm">
+                    🔒 Won Previously (Full Installment)
+                  </span>
+                  <span class="status-tag tag-upcoming" *ngIf="!item.isRecorded && !item.isSelfPrizedInThisTerm && !item.isSelfPrizedInPriorTerm">
+                    ⏳ Upcoming ({{ minBufferPercent }}%–{{ maxBufferPercent }}% Buffer)
+                  </span>
+                </div>
+
+                <div class="commitment-card-bot">
+                  <div class="commitment-amount-col">
+                    <span class="amount-lbl">Expected Outflow</span>
+                    <strong *ngIf="item.minExpectedPayment !== item.maxExpectedPayment" class="amount-num text-primary">
+                      ₹{{ item.minExpectedPayment | number }} – ₹{{ item.maxExpectedPayment | number }}
+                    </strong>
+                    <strong *ngIf="item.minExpectedPayment === item.maxExpectedPayment" class="amount-num" [class.text-success]="item.minExpectedPayment === 0" [class.text-primary]="item.minExpectedPayment > 0">
+                      ₹{{ item.minExpectedPayment | number }}
+                    </strong>
+                  </div>
+                  <button type="button" class="btn-sm btn-commitment-view" (click)="viewChit(item.chitId)">
+                    View Chit ➔
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -177,8 +222,9 @@
 
       <!-- Timeline Dot Navigation Pagination Bar -->
       <div class="timeline-navigation-container">
-        <button class="dot-step-btn" (click)="prevMonth()" [disabled]="selectedMonthIndex === 0">
-          ‹ Prev
+        <button class="dot-step-btn" (click)="prevMonth()" [disabled]="selectedMonthIndex === 0" title="Previous Month">
+          <span class="step-arrow">‹</span>
+          <span class="step-text">Prev</span>
         </button>
 
         <div class="dots-wrapper">
@@ -195,8 +241,9 @@
           </div>
         </div>
 
-        <button class="dot-step-btn" (click)="nextMonth()" [disabled]="selectedMonthIndex === monthGroups.length - 1">
-          Next ›
+        <button class="dot-step-btn" (click)="nextMonth()" [disabled]="selectedMonthIndex === monthGroups.length - 1" title="Next Month">
+          <span class="step-text">Next</span>
+          <span class="step-arrow">›</span>
         </button>
       </div>
     </div>

@@ -27,6 +27,32 @@ export class ChitListComponent implements OnInit {
 
   searchQuery: string = '';
   activeTab: 'ALL' | 'ONGOING' | 'COMPLETED' = 'ALL';
+  expandedChitIds = new Set<string>();
+
+  isExpanded(id: string): boolean {
+    return this.expandedChitIds.has(id);
+  }
+
+  toggleExpand(event: Event, id: string): void {
+    event.stopPropagation();
+    if (this.expandedChitIds.has(id)) {
+      this.expandedChitIds.delete(id);
+    } else {
+      this.expandedChitIds.add(id);
+    }
+  }
+
+  get allExpanded(): boolean {
+    return this.filteredChits.length > 0 && this.expandedChitIds.size === this.filteredChits.length;
+  }
+
+  toggleExpandAll(): void {
+    if (this.allExpanded) {
+      this.expandedChitIds.clear();
+    } else {
+      this.filteredChits.forEach(item => this.expandedChitIds.add(item.chit.id));
+    }
+  }
 
   constructor(private chitService: ChitService, private router: Router) { }
 
