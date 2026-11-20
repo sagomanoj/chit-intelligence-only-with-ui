@@ -3,6 +3,7 @@ import { ChitService, Chit } from '../services/chit.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ChitType, CommissionTreatment } from '../services/dividend-rules';
 
 @Component({
   selector: 'app-chit-create',
@@ -11,7 +12,10 @@ import { CommonModule } from '@angular/common';
   styleUrl: './chit-create.css',
 })
 export class ChitCreateComponent implements OnInit {
+  readonly ChitType = ChitType;
+  readonly CommissionTreatment = CommissionTreatment;
   isEditMode = false;
+  hasRecordedTerms = false;
   chitId: string | null = null;
   activeTooltip: string | null = null;
 
@@ -30,6 +34,8 @@ export class ChitCreateComponent implements OnInit {
     agentCommissionAmount: number;
     organizerPayoutTerm: number;
     dividendDistributionType: number;
+    commissionTreatmentType: number;
+    hasRecordedTerms?: boolean;
     startDate?: string;
     status: 'ACTIVE' | 'COMPLETED' | 'DRAFT';
     excludeCurrentTermShare: boolean;
@@ -48,6 +54,8 @@ export class ChitCreateComponent implements OnInit {
     agentCommissionAmount: 0,
     organizerPayoutTerm: 1,
     dividendDistributionType: 2, // NON_PRIZED_ONLY
+    commissionTreatmentType: CommissionTreatment.DEDUCT_FROM_DISCOUNT,
+    hasRecordedTerms: false,
     startDate: new Date().toISOString().split('T')[0],
     status: 'ACTIVE',
     excludeCurrentTermShare: true,
@@ -73,8 +81,11 @@ export class ChitCreateComponent implements OnInit {
         if (existingChit) {
           this.chit = {
             ...existingChit,
+            commissionTreatmentType: existingChit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT,
             excludeCurrentTermShare: existingChit.excludeCurrentTermShare !== false
           };
+          this.hasRecordedTerms = existingChit.hasRecordedTerms === true;
+          this.chitService.getTerms(id).subscribe(terms => this.hasRecordedTerms ||= terms.length > 0);
         } else {
           alert('Chit group not found.');
           this.router.navigate(['/chits']);
@@ -128,6 +139,8 @@ export class ChitCreateComponent implements OnInit {
       agentCommissionAmount: this.chit.agentCommissionAmount,
       organizerPayoutTerm: this.chit.organizerPayoutTerm,
       dividendDistributionType: this.chit.dividendDistributionType,
+      commissionTreatmentType: this.chit.commissionTreatmentType,
+      hasRecordedTerms: this.hasRecordedTerms,
       startDate: this.chit.startDate,
       status: this.chit.status,
       excludeCurrentTermShare: this.chit.excludeCurrentTermShare !== false,

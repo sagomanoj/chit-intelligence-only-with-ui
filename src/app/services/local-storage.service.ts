@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
+import { ChitType, CommissionTreatment, getDividendPool, getEligibleMemberCount, getRoundedDividendPerMember } from './dividend-rules';
 
 export interface UserSettings {
   schemaVersion: string;
@@ -19,7 +20,9 @@ export interface Chit {
   frequencyInMonths: number;
   agentCommissionPercent: number;
   agentCommissionAmount: number;
-  dividendDistributionType: number; // 1: All members, 2: Non-prized only
+  dividendDistributionType: number; // ChitType
+  commissionTreatmentType?: number; // CommissionTreatment; missing legacy values default to deduct
+  hasRecordedTerms?: boolean;
   organizerPayoutTerm: number;
   startDate?: string;
   status: 'ACTIVE' | 'COMPLETED' | 'DRAFT';
@@ -126,6 +129,8 @@ export class LocalStorageService implements IStorageProvider {
       agentCommissionPercent: 5,
       agentCommissionAmount: 25000,
       dividendDistributionType: 1,
+      commissionTreatmentType: CommissionTreatment.DEDUCT_FROM_DISCOUNT,
+      hasRecordedTerms: false,
       organizerPayoutTerm: 1,
       startDate: new Date().toISOString().split('T')[0],
       status: 'ACTIVE',
@@ -222,9 +227,16 @@ export class LocalStorageService implements IStorageProvider {
     if (chit.id) {
       const index = current.chits.findIndex(c => c.id === chit.id);
       if (index >= 0) {
+        const previousChit = current.chits[index];
+        const hasRecordedTerms = previousChit.hasRecordedTerms === true || current.termTransactions.some(t => t.chitId === previousChit.id);
         savedChit = {
-          ...current.chits[index],
+          ...previousChit,
           ...chit,
+          dividendDistributionType: hasRecordedTerms ? previousChit.dividendDistributionType : (chit.dividendDistributionType || ChitType.STANDARD_NON_WINNERS_ONLY),
+          commissionTreatmentType: hasRecordedTerms
+            ? (previousChit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT)
+            : (chit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT),
+          hasRecordedTerms,
           excludeCurrentTermShare,
           updatedAt: now
         } as Chit;
@@ -243,12 +255,12 @@ export class LocalStorageService implements IStorageProvider {
           return t;
         });
       } else {
-        savedChit = { ...chit, id: chit.id, excludeCurrentTermShare, createdAt: now, updatedAt: now } as Chit;
+        savedChit = { ...chit, id: chit.id, commissionTreatmentType: chit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT, hasRecordedTerms: false, excludeCurrentTermShare, createdAt: now, updatedAt: now } as Chit;
         current.chits.push(savedChit);
       }
     } else {
       const id = 'chit-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
-      savedChit = { ...chit, id, excludeCurrentTermShare, createdAt: now, updatedAt: now } as Chit;
+      savedChit = { ...chit, id, commissionTreatmentType: chit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT, hasRecordedTerms: false, excludeCurrentTermShare, createdAt: now, updatedAt: now } as Chit;
       current.chits.push(savedChit);
     }
 
@@ -297,9 +309,12 @@ export class LocalStorageService implements IStorageProvider {
 
     // Auto-calculate financial fields
     const agentCommission = term.agentCommission ?? chit.agentCommissionAmount;
-    const totalDividend = Math.max(0, term.winningBidAmount - agentCommission);
-    const eligibleMembers = Math.max(1, chit.totalMembers - term.termNumber);
-    const dividendPerMember = eligibleMembers > 0 ? totalDividend / eligibleMembers : 0;
+    const totalDividend = getDividendPool(term.winningBidAmount, agentCommission, chit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT);
+    const eligibleMembers = getEligibleMemberCount(chit.dividendDistributionType ?? ChitType.STANDARD_NON_WINNERS_ONLY, chit.totalMembers, term.termNumber);
+    const sharedPerMember = getRoundedDividendPerMember(totalDividend, eligibleMembers);
+    const priorSelfPrize = current.termTransactions.some(t => t.chitId === chit.id && t.isSelfPrized && t.termNumber < term.termNumber && t.id !== term.id);
+    const userEligible = chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION || (!term.isSelfPrized && !priorSelfPrize);
+    const dividendPerMember = userEligible ? sharedPerMember : 0;
     const netInstallmentPaid = term.isSelfPrized
       ? 0
       : (term.netInstallmentPaid !== undefined && term.netInstallmentPaid !== null
@@ -310,6 +325,8 @@ export class LocalStorageService implements IStorageProvider {
     const payoutReceived = term.isSelfPrized
       ? (excludeShare ? Math.max(0, basePayout - chit.installmentAmount) : basePayout)
       : 0;
+
+    chit.hasRecordedTerms = true;
 
     let savedTerm: ChitTerm;
 
@@ -367,6 +384,8 @@ export class LocalStorageService implements IStorageProvider {
     const term = current.termTransactions.find(t => t.id === termId);
     current.termTransactions = current.termTransactions.filter(t => t.id !== termId);
     if (term) {
+      const chit = current.chits.find(c => c.id === term.chitId);
+      if (chit) chit.hasRecordedTerms = true;
       this.syncChitStatus(term.chitId, current);
     }
     this.persist(current);

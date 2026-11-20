@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { Chit, ChitTerm } from './local-storage.service';
+import { ChitType, CommissionTreatment, getDividendPool, getEligibleMemberCount, getRoundedDividendPerMember } from './dividend-rules';
 
 export interface ProfitRequest {
   chitValue: number;
@@ -8,6 +9,8 @@ export interface ProfitRequest {
   currentTermNumber: number;
   totalMembers: number;
   dividendDistributionType: number;
+  commissionTreatmentType?: number;
+  currentMemberDividend?: number;
   pastDividend: number;
   pastInvestment: number;
   frequencyInMonths: number;
@@ -81,7 +84,7 @@ export class CalculationService {
       takeHomeAmount = Math.max(0, takeHomeAmount - installmentAmount);
       totalInvestment = request.pastInvestment + futureInvestment;
     } else {
-      totalInvestment = request.pastInvestment + installmentAmount + futureInvestment;
+      totalInvestment = request.pastInvestment + Math.max(0, installmentAmount - (request.currentMemberDividend || 0)) + futureInvestment;
     }
 
     const annualRate = this.resolveAnnualInterestRate(request.interestPercent, request.interestRupee);
@@ -166,12 +169,22 @@ export class CalculationService {
 
     const defaultWinning = winningAmount ?? (chit.chitValue * 0.15); // default 15% discount for calculation
 
+    const distributionType = chit.dividendDistributionType ?? ChitType.STANDARD_NON_WINNERS_ONLY;
+    const commissionTreatmentType = chit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT;
+    const userPreviouslyWon = priorTerms.some(t => t.isSelfPrized);
+    const eligibleMembers = getEligibleMemberCount(distributionType, chit.totalMembers, Math.min(nextTerm, chit.totalMembers));
+    const memberDividend = distributionType === ChitType.ALWAYS_COMMISSION || !userPreviouslyWon
+      ? getRoundedDividendPerMember(getDividendPool(defaultWinning, chit.agentCommissionAmount || 0, commissionTreatmentType), eligibleMembers)
+      : 0;
+
     return {
       chitValue: chit.chitValue,
       winningAmount: defaultWinning,
       currentTermNumber: Math.min(nextTerm, chit.totalMembers),
       totalMembers: chit.totalMembers,
-      dividendDistributionType: chit.dividendDistributionType || 1,
+      dividendDistributionType: distributionType,
+      commissionTreatmentType,
+      currentMemberDividend: memberDividend,
       pastDividend,
       pastInvestment,
       frequencyInMonths: chit.frequencyInMonths || 1,

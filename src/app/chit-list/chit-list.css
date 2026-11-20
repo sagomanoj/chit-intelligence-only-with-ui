@@ -409,6 +409,12 @@
   font-weight: 700;
   font-size: 0.95rem;
 }
+.fin-note {
+  display: block;
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-size: 0.75rem;
+}
 .text-primary { color: #2563eb; }
 .text-success { color: #16a34a; }
 .text-accent { color: #d97706; }
@@ -560,17 +566,60 @@
   }
 
   .chit-card {
-    padding: 1rem;
+    padding: 0;
+  }
+
+  .card-compact-header {
+    padding: 0.85rem;
+  }
+
+  .card-expandable-content {
+    padding: 0.85rem;
+  }
+
+  .financial-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    padding: 0.7rem;
+  }
+
+  .fin-box {
+    min-width: 0;
+  }
+
+  .fin-val {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 0.88rem;
+  }
+
+  .fin-title {
+    font-size: 0.65rem;
+  }
+
+  .fin-note {
+    font-size: 0.7rem;
+  }
+
+  .progress-label {
+    margin-bottom: 0.85rem;
   }
 
   .card-actions {
-    flex-wrap: wrap;
-    gap: 0.4rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
   }
 
   .btn-action {
+    width: 100%;
+    min-height: 44px;
+    flex: initial;
     font-size: 0.78rem;
-    padding: 0.45rem 0.4rem;
+    padding: 0.5rem 0.35rem;
+    line-height: 1.2;
+    text-align: center;
   }
 }
 

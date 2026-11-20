@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ChitService, Chit, ChitTerm } from '../services/chit.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ChitType, CommissionTreatment, getDividendPool, getEligibleMemberCount, getRoundedDividendPerMember } from '../services/dividend-rules';
 
 @Component({
   selector: 'app-chit-detail',
@@ -11,6 +12,8 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './chit-detail.css',
 })
 export class ChitDetailComponent implements OnInit {
+  readonly ChitType = ChitType;
+  readonly CommissionTreatment = CommissionTreatment;
   chit: Chit | null = null;
   terms: ChitTerm[] = [];
   summary: any = null;
@@ -53,6 +56,28 @@ export class ChitDetailComponent implements OnInit {
   get selfPrizedTermNumber(): number | undefined {
     const prior = this.terms?.find(t => t.isSelfPrized && (!this.isEditing || t.id !== this.editingTermId));
     return prior?.termNumber;
+  }
+
+  get dividendPoolAmount(): number {
+    if (!this.chit) return 0;
+    return getDividendPool(this.newTerm.winningBidAmount || 0, this.chit.agentCommissionAmount || 0, this.chit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT);
+  }
+
+  get eligibleDividendMembers(): number {
+    if (!this.chit) return 0;
+    return getEligibleMemberCount(this.chit.dividendDistributionType ?? ChitType.STANDARD_NON_WINNERS_ONLY, this.chit.totalMembers, this.newTerm.termNumber);
+  }
+
+  get dividendPerEligibleMember(): number {
+    return getRoundedDividendPerMember(this.dividendPoolAmount, this.eligibleDividendMembers);
+  }
+
+  get isUserEligibleForDividend(): boolean {
+    return !!this.chit && (this.chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION || (!this.newTerm.isSelfPrized && !this.isSelfPrizedAlreadyWon));
+  }
+
+  get userDividendForTerm(): number {
+    return this.isUserEligibleForDividend ? this.dividendPerEligibleMember : 0;
   }
 
   loadChitDetails(): void {
@@ -150,7 +175,7 @@ export class ChitDetailComponent implements OnInit {
 
     this.newTerm.auctionDate = this.calculateDefaultAuctionDate(termNumber);
 
-    if (this.isSelfPrizedAlreadyWon) {
+    if (this.isSelfPrizedAlreadyWon && this.chit.dividendDistributionType !== ChitType.ALWAYS_COMMISSION) {
       this.newTerm.isSelfPrized = false;
       this.newTerm.investmentAmount = this.chit.installmentAmount;
       this.newTerm.winningBidAmount = 0;
@@ -179,17 +204,12 @@ export class ChitDetailComponent implements OnInit {
       return;
     }
 
-    if (this.isSelfPrizedAlreadyWon) {
+    if (this.isSelfPrizedAlreadyWon && this.chit.dividendDistributionType !== ChitType.ALWAYS_COMMISSION) {
       this.newTerm.investmentAmount = this.chit.installmentAmount;
       return;
     }
 
-    const agentCommission = this.chit.agentCommissionAmount || 0;
-    const totalDividend = Math.max(0, (this.newTerm.winningBidAmount || 0) - agentCommission);
-    const eligibleMembers = Math.max(1, this.chit.totalMembers - this.newTerm.termNumber);
-    
-    const dividendPerMember = eligibleMembers > 0 ? totalDividend / eligibleMembers : 0;
-    this.newTerm.investmentAmount = Math.max(0, Math.round(this.chit.installmentAmount - dividendPerMember));
+    this.newTerm.investmentAmount = Math.max(0, Math.round(this.chit.installmentAmount - this.userDividendForTerm));
   }
 
   onSelfPrizedChange(): void {
@@ -207,7 +227,7 @@ export class ChitDetailComponent implements OnInit {
   onInvestmentAmountChange(): void {
     if (!this.chit || this.newTerm.isSelfPrized) return;
 
-    if (this.isSelfPrizedAlreadyWon) {
+    if (this.isSelfPrizedAlreadyWon && this.chit.dividendDistributionType !== ChitType.ALWAYS_COMMISSION) {
       this.newTerm.investmentAmount = this.chit.installmentAmount;
       return;
     }
@@ -215,12 +235,9 @@ export class ChitDetailComponent implements OnInit {
     const installment = this.chit.installmentAmount;
     const inv = this.newTerm.investmentAmount || 0;
     const dividendPerMember = Math.max(0, installment - inv);
-    
-    const eligibleMembers = Math.max(1, this.chit.totalMembers - this.newTerm.termNumber);
-
-    const totalDividend = dividendPerMember * eligibleMembers;
-    const agentCommission = this.chit.agentCommissionAmount || 0;
-    this.newTerm.winningBidAmount = Math.round(totalDividend + agentCommission);
+    const pool = dividendPerMember * this.eligibleDividendMembers;
+    const commission = this.chit.agentCommissionAmount || 0;
+    this.newTerm.winningBidAmount = Math.max(0, Math.round(this.chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT ? pool - commission : pool + commission));
   }
 
   onTermNumberChange(): void {
@@ -233,6 +250,7 @@ export class ChitDetailComponent implements OnInit {
     if (this.summary?.isFullyCompleted) return;
     this.isEditing = false;
     this.editingTermId = null;
+    this.newTerm.isSelfPrized = false;
     this.newTerm.termNumber = this.summary ? this.summary.nextTermNumber : 1;
     this.updateDefaultTermFields(this.newTerm.termNumber);
     this.showAddModal = true;

@@ -645,6 +645,9 @@
   font-weight: 600;
 }
 
+.dividend-explanation p { margin: 0; }
+.dividend-explanation p + p { margin-top: 0.35rem; }
+
 .checkbox-group .checkbox-label,
 .checkbox-label {
   display: flex;

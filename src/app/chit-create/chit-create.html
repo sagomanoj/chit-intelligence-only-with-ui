@@ -116,6 +116,28 @@
           <input type="date" class="form-control" [(ngModel)]="chit.startDate" name="startDate">
         </div>
 
+        <div class="form-group">
+          <label class="required">Chit Type</label>
+          <select class="form-control" [(ngModel)]="chit.dividendDistributionType" name="dividendDistributionType" [disabled]="hasRecordedTerms">
+            <option [ngValue]="ChitType.ALWAYS_COMMISSION">Always Commission (all members)</option>
+            <option [ngValue]="ChitType.STANDARD_NON_WINNERS_ONLY">Standard (non-winners only)</option>
+          </select>
+          <small class="help-text">{{ chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION ? 'Every member continues to receive a dividend share, including prior winners.' : 'Only members who have not won yet receive a dividend share.' }}</small>
+        </div>
+
+        <div class="form-group">
+          <label class="required">Commission Treatment</label>
+          <select class="form-control" [(ngModel)]="chit.commissionTreatmentType" name="commissionTreatmentType" [disabled]="hasRecordedTerms">
+            <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">Deduct commission from discount</option>
+            <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">Add commission to discount</option>
+          </select>
+          <small class="help-text">{{ chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT ? 'Dividend pool = bid discount + commission.' : 'Dividend pool = bid discount − commission.' }}</small>
+        </div>
+
+        <div class="form-group full-width" *ngIf="hasRecordedTerms">
+          <small class="help-text">Chit Type and Commission Treatment are locked because this chit already has a recorded term.</small>
+        </div>
+
         <div class="form-group full-width checkbox-group">
           <label class="checkbox-label">
             <input type="checkbox" [(ngModel)]="chit.excludeCurrentTermShare" name="excludeCurrentTermShare">

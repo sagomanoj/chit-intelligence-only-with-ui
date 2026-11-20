@@ -4,6 +4,7 @@ import { ChitService, Chit, ChitTerm } from '../services/chit.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ChitType, CommissionTreatment, getDividendPool, getEligibleMemberCount, getRoundedDividendPerMember } from '../services/dividend-rules';
 
 @Component({
   selector: 'app-auction',
@@ -12,6 +13,8 @@ import { CommonModule } from '@angular/common';
   styleUrl: './auction.css',
 })
 export class AuctionComponent implements OnInit {
+  readonly ChitType = ChitType;
+  readonly CommissionTreatment = CommissionTreatment;
   // Active Chit Context (if navigated from chit)
   chitId: string | null = null;
   chit: Chit | null = null;
@@ -26,6 +29,9 @@ export class AuctionComponent implements OnInit {
   pastInvestment: number | null = null;
   discountAmount: number | null = null;
   excludeOwnShare: boolean = true;
+  dividendDistributionType: number = ChitType.STANDARD_NON_WINNERS_ONLY;
+  commissionTreatmentType: number = CommissionTreatment.DEDUCT_FROM_DISCOUNT;
+  hasPreviouslyWon: boolean = false;
 
   // Results
   profit: ProfitResponse | null = null;
@@ -67,6 +73,9 @@ export class AuctionComponent implements OnInit {
         this.chit = chit;
         this.chitService.getTerms(id).subscribe(terms => {
           this.terms = terms;
+          this.dividendDistributionType = chit.dividendDistributionType ?? ChitType.STANDARD_NON_WINNERS_ONLY;
+          this.commissionTreatmentType = chit.commissionTreatmentType ?? CommissionTreatment.DEDUCT_FROM_DISCOUNT;
+          this.hasPreviouslyWon = terms.some(term => term.isSelfPrized);
           const request = this.calcService.buildProfitRequestFromChit(chit, this.terms);
 
           this.totalAmount = request.chitValue;
@@ -125,7 +134,9 @@ export class AuctionComponent implements OnInit {
   saveAsTermRecord(): void {
     if (!this.chitId || !this.discountAmount || !this.currentChitNumber) return;
 
-    const isSelfPrized = confirm(`Mark Term ${this.currentChitNumber} payout as WON by YOU? Click OK for YES, Cancel for NO.`);
+    const isSelfPrized = this.hasPreviouslyWon
+      ? false
+      : confirm(`Mark Term ${this.currentChitNumber} payout as WON by YOU? Click OK for YES, Cancel for NO.`);
 
     const termData = {
       chitId: this.chitId,
@@ -215,17 +226,20 @@ export class AuctionComponent implements OnInit {
 
   getEligibleMembersCount(): number {
     if (!this.participants || this.participants <= 0) return 0;
-    const currentTerm = this.currentChitNumber || 1;
-    return Math.max(0, this.participants - currentTerm);
+    return getEligibleMemberCount(this.dividendDistributionType, this.participants, this.currentChitNumber || 1);
+  }
+
+  getDividendPool(): number {
+    return getDividendPool(this.discountAmount || 0, this.agentCommissionAmount || 0, this.commissionTreatmentType);
+  }
+
+  getSharePerEligibleMember(): number {
+    return getRoundedDividendPerMember(this.getDividendPool(), this.getEligibleMembersCount());
   }
 
   getDividendPerMember(): number {
-    const eligible = this.getEligibleMembersCount();
-    if (eligible <= 0) return 0;
-    const commission = this.agentCommissionAmount || 0;
-    const discount = this.discountAmount || 0;
-    const dividendPool = Math.max(0, discount - commission);
-    return Math.round(dividendPool / eligible);
+    if (this.dividendDistributionType !== ChitType.ALWAYS_COMMISSION && this.hasPreviouslyWon) return 0;
+    return this.getSharePerEligibleMember();
   }
 
   getAmountToBePaid(): number {
@@ -239,6 +253,7 @@ export class AuctionComponent implements OnInit {
 
   onAmountToBePaidChange(newAmount: any): void {
     if (!this.totalAmount || !this.participants || this.participants <= 0) return;
+    if (this.dividendDistributionType !== ChitType.ALWAYS_COMMISSION && this.hasPreviouslyWon) return;
     const val = (newAmount === null || newAmount === undefined || newAmount === '') ? null : Number(newAmount);
     if (val === null || !Number.isFinite(val) || val < 0) return;
 
@@ -247,7 +262,7 @@ export class AuctionComponent implements OnInit {
     const eligible = this.getEligibleMembersCount();
     const dividendPool = dividendPerMember * eligible;
     const commission = this.agentCommissionAmount || 0;
-    const calculatedDiscount = Math.round(dividendPool + commission);
+    const calculatedDiscount = Math.round(this.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT ? dividendPool - commission : dividendPool + commission);
 
     const maxDiscount = this.getDiscountUpperBound();
     this.discountAmount = Math.min(maxDiscount, Math.max(0, calculatedDiscount));
@@ -342,7 +357,9 @@ export class AuctionComponent implements OnInit {
       winningAmount: this.discountAmount,
       currentTermNumber: this.currentChitNumber,
       totalMembers: this.participants,
-      dividendDistributionType: 1,
+      dividendDistributionType: this.dividendDistributionType,
+      commissionTreatmentType: this.commissionTreatmentType,
+      currentMemberDividend: this.getDividendPerMember(),
       pastDividend: 0,
       pastInvestment: this.pastInvestment || 0,
       frequencyInMonths: this.frequency || 1,

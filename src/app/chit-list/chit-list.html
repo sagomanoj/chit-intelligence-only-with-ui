@@ -68,7 +68,7 @@
             <span class="meta-dot">•</span>
             <span class="meta-inst">₹{{ item.chit.installmentAmount | number }}/mo</span>
             <span class="meta-dot">•</span>
-            <span class="compact-progress-tag">{{ item.progressPercent }}% Complete</span>
+            <span class="compact-progress-tag" *ngIf="!isExpanded(item.chit.id)">{{ item.progressPercent }}% Complete</span>
           </div>
         </div>
 
@@ -89,9 +89,18 @@
           <div class="progress-container">
             <div class="progress-bar" [style.width.%]="item.progressPercent"></div>
           </div>
-          <div class="progress-label">{{ item.progressPercent }}% Complete ({{ item.termsCompleted }} of {{ item.chit.totalMembers }} terms)</div>
+          <div class="progress-label">{{ item.termsCompleted }} of {{ item.chit.totalMembers }} terms completed</div>
 
           <div class="financial-summary">
+            <div class="fin-box">
+              <span class="fin-title">Chit Type</span>
+              <span class="fin-val">{{ item.chit.dividendDistributionType === 1 ? 'Always Commission' : 'Standard' }}</span>
+              <small class="fin-note">{{ item.chit.dividendDistributionType === 1 ? 'All members receive a share' : 'Non-winners only' }}</small>
+            </div>
+            <div class="fin-box">
+              <span class="fin-title">Commission handling</span>
+              <span class="fin-val">{{ item.chit.commissionTreatmentType === 2 ? 'Added to discount' : 'Deducted from discount' }}</span>
+            </div>
             <div class="fin-box">
               <span class="fin-title">Total Invested</span>
               <span class="fin-val text-primary">₹{{ item.totalInvested | number }}</span>
@@ -112,13 +121,13 @@
             🧮 Open Calculator
           </button>
           <button class="btn-action btn-detail" (click)="viewChit(item.chit.id)">
-            📋 Open Term History
+            📋 Term History
           </button>
           <button class="btn-action btn-edit" (click)="editChit($event, item.chit.id)">
-            ✏️ Edit
+            ✏️ Edit Chit
           </button>
           <button class="btn-action btn-delete" (click)="deleteChit($event, item.chit.id, item.chit.name)">
-            🗑️
+            🗑️ Delete
           </button>
         </div>
       </div>

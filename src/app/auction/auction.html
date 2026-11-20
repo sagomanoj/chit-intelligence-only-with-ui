@@ -4,11 +4,11 @@
     <div class="context-info">
       <span class="context-tag">CHIT CALCULATOR</span>
       <h2 class="context-title">{{ chit.name }}</h2>
-      <span class="context-sub">Pre-filled for Term #{{ currentChitNumber }} | Past Investment: ₹{{ (pastInvestment || 0) | number }}</span>
+      <span class="context-sub">Term {{ currentChitNumber }} · {{ dividendDistributionType === ChitType.ALWAYS_COMMISSION ? 'Always Commission' : 'Standard (Non-winners only)' }}</span>
+      <span class="context-sub">Organizer commission {{ commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT ? 'added to' : 'deducted from' }} the discount · Past paid: ₹{{ (pastInvestment || 0) | number }}</span>
     </div>
     <div class="context-actions">
       <button class="btn btn-outline" (click)="goBackToChit()">← Back to Chit</button>
-      <button class="btn btn-save" *ngIf="profit" (click)="saveAsTermRecord()">💾 Save as Term {{ currentChitNumber }} Record</button>
     </div>
   </div>
 
@@ -32,7 +32,7 @@
 
   <button class="mobile-results-toggle" *ngIf="(profit || isCalculating) && !showModalResults" (click)="toggleModalResults()">
     <span *ngIf="isCalculating" class="spinner-small"></span>
-    <span *ngIf="!isCalculating">📊 View Result: Rs.{{ profit?.netProfit | number:'1.0-0' }}</span>
+    <span *ngIf="!isCalculating">📊 View Result: ₹{{ profit?.netProfit | number:'1.0-0' }}</span>
   </button>
 
   <main class="dashboard-grid">
@@ -54,6 +54,22 @@
           <div class="form-group">
             <label for="participants" class="required">Total Members</label>
             <input type="number" id="participants" [(ngModel)]="participants" (ngModelChange)="onInputChange()" name="participants" placeholder="14" [class.error]="isFieldInvalid('participants')">
+          </div>
+
+          <div class="form-group" *ngIf="!chit">
+            <label for="dividendDistributionType">Chit Type</label>
+            <select id="dividendDistributionType" [(ngModel)]="dividendDistributionType" (ngModelChange)="onInputChange()" name="dividendDistributionType">
+              <option [ngValue]="ChitType.ALWAYS_COMMISSION">Always Commission</option>
+              <option [ngValue]="ChitType.STANDARD_NON_WINNERS_ONLY">Standard (Non Winners Only)</option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="!chit">
+            <label for="commissionTreatmentType">Commission Treatment</label>
+            <select id="commissionTreatmentType" [(ngModel)]="commissionTreatmentType" (ngModelChange)="onInputChange()" name="commissionTreatmentType">
+              <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">Deduct commission</option>
+              <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">Add commission</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -82,6 +98,13 @@
             <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" (ngModelChange)="onInputChange()" name="currentChitNumber" placeholder="6" [class.error]="isFieldInvalid('currentChitNumber')">
           </div>
 
+          <div class="form-group wide checkbox-row" *ngIf="!chit && dividendDistributionType === ChitType.STANDARD_NON_WINNERS_ONLY">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="hasPreviouslyWon" (ngModelChange)="onInputChange()" name="hasPreviouslyWon">
+              <span>I have already won in an earlier term</span>
+            </label>
+          </div>
+
           <div class="form-group">
             <label for="pastInvestment" class="required">Past Investment</label>
             <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" (ngModelChange)="onInputChange()" name="pastInvestment" placeholder="195000" [class.error]="isFieldInvalid('pastInvestment')">
@@ -104,14 +127,18 @@
             </div>
             <input type="number" id="amountToBePaid" [ngModel]="getAmountToBePaid()" (ngModelChange)="onAmountToBePaidChange($event)" name="amountToBePaid" placeholder="0" class="amount-to-pay-input">
             <span class="amount-to-pay-sub" *ngIf="participants && currentChitNumber">
-              ₹{{ getDividendPerMember() | number:'1.0-0' }} div for {{ getEligibleMembersCount() }} unprized
+              <span *ngIf="commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT">We add ₹{{ (agentCommissionAmount || 0) | number:'1.0-0' }} commission to the ₹{{ (discountAmount || 0) | number:'1.0-0' }} discount.</span>
+              <span *ngIf="commissionTreatmentType !== CommissionTreatment.ADD_TO_DISCOUNT">The organizer’s ₹{{ (agentCommissionAmount || 0) | number:'1.0-0' }} commission is deducted from the ₹{{ (discountAmount || 0) | number:'1.0-0' }} bid discount.</span>
+              <span *ngIf="getEligibleMembersCount() > 0">₹{{ getDividendPool() | number:'1.0-0' }} is shared among {{ getEligibleMembersCount() }} eligible {{ getEligibleMembersCount() === 1 ? 'member' : 'members' }}; each gets about ₹{{ getSharePerEligibleMember() | number:'1.0-0' }} off the installment.</span>
+              <span *ngIf="getEligibleMembersCount() === 0">No members are eligible for a dividend this term.</span>
+              <span *ngIf="hasPreviouslyWon && dividendDistributionType !== ChitType.ALWAYS_COMMISSION"> You have already won, so you do not receive a share.</span>
             </span>
           </div>
 
           <div class="form-group wide checkbox-row">
             <label class="checkbox-label">
               <input type="checkbox" [(ngModel)]="excludeOwnShare" (ngModelChange)="onInputChange()" name="excludeOwnShare">
-              <span>Exclude current term share (Rs.{{ getShareAmount() | number:'1.0-0' }}) from Profit/Loss</span>
+              <span>Exclude my current ₹{{ getShareAmount() | number:'1.0-0' }} installment from the payout and profit estimate</span>
             </label>
           </div>
         </div>
@@ -120,15 +147,15 @@
           <div class="slider-header">
             <span>Discount Bid Range</span>
             <div class="slider-header-values">
-              <strong>Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
+              <strong>₹{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
               <span class="slider-pay-tag">Pay: ₹{{ getAmountToBePaid() | number:'1.0-0' }}</span>
             </div>
           </div>
           <input type="range" id="discountSlider" min="0" [max]="getDiscountUpperBound()" step="1000"
                  [value]="discountAmount || 0" name="discountSlider" (input)="onDiscountSliderChange($event)">
           <div class="slider-meta">
-            <span>Rs.0</span>
-            <span>Max Rs.{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
+            <span>₹0</span>
+            <span>Max ₹{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
           </div>
         </div>
       </article>
@@ -189,22 +216,22 @@
               <h3>Bid Discount Adjuster</h3>
             </div>
             <div class="slider-header-values">
-              <strong class="result-slider-value">Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
+              <strong class="result-slider-value">₹{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
               <span class="slider-pay-tag">Pay: ₹{{ getAmountToBePaid() | number:'1.0-0' }}</span>
             </div>
           </div>
           <input type="range" class="result-slider-input" min="0" [max]="getDiscountUpperBound()" step="1000"
                  [value]="discountAmount || 0" (input)="onDiscountSliderChange($event)">
           <div class="result-slider-meta">
-            <span>Rs.0</span>
-            <span>Max Limit: Rs.{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
+            <span>₹0</span>
+            <span>Max Limit: ₹{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
           </div>
         </article>
 
         <article class="hero-result" [class.loss-card]="profit.status === 'LOSS'" [class.neutral-card]="profit.status === 'NO PROFIT / NO LOSS'">
           <div>
             <span>{{ profit.status }}</span>
-            <strong>Rs.{{ profit.netProfit | number:'1.0-0' }}</strong>
+            <strong>₹{{ profit.netProfit | number:'1.0-0' }}</strong>
           </div>
           <div class="hero-stats">
             <small>{{ profit.profitPercentage | number:'1.2-2' }}% overall</small>
@@ -216,17 +243,17 @@
         <section class="metric-strip three-col">
           <article>
             <span>Take Home</span>
-            <strong>Rs.{{ profit.takeHomeAmount | number:'1.0-0' }}</strong>
+            <strong>₹{{ profit.takeHomeAmount | number:'1.0-0' }}</strong>
             <small>after discount</small>
           </article>
           <article class="highlight-metric-card">
             <span>Amount to Pay</span>
-            <strong class="text-pay">Rs.{{ getAmountToBePaid() | number:'1.0-0' }}</strong>
+            <strong class="text-pay">₹{{ getAmountToBePaid() | number:'1.0-0' }}</strong>
             <small>₹{{ getDividendPerMember() | number:'1.0-0' }} div/member</small>
           </article>
           <article>
             <span>Investment</span>
-            <strong>Rs.{{ profit.totalInvestment | number:'1.0-0' }}</strong>
+            <strong>₹{{ profit.totalInvestment | number:'1.0-0' }}</strong>
             <small>past + future</small>
           </article>
         </section>
@@ -236,23 +263,23 @@
           <div class="result-grid">
             <div class="result-highlight-cell">
               <span>Amount to be Paid</span>
-              <strong class="text-pay">Rs.{{ getAmountToBePaid() | number:'1.0-0' }}</strong>
+              <strong class="text-pay">₹{{ getAmountToBePaid() | number:'1.0-0' }}</strong>
             </div>
             <div>
               <span>Dividend Per Member</span>
-              <strong>Rs.{{ getDividendPerMember() | number:'1.0-0' }}</strong>
+              <strong>₹{{ getDividendPerMember() | number:'1.0-0' }}</strong>
             </div>
             <div>
               <span>Bid Discount Amount</span>
-              <strong>Rs.{{ profit.discountAmount | number:'1.0-0' }}</strong>
+              <strong>₹{{ profit.discountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
               <span>Max Bid Limit(No profit/Loss)</span>
-              <strong>Rs.{{ profit.breakEvenDiscountAmount | number:'1.0-0' }}</strong>
+              <strong>₹{{ profit.breakEvenDiscountAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
               <span>Commission</span>
-              <strong>Rs.{{ profit.agentCommissionAmount | number:'1.0-0' }}</strong>
+              <strong>₹{{ profit.agentCommissionAmount | number:'1.0-0' }}</strong>
             </div>
             <div>
               <span>Remaining</span>
@@ -260,11 +287,11 @@
             </div>
             <div>
               <span>Future Pay</span>
-              <strong>Rs.{{ profit.futureInvestment | number:'1.0-0' }}</strong>
+              <strong>₹{{ profit.futureInvestment | number:'1.0-0' }}</strong>
             </div>
             <div>
               <span>Installment</span>
-              <strong>Rs.{{ profit.installmentAmount | number:'1.0-0' }}</strong>
+              <strong>₹{{ profit.installmentAmount | number:'1.0-0' }}</strong>
             </div>
           </div>
         </section>
@@ -286,22 +313,22 @@
           <div *ngIf="profit.reinvestmentEnabled" class="result-grid">
             <div>
               <span>Monthly Interest</span>
-              <strong>Rs.{{ profit.monthlyInterest | number:'1.0-0' }}</strong>
+              <strong>₹{{ profit.monthlyInterest | number:'1.0-0' }}</strong>
             </div>
             <div>
               <span>Interest Per Term</span>
-              <strong>Rs.{{ profit.interestPerTerm | number:'1.0-0' }}</strong>
+              <strong>₹{{ profit.interestPerTerm | number:'1.0-0' }}</strong>
             </div>
             <div>
               <span>Extra Pay Per Term</span>
               <strong [class.profit]="profit.extraPaymentPerTerm <= 0" [class.loss]="profit.extraPaymentPerTerm > 0">
-                Rs.{{ profit.extraPaymentPerTerm | number:'1.0-0' }}
+                ₹{{ profit.extraPaymentPerTerm | number:'1.0-0' }}
               </strong>
             </div>
             <div>
               <span>Total Extra Pay</span>
               <strong [class.profit]="profit.totalExtraPayment <= 0" [class.loss]="profit.totalExtraPayment > 0">
-                Rs.{{ profit.totalExtraPayment | number:'1.0-0' }}
+                ₹{{ profit.totalExtraPayment | number:'1.0-0' }}
               </strong>
             </div>
           </div>

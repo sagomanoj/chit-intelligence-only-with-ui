@@ -62,9 +62,9 @@
         <p>Review your expected payments and keep every group on track.</p>
       </div>
       <div class="schedule-tools">
-        <button type="button" class="buffer-control" (click)="openBufferModal()" aria-label="Edit dividend estimate range">
+        <button type="button" class="buffer-control" (click)="openBufferModal()" aria-label="Edit estimated dividend share per member">
           <span class="buffer-control-icon" aria-hidden="true">↗</span>
-          <span><small>Dividend estimate</small><strong>{{ minBufferPercent }}%–{{ maxBufferPercent }}%</strong></span>
+          <span><small>Dividend share / member</small><strong>{{ minBufferPercent }}%–{{ maxBufferPercent }}%</strong></span>
           <span class="edit-label">Edit</span>
         </button>
         <button type="button" class="current-month-button" *ngIf="monthGroups.length > 0" (click)="goToCurrentMonth()" [attr.aria-pressed]="activeMonthGroup?.isCurrentMonth">
@@ -104,7 +104,7 @@
           </div>
         </div>
 
-        <div class="commitments-heading"><h4>Scheduled contributions</h4><span>Based on your selected dividend estimate</span></div>
+        <div class="commitments-heading"><h4>Scheduled contributions</h4><span>Based on your estimated share per eligible member</span></div>
 
         <p *ngIf="activeMonthGroup.items.length === 0">No contributions are scheduled for this month.</p>
 
@@ -188,16 +188,16 @@
 
   <div class="modal-backdrop" *ngIf="showBufferModal" (click)="closeBufferModal()">
     <section class="modal-card modal-md" role="dialog" aria-modal="true" aria-labelledby="buffer-modal-title" (click)="$event.stopPropagation()">
-      <header class="modal-header"><div><span class="section-eyebrow">PROJECTION SETTINGS</span><h3 id="buffer-modal-title">Dividend estimate range</h3><p class="modal-sub">Adjust the assumed discount for future auction terms.</p></div><button type="button" class="btn-close" (click)="closeBufferModal()" aria-label="Close">×</button></header>
+      <header class="modal-header"><div><span class="section-eyebrow">PROJECTION SETTINGS</span><h3 id="buffer-modal-title">Dividend share per member</h3><p class="modal-sub">Set the estimated discount share each eligible member may receive.</p></div><button type="button" class="btn-close" (click)="closeBufferModal()" aria-label="Close">×</button></header>
       <div class="modal-body">
-        <p class="buffer-modal-desc">A larger dividend estimate lowers your projected out-of-pocket amount. Choose a range that reflects your expectations.</p>
+        <p class="buffer-modal-desc">This estimate is an expected per-member share after applying the chit’s distribution settings. A larger share lowers the projected out-of-pocket amount.</p>
         <div class="buffer-inputs-grid">
           <div class="buffer-field"><label for="min-buffer">Minimum estimate (%)</label><input id="min-buffer" type="number" class="form-control" [(ngModel)]="minBufferPercent" (ngModelChange)="onBufferRangeChange()" min="0" max="50" /></div>
           <span class="buffer-separator" aria-hidden="true">to</span>
           <div class="buffer-field"><label for="max-buffer">Maximum estimate (%)</label><input id="max-buffer" type="number" class="form-control" [(ngModel)]="maxBufferPercent" (ngModelChange)="onBufferRangeChange()" min="0" max="50" /></div>
         </div>
         <div class="preset-section"><span class="preset-label">Quick presets</span><div class="preset-pills"><button type="button" class="pill-btn" [class.active]="minBufferPercent === 10 && maxBufferPercent === 20" (click)="setBufferPreset(10, 20)">10–20% <small>Conservative</small></button><button type="button" class="pill-btn" [class.active]="minBufferPercent === 20 && maxBufferPercent === 30" (click)="setBufferPreset(20, 30)">20–30% <small>Standard</small></button><button type="button" class="pill-btn" [class.active]="minBufferPercent === 25 && maxBufferPercent === 35" (click)="setBufferPreset(25, 35)">25–35% <small>Optimistic</small></button></div></div>
-        <div class="buffer-preview-box"><div class="preview-title"><span class="preview-badge">Live example</span><span>On a ₹{{ sampleInstallment | number }} installment</span></div><div class="preview-metrics"><div class="metric-item"><span class="m-label">Estimated discount</span><strong class="m-val">₹{{ sampleMinDiscount | number }} – ₹{{ sampleMaxDiscount | number }}</strong></div><div class="metric-item"><span class="m-label">Estimated payment</span><strong class="m-val">₹{{ sampleMinOutflow | number }} – ₹{{ sampleMaxOutflow | number }}</strong></div></div></div>
+        <div class="buffer-preview-box"><div class="preview-title"><span class="preview-badge">Live example</span><span>On a ₹{{ sampleInstallment | number }} installment</span></div><div class="preview-metrics"><div class="metric-item"><span class="m-label">Estimated share per member</span><strong class="m-val">₹{{ sampleMinDiscount | number }} – ₹{{ sampleMaxDiscount | number }}</strong></div><div class="metric-item"><span class="m-label">Estimated payment</span><strong class="m-val">₹{{ sampleMinOutflow | number }} – ₹{{ sampleMaxOutflow | number }}</strong></div></div></div>
       </div>
       <footer class="modal-footer"><button type="button" class="secondary-button" (click)="closeBufferModal()">Done</button></footer>
     </section>

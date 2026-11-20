@@ -26,6 +26,8 @@
             {{ chit.status === 'COMPLETED' ? 'COMPLETED' : 'ONGOING' }}
           </span>
           <span class="badge badge-info">{{ chit.totalMembers }} Months</span>
+          <span class="badge badge-info">{{ chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION ? 'Always Commission' : 'Standard (Non Winners Only)' }}</span>
+          <span class="badge badge-info">Commission {{ chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT ? 'added' : 'deducted' }} in dividend pool</span>
           <span class="badge badge-info">{{ chit.frequencyInMonths }} Month Frequency</span>
           <span class="badge badge-info" *ngIf="effectiveStartDate">Start: {{ effectiveStartDate | date:'dd/MM/yyyy' }}</span>
           <span class="badge badge-info" *ngIf="estimatedEndDate">Est. End: {{ estimatedEndDate | date:'dd/MM/yyyy' }}</span>
@@ -100,17 +102,17 @@
                 </div>
               </th>
               <th>
-                Dividend Per Member
+                Your Dividend Share
                 <span class="info-icon" (click)="toggleTooltip('colDiv')" title="Click for info">ℹ️</span>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colDiv'">
-                  Net auction dividend discount distributed to each eligible non-prized member.
+                  Your rounded dividend share after applying this chit’s distribution type and commission treatment.
                 </div>
               </th>
               <th>
                 Net Installment Paid
                 <span class="info-icon" (click)="toggleTooltip('colNet')" title="Click for info">ℹ️</span>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colNet'">
-                  Actual out-of-pocket investment paid by a non-prized member after deducting dividend discount.
+              Your actual out-of-pocket contribution after this chit’s dividend share is applied.
                 </div>
               </th>
               <th>
@@ -131,7 +133,7 @@
                 Total Dividend
                 <span class="info-icon" (click)="toggleTooltip('colTotDiv')" title="Click for info">ℹ️</span>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTotDiv'">
-                  Net discount pool distributed back to non-prized members (Winning Bid - Agent Commission).
+                  Total dividend pool using this chit’s selected commission treatment.
                 </div>
               </th>
               <th>
@@ -289,7 +291,7 @@
               <span class="info-icon" (click)="toggleTooltip('investmentAmount')" title="Click for info">ℹ️</span>
             </label>
             <div class="tooltip-box" *ngIf="activeTooltip === 'investmentAmount'">
-              Actual out-of-pocket contribution paid by a non-prized member for this term after deducting the dividend discount.
+              Your actual contribution after applying the dividend share for this chit type.
             </div>
             <input type="number" class="form-control text-primary" [(ngModel)]="newTerm.investmentAmount" (ngModelChange)="onInvestmentAmountChange()" name="investmentAmount" required min="0" placeholder="0" [disabled]="newTerm.isSelfPrized">
             <small class="help-text" *ngIf="newTerm.isSelfPrized">Winning term — no investment required (₹0)</small>
@@ -306,6 +308,18 @@
             </div>
             <input type="number" class="form-control" [(ngModel)]="newTerm.winningBidAmount" (ngModelChange)="onWinningBidChange()" name="winningBidAmount" required min="0" placeholder="0">
             <small class="help-text">Discount foregone in auction</small>
+          </div>
+
+          <div class="form-group full-width">
+            <div class="already-taken-banner dividend-explanation">
+              <ng-container *ngIf="eligibleDividendMembers > 0">
+                <p *ngIf="chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT">We add the ₹{{ chit.agentCommissionAmount | number }} organizer commission to the ₹{{ newTerm.winningBidAmount | number }} bid discount. That gives ₹{{ dividendPoolAmount | number }} to share.</p>
+                <p *ngIf="chit.commissionTreatmentType !== CommissionTreatment.ADD_TO_DISCOUNT">The organizer’s ₹{{ chit.agentCommissionAmount | number }} commission is deducted from the ₹{{ newTerm.winningBidAmount | number }} bid discount, leaving ₹{{ dividendPoolAmount | number }} to share.</p>
+                <p>That is shared by {{ eligibleDividendMembers }} eligible {{ eligibleDividendMembers === 1 ? 'member' : 'members' }}. Each gets about ₹{{ dividendPerEligibleMember | number }} off their installment.</p>
+              </ng-container>
+              <p *ngIf="eligibleDividendMembers === 0">No members are eligible for a dividend in this term, so no discount share will be applied.</p>
+              <p *ngIf="!isUserEligibleForDividend">You have already won, so you do not receive a share for this term.</p>
+            </div>
           </div>
 
           <div class="form-group full-width" *ngIf="isSelfPrizedAlreadyWon">

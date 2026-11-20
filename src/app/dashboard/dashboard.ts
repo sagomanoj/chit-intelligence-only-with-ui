@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ChitService, Chit, ChitTerm } from '../services/chit.service';
+import { ChitType } from '../services/dividend-rules';
 
 export interface MonthScheduleChitItem {
   chitId: string;
@@ -207,7 +208,7 @@ export class DashboardComponent implements OnInit {
         let minPayment = 0;
         let maxPayment = 0;
 
-        if (isAlreadyTaken) {
+        if (isAlreadyTaken && chit.dividendDistributionType !== ChitType.ALWAYS_COMMISSION) {
           // Chit already won in prior term — must pay full installment amount
           minPayment = chit.installmentAmount;
           maxPayment = chit.installmentAmount;
