@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ChitService, Chit, ChitTerm } from '../services/chit.service';
 
 export interface MonthScheduleChitItem {
@@ -35,11 +35,13 @@ export interface MonthScheduleGroup {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit {
+  @ViewChildren('monthButton') monthButtons!: QueryList<ElementRef<HTMLButtonElement>>;
+  readonly today = new Date();
   chits: Chit[] = [];
 
   // Buffer range percentage controls
@@ -139,7 +141,8 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const currentMonthKey = todayStr.substring(0, 7);
 
     let portfolioVal = 0;
@@ -239,6 +242,9 @@ export class DashboardComponent implements OnInit {
     this.totalDividendsRealized = Math.round(totalDiv);
     this.totalPrizeMoneyWon = Math.round(totalWon);
 
+    // Keep the current month selectable even when no payment is scheduled yet.
+    if (!groupsMap.has(currentMonthKey)) groupsMap.set(currentMonthKey, []);
+
     // Build sorted MonthScheduleGroup array (Current and Future months only)
     const sortedMonthKeys = Array.from(groupsMap.keys())
       .filter(key => key >= currentMonthKey)
@@ -294,6 +300,7 @@ export class DashboardComponent implements OnInit {
       this.currentMonthMaxOutflow = 0;
       this.selectedMonthIndex = 0;
     }
+    setTimeout(() => this.scrollSelectedMonthIntoView());
   }
 
   // Carousel navigation controls
@@ -307,18 +314,21 @@ export class DashboardComponent implements OnInit {
   nextMonth(): void {
     if (this.selectedMonthIndex < this.monthGroups.length - 1) {
       this.selectedMonthIndex++;
+      this.scrollSelectedMonthIntoView();
     }
   }
 
   prevMonth(): void {
     if (this.selectedMonthIndex > 0) {
       this.selectedMonthIndex--;
+      this.scrollSelectedMonthIntoView();
     }
   }
 
   goToMonth(index: number): void {
     if (index >= 0 && index < this.monthGroups.length) {
       this.selectedMonthIndex = index;
+      this.scrollSelectedMonthIntoView();
     }
   }
 
@@ -326,7 +336,12 @@ export class DashboardComponent implements OnInit {
     const currentIdx = this.monthGroups.findIndex(g => g.isCurrentMonth);
     if (currentIdx !== -1) {
       this.selectedMonthIndex = currentIdx;
+      this.scrollSelectedMonthIntoView();
     }
+  }
+
+  private scrollSelectedMonthIntoView(): void {
+    requestAnimationFrame(() => this.monthButtons?.get(this.selectedMonthIndex)?.nativeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
   }
 
   openMonthModal(group: MonthScheduleGroup): void {
