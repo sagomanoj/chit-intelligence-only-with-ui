@@ -187,7 +187,7 @@
   </div>
 
   <div class="modal-backdrop" *ngIf="showBufferModal" (click)="closeBufferModal()">
-    <section class="modal-card modal-md" role="dialog" aria-modal="true" aria-labelledby="buffer-modal-title" (click)="$event.stopPropagation()">
+    <section class="modal-card modal-md buffer-modal-card" role="dialog" aria-modal="true" aria-labelledby="buffer-modal-title" (click)="$event.stopPropagation()">
       <header class="modal-header"><div><span class="section-eyebrow">PROJECTION SETTINGS</span><h3 id="buffer-modal-title">Dividend share per member</h3><p class="modal-sub">Set the estimated discount share each eligible member may receive.</p></div><button type="button" class="btn-close" (click)="closeBufferModal()" aria-label="Close">×</button></header>
       <div class="modal-body">
         <p class="buffer-modal-desc">This estimate is an expected per-member share after applying the chit’s distribution settings. A larger share lowers the projected out-of-pocket amount.</p>

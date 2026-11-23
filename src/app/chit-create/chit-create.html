@@ -131,7 +131,8 @@
             <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">Deduct commission from discount</option>
             <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">Add commission to discount</option>
           </select>
-          <small class="help-text">{{ chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT ? 'Dividend pool = bid discount + commission.' : 'Dividend pool = bid discount − commission.' }}</small>
+          <small class="help-text"><strong>Subtract from discount:</strong> The organizer’s commission is taken out first; members share what remains.</small>
+          <small class="help-text"><strong>Add to discount:</strong> The organizer’s commission is added before sharing, increasing the dividend pool.</small>
         </div>
 
         <div class="form-group full-width" *ngIf="hasRecordedTerms">
@@ -142,12 +143,12 @@
           <label class="checkbox-label">
             <input type="checkbox" [(ngModel)]="chit.excludeCurrentTermShare" name="excludeCurrentTermShare">
             <span>
-              <strong>Exclude current term share (₹{{ (chit.installmentAmount || 0) | number }}) from Profit/Loss & Payout</strong>
+              <strong>When you win, exclude your ₹{{ (chit.installmentAmount || 0) | number }} contribution from profit/loss</strong>
             </span>
             <span class="info-icon" (click)="toggleTooltip('excludeCurrentTermShare')" title="Click for info">ℹ️</span>
           </label>
           <div class="tooltip-box" *ngIf="activeTooltip === 'excludeCurrentTermShare'">
-            When checked (default), the winner's current term share (installment amount) is excluded / deducted from the self-prized payout and profit calculation. If unchecked, the current term share is included in the payout.
+            When checked, your contribution for the month you win is taken off your payout and is not counted in your profit/loss. Turn this off to keep the full payout and count that contribution as part of your investment.
           </div>
         </div>
       </div>

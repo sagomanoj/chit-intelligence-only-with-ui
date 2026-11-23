@@ -50,3 +50,27 @@ h1, h2, h3, h4, h5, h6, .brand-text {
   -webkit-overflow-scrolling: touch;
   display: block;
 }
+
+.buffer-modal-card .modal-body {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.buffer-modal-card .modal-footer {
+  flex: 0 0 auto;
+  background: #fff;
+}
+
+@media (max-width: 760px) {
+  .modal-backdrop .buffer-modal-card {
+    position: fixed;
+    right: 0;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    left: 0;
+    width: 100%;
+    height: min(78dvh, 820px);
+    max-height: calc(100dvh - 92px - env(safe-area-inset-bottom));
+    margin: 0;
+    padding-bottom: 0;
+  }
+}
