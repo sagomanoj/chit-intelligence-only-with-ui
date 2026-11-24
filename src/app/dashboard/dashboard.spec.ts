@@ -8,6 +8,10 @@ describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
 
+  // Keep the first installment in the current month so all ten terms are upcoming.
+  const now = new Date();
+  const firstTerm = new Date(now.getFullYear(), now.getMonth(), 15, 12).toISOString().slice(0, 10);
+
   const mockChitService = {
     getChits: () => of([
       {
@@ -21,7 +25,7 @@ describe('DashboardComponent', () => {
         agentCommissionAmount: 5000,
         dividendDistributionType: 1,
         organizerPayoutTerm: 1,
-        startDate: '2026-01-01',
+        startDate: firstTerm,
         status: 'ACTIVE',
         createdAt: '2026-01-01',
         updatedAt: '2026-01-01'

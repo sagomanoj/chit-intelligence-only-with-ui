@@ -44,12 +44,12 @@ export class ChitListComponent implements OnInit {
   }
 
   get allExpanded(): boolean {
-    return this.filteredChits.length > 0 && this.expandedChitIds.size === this.filteredChits.length;
+    return this.filteredChits.length > 0 && this.filteredChits.every(item => this.expandedChitIds.has(item.chit.id));
   }
 
   toggleExpandAll(): void {
     if (this.allExpanded) {
-      this.expandedChitIds.clear();
+      this.filteredChits.forEach(item => this.expandedChitIds.delete(item.chit.id));
     } else {
       this.filteredChits.forEach(item => this.expandedChitIds.add(item.chit.id));
     }

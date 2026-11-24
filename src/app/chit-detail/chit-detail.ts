@@ -1,3 +1,4 @@
+import { SheetDirective } from '../sheet.directive';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChitService, Chit, ChitTerm } from '../services/chit.service';
@@ -7,7 +8,7 @@ import { ChitType, CommissionTreatment, getDividendPool, getEligibleMemberCount,
 
 @Component({
   selector: 'app-chit-detail',
-  imports: [CommonModule, FormsModule],
+  imports: [SheetDirective, CommonModule, FormsModule],
   templateUrl: './chit-detail.html',
   styleUrl: './chit-detail.css',
 })
@@ -93,6 +94,14 @@ export class ChitDetailComponent implements OnInit {
         }
       });
     }
+  }
+
+  payoutForTerm(term: ChitTerm): number {
+    if (Number.isFinite(term.payoutReceived)) return term.payoutReceived;
+    // Older backups can omit the stored payout amount.
+    if (!this.chit) return 0;
+    const contribution = this.chit.excludeCurrentTermShare === false ? 0 : this.chit.installmentAmount;
+    return Math.max(0, this.chit.chitValue - term.winningBidAmount - (term.agentCommission || 0) - contribution);
   }
 
   get effectiveStartDate(): string | null {

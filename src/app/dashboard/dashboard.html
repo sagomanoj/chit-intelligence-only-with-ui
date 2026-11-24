@@ -11,70 +11,255 @@
   </header>
 
   <section class="metrics" aria-label="Portfolio highlights">
-    <article class="metric payment"><span class="metric-symbol" aria-hidden="true">▦</span>
-      <div>Estimated payment this month<strong>₹{{ currentMonthMinOutflow | number }}<ng-container *ngIf="currentMonthMinOutflow !== currentMonthMaxOutflow">–₹{{ currentMonthMaxOutflow | number }}</ng-container></strong></div></article>
-    <article class="metric savings"><span>Dividend savings</span><strong>₹{{ totalDividendsRealized | number }}</strong></article>
-    <article class="metric prize"><span>Prize payouts received</span><strong>₹{{ totalPrizeMoneyWon | number }}</strong></article>
+    <article class="metric payment">
+      <svg class="ui-icon chip" aria-hidden="true">
+        <use href="assets/ui-icons.svg#calendar"></use>
+      </svg>
+      <div>
+        Estimated payment this month<strong
+          >₹{{ currentMonthMinOutflow | number
+          }}<ng-container *ngIf="currentMonthMinOutflow !== currentMonthMaxOutflow"
+            >–₹{{ currentMonthMaxOutflow | number }}</ng-container
+          ></strong
+        >
+      </div>
+    </article>
+    <article class="metric savings">
+      <span class="metric-heading"
+        ><svg class="ui-icon chip mint" aria-hidden="true">
+          <use href="assets/ui-icons.svg#savings"></use>
+        </svg>
+        Dividend savings</span
+      ><strong>₹{{ totalDividendsRealized | number }}</strong>
+    </article>
+    <article class="metric prize">
+      <span class="metric-heading"
+        ><svg class="ui-icon chip gold" aria-hidden="true">
+          <use href="assets/ui-icons.svg#trophy"></use>
+        </svg>
+        Prize payouts received</span
+      ><strong>₹{{ totalPrizeMoneyWon | number }}</strong>
+    </article>
   </section>
   <button type="button" class="estimate-control" (click)="openBufferModal()">
-    <span>Dividend estimate <b>{{ minBufferPercent }}–{{ maxBufferPercent }}%</b></span><strong>✎ Edit</strong>
+    <span
+      >Dividend estimate <b>{{ minBufferPercent }}–{{ maxBufferPercent }}%</b></span
+    ><strong
+      ><svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#pencil"></use></svg>
+      Edit</strong
+    >
   </button>
 
   <section class="payment-panel">
-    <div class="section-head"><h2>Scheduled payments</h2>
+    <div class="section-head">
+      <h2>Scheduled payments</h2>
       <div class="month-picker" *ngIf="activeMonthGroup as group">
-        <button type="button" (click)="prevMonth()" [disabled]="selectedMonthIndex === 0" aria-label="Previous month">‹</button>
-        <select aria-label="Payment month" [ngModel]="selectedMonthIndex" (ngModelChange)="goToMonth($event)">
-          <option *ngFor="let month of monthGroups; index as i" [ngValue]="i">{{ month.monthLabel }}</option>
+        <button
+          type="button"
+          (click)="prevMonth()"
+          [disabled]="selectedMonthIndex === 0"
+          aria-label="Previous month"
+        >
+          ‹
+        </button>
+        <select
+          aria-label="Payment month"
+          [ngModel]="selectedMonthIndex"
+          (ngModelChange)="goToMonth($event)"
+        >
+          <option *ngFor="let month of monthGroups; index as i" [ngValue]="i">
+            {{ month.monthLabel }}
+          </option>
         </select>
-        <button type="button" (click)="nextMonth()" [disabled]="selectedMonthIndex === monthGroups.length - 1" aria-label="Next month">›</button>
+        <button
+          type="button"
+          (click)="nextMonth()"
+          [disabled]="selectedMonthIndex === monthGroups.length - 1"
+          aria-label="Next month"
+        >
+          ›
+        </button>
       </div>
     </div>
     <ng-container *ngIf="activeMonthGroup as group">
       <ng-container *ngTemplateOutlet="payments; context: { $implicit: group }"></ng-container>
       <div class="month-links">
-        <button type="button" *ngIf="!group.isCurrentMonth" (click)="goToCurrentMonth()">Current month</button>
+        <button type="button" *ngIf="!group.isCurrentMonth" (click)="goToCurrentMonth()">
+          Current month
+        </button>
         <button type="button" (click)="openMonthModal(group)">View payment breakdown →</button>
       </div>
     </ng-container>
-    <p *ngIf="!monthGroups.length">No upcoming payments yet. <a routerLink="/chits/create">Create a chit group</a></p>
+    <p *ngIf="!monthGroups.length">
+      No upcoming payments yet. <a routerLink="/chits/create">Create a chit group</a>
+    </p>
   </section>
   <ng-template #payments let-group>
-    <button type="button" class="folder-row" *ngFor="let item of group.items" [attr.data-color]="item.color" (click)="viewChit(item.chitId)">
-      <span class="folder-tab">{{ item.chitName }}</span>
+    <button
+      type="button"
+      class="folder-row"
+      *ngFor="let item of group.items"
+      [attr.data-color]="item.color"
+      (click)="viewChit(item.chitId)"
+    >
+      <span class="folder-label"
+        ><span class="folder-tab"
+          ><svg class="ui-icon" aria-hidden="true">
+            <use href="assets/ui-icons.svg#groups"></use>
+          </svg>
+          {{ item.chitName }}</span
+        ><small class="folder-state">{{
+          item.isRecorded
+            ? 'Recorded'
+            : item.isSelfPrizedInThisTerm
+              ? 'Prize payout'
+              : item.isSelfPrizedInPriorTerm
+                ? 'Won previously'
+                : 'Upcoming'
+        }}</small></span
+      >
       <span class="folder-front">
-        <span>Due on {{ dueDay(item.scheduledDate, group.monthKey) }} · Term {{ item.termNumber }} of {{ item.totalMembers }}
-          <small *ngIf="item.isRecorded || item.isSelfPrizedInPriorTerm || item.isSelfPrizedInThisTerm">{{ item.isRecorded ? 'Recorded' : (item.isSelfPrizedInThisTerm ? 'Prize payout' : 'Won previously') }}</small>
+        <span
+          >Due on {{ dueDay(item.scheduledDate, group.monthKey) }} · Term {{ item.termNumber }} of
+          {{ item.totalMembers }}
         </span>
-        <b>₹{{ item.minExpectedPayment | number }}<ng-container *ngIf="item.minExpectedPayment !== item.maxExpectedPayment">–₹{{ item.maxExpectedPayment | number }}</ng-container></b>
+        <b
+          >₹{{ item.minExpectedPayment | number
+          }}<ng-container *ngIf="item.minExpectedPayment !== item.maxExpectedPayment"
+            >–₹{{ item.maxExpectedPayment | number }}</ng-container
+          ></b
+        >
         <span aria-hidden="true">›</span>
       </span>
     </button>
     <p *ngIf="!group.items.length">No payments scheduled for this month.</p>
   </ng-template>
-  <div class="modal-backdrop" *ngIf="showMonthModal && selectedMonthGroup as group" (click)="closeMonthModal()">
-    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Monthly payment breakdown" (click)="$event.stopPropagation()">
-      <header class="modal-header"><h2>Monthly payment breakdown</h2><button type="button" class="btn-close" (click)="closeMonthModal()" aria-label="Close">×</button></header>
-      <div class="modal-body"><p>{{ group.monthLabel }}</p>
-        <div class="month-total">Estimated payment this month<strong>₹{{ group.minTotalPayment | number }}<ng-container *ngIf="group.minTotalPayment !== group.maxTotalPayment">–₹{{ group.maxTotalPayment | number }}</ng-container></strong></div>
-        <ng-container *ngTemplateOutlet="payments; context: { $implicit: group }"></ng-container>
-      </div><footer class="modal-footer"><button type="button" (click)="closeMonthModal()">Close</button></footer>
-    </section>
-  </div>
-  <div class="modal-backdrop" *ngIf="showBufferModal" (click)="closeBufferModal()">
-    <section class="modal-card modal-md buffer-modal-card" role="dialog" aria-modal="true" aria-labelledby="buffer-modal-title" (click)="$event.stopPropagation()">
-      <header class="modal-header"><div><h3 id="buffer-modal-title">Dividend share per member</h3><p class="modal-sub">Set the estimated discount share each eligible member may receive.</p></div><button type="button" class="btn-close" (click)="closeBufferModal()" aria-label="Close">×</button></header>
-      <div class="modal-body">
-
-        <div class="buffer-inputs-grid">
-          <div class="buffer-field"><label for="min-buffer">Minimum estimate (%)</label><input id="min-buffer" type="number" class="form-control" [(ngModel)]="minBufferPercent" (ngModelChange)="onBufferRangeChange()" min="0" max="50" /></div>
-          <span class="buffer-separator" aria-hidden="true">to</span>
-          <div class="buffer-field"><label for="max-buffer">Maximum estimate (%)</label><input id="max-buffer" type="number" class="form-control" [(ngModel)]="maxBufferPercent" (ngModelChange)="onBufferRangeChange()" min="0" max="50" /></div>
+  <dialog
+    appSheet
+    class="ui-overlay"
+    *ngIf="showMonthModal && selectedMonthGroup as group"
+    aria-labelledby="breakdown-title"
+    (cancel)="closeMonthModal()"
+    (click)="closeMonthModal()"
+  >
+    <section class="ui-sheet" (click)="$event.stopPropagation()">
+      <header class="sheet-head">
+        <h2 id="breakdown-title">Monthly payment breakdown</h2>
+        <button type="button" class="ui-close" (click)="closeMonthModal()" aria-label="Close">
+          ×
+        </button>
+      </header>
+      <div class="sheet-body">
+        <p class="breakdown-month">
+          <svg class="ui-icon" aria-hidden="true">
+            <use href="assets/ui-icons.svg#calendar"></use>
+          </svg>
+          {{ group.monthLabel }}
+        </p>
+        <div class="month-total value-card">
+          Estimated payment this month<strong
+            >₹{{ group.minTotalPayment | number
+            }}<ng-container *ngIf="group.minTotalPayment !== group.maxTotalPayment"
+              >–₹{{ group.maxTotalPayment | number }}</ng-container
+            ></strong
+          ><small
+            >{{ group.items.length }} chit
+            {{ group.items.length === 1 ? 'group' : 'groups' }}</small
+          >
         </div>
-        <div class="preset-section"><span class="preset-label">Quick presets</span><div class="preset-pills"><button type="button" class="pill-btn" [class.active]="minBufferPercent === 10 && maxBufferPercent === 20" (click)="setBufferPreset(10, 20)">10–20% <small>Conservative</small></button><button type="button" class="pill-btn" [class.active]="minBufferPercent === 20 && maxBufferPercent === 30" (click)="setBufferPreset(20, 30)">20–30% <small>Standard</small></button><button type="button" class="pill-btn" [class.active]="minBufferPercent === 25 && maxBufferPercent === 35" (click)="setBufferPreset(25, 35)">25–35% <small>Optimistic</small></button></div></div>
-        <div class="buffer-preview-box"><div class="preview-title"><span class="preview-badge">Live example</span><span>On a ₹{{ sampleInstallment | number }} installment</span></div><div class="preview-metrics"><div class="metric-item"><span class="m-label">Estimated share per member</span><strong class="m-val">₹{{ sampleMinDiscount | number }} – ₹{{ sampleMaxDiscount | number }}</strong></div><div class="metric-item"><span class="m-label">Estimated payment</span><strong class="m-val">₹{{ sampleMinOutflow | number }} – ₹{{ sampleMaxOutflow | number }}</strong></div></div></div>
+        <ng-container *ngTemplateOutlet="payments; context: { $implicit: group }"></ng-container>
       </div>
-      <footer class="modal-footer"><button type="button" class="secondary-button" (click)="closeBufferModal()">Done</button></footer>
+      <footer class="sheet-actions">
+        <button type="button" class="ui-action primary" (click)="closeMonthModal()">Close</button>
+      </footer>
     </section>
-  </div>
+  </dialog>
+  <dialog
+    appSheet
+    class="ui-overlay"
+    *ngIf="showBufferModal"
+    aria-labelledby="buffer-modal-title"
+    (cancel)="closeBufferModal()"
+    (click)="closeBufferModal()"
+  >
+    <section class="ui-sheet" (click)="$event.stopPropagation()">
+      <header class="sheet-head">
+        <h2 id="buffer-modal-title">Dividend share per member</h2>
+        <button type="button" class="ui-close" (click)="closeBufferModal()" aria-label="Close">
+          ×
+        </button>
+      </header>
+      <div class="sheet-body">
+        <p class="sheet-intro">Estimate how much each eligible member saves on an installment.</p>
+        <div class="ui-fields buffer-fields">
+          <div class="form-group">
+            <label for="min-buffer">Minimum (%)</label
+            ><input
+              id="min-buffer"
+              type="number"
+              [(ngModel)]="minBufferPercent"
+              (ngModelChange)="onBufferRangeChange()"
+              min="0"
+              max="50"
+            />
+          </div>
+          <div class="form-group">
+            <label for="max-buffer">Maximum (%)</label
+            ><input
+              id="max-buffer"
+              type="number"
+              [(ngModel)]="maxBufferPercent"
+              (ngModelChange)="onBufferRangeChange()"
+              min="0"
+              max="50"
+            />
+          </div>
+        </div>
+        <div class="preset-pills" aria-label="Quick presets">
+          <button
+            type="button"
+            [attr.aria-pressed]="minBufferPercent === 10 && maxBufferPercent === 20"
+            (click)="setBufferPreset(10, 20)"
+          >
+            10–20%<small>Conservative</small>
+          </button>
+          <button
+            type="button"
+            [attr.aria-pressed]="minBufferPercent === 20 && maxBufferPercent === 30"
+            (click)="setBufferPreset(20, 30)"
+          >
+            20–30%<small>Standard</small>
+          </button>
+          <button
+            type="button"
+            [attr.aria-pressed]="minBufferPercent === 25 && maxBufferPercent === 35"
+            (click)="setBufferPreset(25, 35)"
+          >
+            25–35%<small>Optimistic</small>
+          </button>
+        </div>
+        <div class="buffer-preview">
+          <h3 class="ui-heading">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#calendar"></use>
+            </svg>
+            On a ₹{{ sampleInstallment | number }} installment
+          </h3>
+          <dl>
+            <div>
+              <dt>Estimated share</dt>
+              <dd>₹{{ sampleMinDiscount | number }}–₹{{ sampleMaxDiscount | number }}</dd>
+            </div>
+            <div>
+              <dt>Estimated payment</dt>
+              <dd>₹{{ sampleMinOutflow | number }}–₹{{ sampleMaxOutflow | number }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+      <footer class="sheet-actions">
+        <button type="button" class="ui-action primary" (click)="closeBufferModal()">Done</button>
+      </footer>
+    </section>
+  </dialog>
 </div>

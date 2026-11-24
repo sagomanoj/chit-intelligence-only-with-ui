@@ -1,3 +1,4 @@
+import { SheetDirective } from '../sheet.directive';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CalculationService, ProfitRequest, ProfitResponse } from '../services/calculation.service';
 import { ChitService, Chit, ChitTerm } from '../services/chit.service';
@@ -9,7 +10,7 @@ import { AppAdsService } from '../services/app-ads.service';
 
 @Component({
   selector: 'app-auction',
-  imports: [FormsModule, CommonModule],
+  imports: [SheetDirective, FormsModule, CommonModule],
   templateUrl: './auction.html',
   styleUrl: './auction.css',
 })

@@ -1,165 +1,408 @@
-<div class="create-container">
+<div class="create-container ui-page">
   <div class="header-row">
-    <button class="btn btn-back" (click)="cancel()">← Back</button>
+    <button class="ui-action" (click)="cancel()">← Back</button>
     <h1 class="page-title">{{ isEditMode ? 'Edit Chit Group' : 'Create chit group' }}</h1>
   </div>
 
   <div class="form-card">
     <form (ngSubmit)="save()" #chitForm="ngForm">
-      <h2>Group details</h2>
-      <div class="form-grid">
-        <div class="form-group full-width">
-          <label class="required">
-            Chit Group Name
-            <span class="info-icon" (click)="toggleTooltip('name')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'name'">
-            Enter a descriptive title for your chit fund group (e.g. 5 Lakhs 20 Months Chit).
+      <section class="ui-panel">
+        <h2 class="ui-heading">
+          <svg class="ui-icon chip" aria-hidden="true">
+            <use href="assets/ui-icons.svg#groups"></use></svg
+          >Group details
+        </h2>
+        <div class="ui-fields">
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-name" class="required">Group name</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Group name"
+                [attr.aria-expanded]="activeTooltip === 'name'"
+                (click)="toggleTooltip('name')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'name'">
+              Enter a descriptive title for your chit fund group (e.g. 5 Lakhs 20 Months Chit).
+            </div>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="chit.name"
+              id="create-name"
+              name="name"
+              required
+              placeholder="e.g. 5 Lakhs 20 Months Chit"
+            />
           </div>
-          <input type="text" class="form-control" [(ngModel)]="chit.name" name="name" required placeholder="e.g. 5 Lakhs 20 Months Chit">
-        </div>
 
-        <div class="form-group">
-          <label class="required">
-            Total Chit Pool Value (₹)
-            <span class="info-icon" (click)="toggleTooltip('chitValue')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'chitValue'">
-            The total lump sum prize amount of the chit fund group (e.g. ₹5,00,000 or ₹12,00,000).
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-chitValue" class="required">Chit value (₹)</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Chit value (₹)"
+                [attr.aria-expanded]="activeTooltip === 'chitValue'"
+                (click)="toggleTooltip('chitValue')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'chitValue'">
+              The total lump sum prize amount of the chit fund group (e.g. ₹5,00,000 or ₹12,00,000).
+            </div>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="chit.chitValue"
+              (ngModelChange)="onValuesChange()"
+              id="create-chitValue"
+              name="chitValue"
+              required
+              min="1000"
+              placeholder="500000"
+            />
           </div>
-          <input type="number" class="form-control" [(ngModel)]="chit.chitValue" (ngModelChange)="onValuesChange()" name="chitValue" required min="1000" placeholder="500000">
-        </div>
 
-        <div class="form-group">
-          <label class="required">
-            Total Members
-            <span class="info-icon" (click)="toggleTooltip('totalMembers')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'totalMembers'">
-            Total number of participants in the group, which also equals the total duration in terms/months.
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-totalMembers" class="required">Members</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Total Members"
+                [attr.aria-expanded]="activeTooltip === 'totalMembers'"
+                (click)="toggleTooltip('totalMembers')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'totalMembers'">
+              Total number of participants in the group, which also equals the total duration in
+              terms/months.
+            </div>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="chit.totalMembers"
+              (ngModelChange)="onValuesChange()"
+              id="create-totalMembers"
+              name="totalMembers"
+              required
+              min="1"
+              placeholder="20"
+            />
           </div>
-          <input type="number" class="form-control" [(ngModel)]="chit.totalMembers" (ngModelChange)="onValuesChange()" name="totalMembers" required min="1" placeholder="20">
-        </div>
 
-        <div class="form-group">
-          <label>
-            Installment Per Term (₹)
-            <span class="info-icon" (click)="toggleTooltip('installmentAmount')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'installmentAmount'">
-            The base contribution amount per member before subtracting auction dividend discounts (Total Chit Value ÷ Total Members).
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-installmentAmount">Installment per term (₹)</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Installment per term (₹)"
+                [attr.aria-expanded]="activeTooltip === 'installmentAmount'"
+                (click)="toggleTooltip('installmentAmount')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'installmentAmount'">
+              The base contribution amount per member before subtracting auction dividend discounts
+              (Total Chit Value ÷ Total Members).
+            </div>
+            <input
+              type="number"
+              class="form-control text-primary"
+              [(ngModel)]="chit.installmentAmount"
+              id="create-installmentAmount"
+              name="installmentAmount"
+              required
+              readonly
+            />
           </div>
-          <input type="number" class="form-control text-primary" [(ngModel)]="chit.installmentAmount" name="installmentAmount" required readonly>
-          <small class="help-text">Auto-calculated: Chit Value ÷ Total Members</small>
-        </div>
 
-        <div class="form-group">
-          <label>
-            Payment Frequency (Months)
-            <span class="info-icon" (click)="toggleTooltip('frequencyInMonths')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'frequencyInMonths'">
-            How often auctions occur and installments are paid (e.g. Monthly = 1 month, Quarterly = 3 months, Half-Yearly = 6 months).
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-frequencyInMonths">Payment frequency</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Payment frequency"
+                [attr.aria-expanded]="activeTooltip === 'frequencyInMonths'"
+                (click)="toggleTooltip('frequencyInMonths')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'frequencyInMonths'">
+              How often auctions occur and installments are paid (e.g. Monthly = 1 month, Quarterly
+              = 3 months, Half-Yearly = 6 months).
+            </div>
+            <select
+              class="form-control"
+              [(ngModel)]="chit.frequencyInMonths"
+              id="create-frequencyInMonths"
+              name="frequencyInMonths"
+            >
+              <option [ngValue]="1">Monthly</option>
+              <option [ngValue]="2">Every 2 months</option>
+              <option [ngValue]="3">Quarterly</option>
+              <option [ngValue]="4">4 Months</option>
+              <option [ngValue]="5">5 Months</option>
+              <option [ngValue]="6">Every 6 months</option>
+            </select>
           </div>
-          <select class="form-control" [(ngModel)]="chit.frequencyInMonths" name="frequencyInMonths">
-            <option [ngValue]="1">Monthly (1 Month)</option>
-            <option [ngValue]="2">Bi-Monthly (2 Months)</option>
-            <option [ngValue]="3">Quarterly (3 Months)</option>
-            <option [ngValue]="4">4 Months</option>
-            <option [ngValue]="5">5 Months</option>
-            <option [ngValue]="6">Half-Yearly (6 Months)</option>
-          </select>
-        </div>
 
-      </div>
-      <h2>Group rules</h2>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>
-            Organizer Commission (%)
-            <span class="info-icon" (click)="toggleTooltip('agentCommissionPercent')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionPercent'">
-            Percentage fee retained by the foreman/organizer per auction term from the chit pool.
-          </div>
-          <input type="number" class="form-control" [(ngModel)]="chit.agentCommissionPercent" (ngModelChange)="onCommissionPercentChange()" name="agentCommissionPercent" step="0.5" min="0" max="100">
-        </div>
-
-        <div class="form-group">
-          <label>
-            Organizer Commission Amount (₹)
-            <span class="info-icon" (click)="toggleTooltip('agentCommissionAmount')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionAmount'">
-            Foreman fee expressed in Rupees (Total Chit Value × Organizer Commission %).
-          </div>
-          <input type="number" class="form-control" [(ngModel)]="chit.agentCommissionAmount" (ngModelChange)="onCommissionAmountChange()" name="agentCommissionAmount" min="0">
-          <small class="help-text">Auto-calculated: {{ chit.agentCommissionPercent }}% of Chit Value</small>
-        </div>
-
-        <div class="form-group">
-          <label>
-            Organizer Payout Term #
-            <span class="info-icon" (click)="toggleTooltip('organizerPayoutTerm')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'organizerPayoutTerm'">
-            The term number reserved for the foreman/organizer to take the full chit payout without discount.
-          </div>
-          <input type="number" class="form-control" [(ngModel)]="chit.organizerPayoutTerm" name="organizerPayoutTerm" min="1" [max]="chit.totalMembers">
-          <small class="help-text">Term when foreman takes full payout (Max {{ chit.totalMembers }})</small>
-        </div>
-
-        <div class="form-group">
-          <label>
-            Start Date
-            <span class="info-icon" (click)="toggleTooltip('startDate')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'startDate'">
-            The starting date of Term 1 auction for this chit fund group.
-          </div>
-          <input type="date" class="form-control" [(ngModel)]="chit.startDate" name="startDate">
-        </div>
-
-        <div class="form-group">
-          <label class="required">Chit Type</label>
-          <select class="form-control" [(ngModel)]="chit.dividendDistributionType" name="dividendDistributionType" [disabled]="hasRecordedTerms">
-            <option [ngValue]="ChitType.ALWAYS_COMMISSION">Always Commission (all members)</option>
-            <option [ngValue]="ChitType.STANDARD_NON_WINNERS_ONLY">Standard (non-winners only)</option>
-          </select>
-          <small class="help-text">{{ chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION ? 'Every member continues to receive a dividend share, including prior winners.' : 'Only members who have not won yet receive a dividend share.' }}</small>
-        </div>
-
-        <div class="form-group">
-          <label class="required">Commission Treatment</label>
-          <select class="form-control" [(ngModel)]="chit.commissionTreatmentType" name="commissionTreatmentType" [disabled]="hasRecordedTerms">
-            <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">Deduct commission from discount</option>
-            <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">Add commission to discount</option>
-          </select>
-          <small class="help-text"><strong>Subtract from discount:</strong> The organizer’s commission is taken out first; members share what remains.</small>
-          <small class="help-text"><strong>Add to discount:</strong> The organizer’s commission is added before sharing, increasing the dividend pool.</small>
-        </div>
-
-        <div class="form-group full-width" *ngIf="hasRecordedTerms">
-          <small class="help-text">Chit Type and Commission Treatment are locked because this chit already has a recorded term.</small>
-        </div>
-
-        <div class="form-group full-width checkbox-group">
-          <label class="checkbox-label">
-            <input type="checkbox" [(ngModel)]="chit.excludeCurrentTermShare" name="excludeCurrentTermShare">
-            <span>
-              <strong>When you win, exclude your ₹{{ (chit.installmentAmount || 0) | number }} contribution from profit/loss</strong>
-            </span>
-            <span class="info-icon" (click)="toggleTooltip('excludeCurrentTermShare')" title="Click for info">ℹ️</span>
-          </label>
-          <div class="tooltip-box" *ngIf="activeTooltip === 'excludeCurrentTermShare'">
-            When checked, your contribution for the month you win is taken off your payout and is not counted in your profit/loss. Turn this off to keep the full payout and count that contribution as part of your investment.
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-startDate">Start Date</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Start Date"
+                [attr.aria-expanded]="activeTooltip === 'startDate'"
+                (click)="toggleTooltip('startDate')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'startDate'">
+              The starting date of Term 1 auction for this chit fund group.
+            </div>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="chit.startDate"
+              id="create-startDate"
+              name="startDate"
+            />
           </div>
         </div>
-      </div>
+      </section>
+      <section class="ui-panel">
+        <h2 class="ui-heading">
+          <svg class="ui-icon chip violet" aria-hidden="true">
+            <use href="assets/ui-icons.svg#shield"></use></svg
+          >Group rules
+        </h2>
+        <div class="ui-fields">
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-agentCommissionPercent">Organizer commission (%)</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Organizer commission (%)"
+                [attr.aria-expanded]="activeTooltip === 'agentCommissionPercent'"
+                (click)="toggleTooltip('agentCommissionPercent')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionPercent'">
+              Percentage fee retained by the foreman/organizer per auction term from the chit pool.
+            </div>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="chit.agentCommissionPercent"
+              (ngModelChange)="onCommissionPercentChange()"
+              id="create-agentCommissionPercent"
+              name="agentCommissionPercent"
+              step="0.5"
+              min="0"
+              max="100"
+            />
+          </div>
 
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-agentCommissionAmount">Commission amount (₹)</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Commission amount (₹)"
+                [attr.aria-expanded]="activeTooltip === 'agentCommissionAmount'"
+                (click)="toggleTooltip('agentCommissionAmount')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionAmount'">
+              Foreman fee expressed in Rupees (Total Chit Value × Organizer Commission %).
+            </div>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="chit.agentCommissionAmount"
+              (ngModelChange)="onCommissionAmountChange()"
+              id="create-agentCommissionAmount"
+              name="agentCommissionAmount"
+              min="0"
+            />
+            <small class="help-text"
+              >Auto-calculated: {{ chit.agentCommissionPercent }}% of Chit Value</small
+            >
+          </div>
+
+          <div class="form-group">
+            <div class="field-title">
+              <label for="create-organizerPayoutTerm">Organizer payout term</label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About Organizer payout term"
+                [attr.aria-expanded]="activeTooltip === 'organizerPayoutTerm'"
+                (click)="toggleTooltip('organizerPayoutTerm')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'organizerPayoutTerm'">
+              The term number reserved for the foreman/organizer to take the full chit payout
+              without discount.
+            </div>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="chit.organizerPayoutTerm"
+              id="create-organizerPayoutTerm"
+              name="organizerPayoutTerm"
+              min="1"
+              [max]="chit.totalMembers"
+            />
+            <small *ngIf="chit.totalMembers" class="help-text">1 to {{ chit.totalMembers }}</small>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="create-dividendDistributionType" class="required">Chit Type</label>
+            <select
+              class="form-control"
+              [(ngModel)]="chit.dividendDistributionType"
+              id="create-dividendDistributionType"
+              name="dividendDistributionType"
+              [disabled]="hasRecordedTerms"
+            >
+              <option [ngValue]="ChitType.ALWAYS_COMMISSION">
+                Always Commission (all members)
+              </option>
+              <option [ngValue]="ChitType.STANDARD_NON_WINNERS_ONLY">
+                Standard (non-winners only)
+              </option>
+            </select>
+            <small class="help-text">{{
+              chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION
+                ? 'Every member continues to receive a dividend share, including prior winners.'
+                : 'Only members who have not won yet receive a dividend share.'
+            }}</small>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="create-commissionTreatmentType" class="required"
+              >Commission Treatment</label
+            >
+            <select
+              class="form-control"
+              [(ngModel)]="chit.commissionTreatmentType"
+              id="create-commissionTreatmentType"
+              name="commissionTreatmentType"
+              [disabled]="hasRecordedTerms"
+            >
+              <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">
+                Deduct commission from discount
+              </option>
+              <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">
+                Add commission to discount
+              </option>
+            </select>
+            <small class="help-text">{{
+              chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
+                ? 'The organizer’s commission is added to the discount before members share it.'
+                : 'Members share the discount left after the organizer’s commission is deducted.'
+            }}</small>
+            <details class="commission-help">
+              <summary>Compare both options</summary>
+              <p>
+                <strong>Deduct commission</strong> — members share the bid discount minus the fee.
+              </p>
+              <p><strong>Add commission</strong> — members share the bid discount plus the fee.</p>
+            </details>
+          </div>
+
+          <div class="form-group full-width" *ngIf="hasRecordedTerms">
+            <small class="help-text"
+              >Chit Type and Commission Treatment are locked because this chit already has a
+              recorded term.</small
+            >
+          </div>
+
+          <div class="form-group full-width checkbox-group">
+            <div class="field-title">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="chit.excludeCurrentTermShare"
+                  id="create-excludeCurrentTermShare"
+                  name="excludeCurrentTermShare"
+                />
+                <span>
+                  <strong
+                    >When you win, exclude your ₹{{
+                      chit.installmentAmount || 0 | number
+                    }}
+                    contribution from profit/loss</strong
+                  >
+                </span>
+              </label>
+              <button
+                class="help-trigger"
+                type="button"
+                aria-label="About winning term contribution"
+                [attr.aria-expanded]="activeTooltip === 'excludeCurrentTermShare'"
+                (click)="toggleTooltip('excludeCurrentTermShare')"
+              >
+                <svg class="ui-icon" aria-hidden="true">
+                  <use href="assets/ui-icons.svg#info"></use>
+                </svg>
+              </button>
+            </div>
+            <div class="tooltip-box" *ngIf="activeTooltip === 'excludeCurrentTermShare'">
+              When checked, your contribution for the month you win is taken off your payout and is
+              not counted in your profit/loss. Turn this off to keep the full payout and count that
+              contribution as part of your investment.
+            </div>
+          </div>
+        </div>
+      </section>
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
-        <button type="submit" class="btn btn-primary" [disabled]="!chitForm.form.valid">{{ isEditMode ? 'Update Chit Group' : 'Create Chit Group' }}</button>
+        <button type="button" class="ui-action" (click)="cancel()">Cancel</button>
+        <button type="submit" class="ui-action primary" [disabled]="!chitForm.form.valid">
+          {{ isEditMode ? 'Update Chit Group' : 'Create Chit Group' }}
+        </button>
       </div>
     </form>
   </div>

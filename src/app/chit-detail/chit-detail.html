@@ -1,141 +1,232 @@
-<div class="chit-detail-container" *ngIf="chit">
-  <div class="top-nav">
-    <button class="btn btn-back" (click)="goBack()">← Back to Chits</button>
-    <div class="action-buttons">
-      <button class="btn btn-secondary" (click)="editChit()">
-        ✏️ Edit Chit
-      </button>
-      <button class="btn btn-calc" (click)="goToAuction()">
-        🧮 Open Calculator for Chit
-      </button>
-      <button class="btn btn-primary" (click)="openAddTermModal()" *ngIf="!summary?.isFullyCompleted">
-        ➕ Add Term {{ summary?.nextTermNumber }}
-      </button>
-      <button class="btn btn-completed-disabled" disabled *ngIf="summary?.isFullyCompleted">
-        🏆 Chit Completed
-      </button>
-    </div>
+<div class="ui-page" *ngIf="chit">
+  <div class="ui-titlebar">
+    <button class="text-action" (click)="goBack()">← My Chits</button>
+    <button class="text-action" (click)="editChit()">
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#pencil"></use></svg>
+      Edit chit
+    </button>
   </div>
-
-  <div class="chit-header-card">
-    <div class="value-card">
-      <h1>{{ chit.name }}</h1><span>Chit value</span>
-      <strong class="detail-value">₹{{ chit.chitValue | number }}</strong>
-      <p>{{ chit.totalMembers }} members · Every {{ chit.frequencyInMonths }} month{{ chit.frequencyInMonths === 1 ? '' : 's' }}</p>
-      <span class="detail-status">{{ chit.status === 'COMPLETED' ? 'Completed' : 'Ongoing' }}</span>
-      <i class="gold-rings" aria-hidden="true"></i>
-    </div>
-    <details class="group-rules"><summary>Group rules</summary>
-      <p>{{ chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION ? 'Always Commission' : 'Standard (Non-winners only)' }}</p>
-      <p>Commission {{ chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT ? 'added to' : 'deducted from' }} the discount</p>
-    </details>
-    <!-- Summary KPI cards -->
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <span class="kpi-label">Installment Per Term</span>
-        <span class="kpi-value">₹{{ chit.installmentAmount | number }}</span>
-        <span class="kpi-sub">Base amount per term</span>
+  <header class="value-card">
+    <h1>{{ chit.name }}</h1>
+    <span>Chit value</span><strong class="detail-value">₹{{ chit.chitValue | number }}</strong>
+    <p>
+      {{ chit.totalMembers }} members ·
+      {{ chit.frequencyInMonths === 1 ? 'Monthly' : 'Every ' + chit.frequencyInMonths + ' months' }}
+    </p>
+    <span class="detail-status">{{
+      summary?.isFullyCompleted || chit.status === 'COMPLETED' ? 'Completed' : 'Ongoing'
+    }}</span>
+    <i class="gold-rings" aria-hidden="true"></i>
+  </header>
+  <section class="kpi-grid" aria-label="Chit summary">
+    <article>
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#calendar"></use></svg>
+      <div>
+        Installment per term<strong>₹{{ chit.installmentAmount | number }}</strong>
       </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Terms Progress</span>
-        <span class="kpi-value">{{ summary?.termsCompleted }} / {{ chit.totalMembers }}</span>
-        <span class="kpi-sub">{{ summary?.isFullyCompleted ? 'Chit Completed' : (chit.totalMembers - summary?.termsCompleted) + ' terms remaining' }}</span>
+    </article>
+    <article>
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#layers"></use></svg>
+      <div>
+        Terms recorded<strong>{{ summary?.termsCompleted }} of {{ chit.totalMembers }}</strong>
       </div>
-      <div class="kpi-card" *ngIf="effectiveStartDate">
-        <span class="kpi-label">Chit Timeline</span>
-        <span class="kpi-value" style="font-size: 1.1rem; color: #475569;">{{ effectiveStartDate | date:'dd/MM/yyyy' }} — {{ estimatedEndDate | date:'dd/MM/yyyy' }}</span>
-        <span class="kpi-sub">Start to estimated end date</span>
+    </article>
+    <article>
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#wallet"></use></svg>
+      <div>
+        Total paid<strong>₹{{ summary?.totalInvested | number }}</strong>
       </div>
-      <div class="kpi-card text-card-primary">
-        <span class="kpi-label">Total Out-of-Pocket Paid</span>
-        <span class="kpi-value">₹{{ summary?.totalInvested | number }}</span>
-        <span class="kpi-sub">Sum of actual installments paid</span>
+    </article>
+    <article>
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#savings"></use></svg>
+      <div>
+        Dividend savings<strong>₹{{ summary?.totalDividendEarned | number }}</strong>
       </div>
-      <div class="kpi-card text-card-success">
-        <span class="kpi-label">Total Dividends Earned</span>
-        <span class="kpi-value">₹{{ summary?.totalDividendEarned | number }}</span>
-        <span class="kpi-sub">Total saved from auctions</span>
+    </article>
+    <article *ngIf="summary?.isSelfPrized">
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#trophy"></use></svg>
+      <div>
+        Self-prized payout<strong>₹{{ summary?.payoutReceived | number }}</strong
+        >Term {{ summary?.selfPrizedTermNumber }}
       </div>
-      <div class="kpi-card text-card-accent" *ngIf="summary?.isSelfPrized">
-        <span class="kpi-label">Self-Prized Payout</span>
-        <span class="kpi-value">₹{{ summary?.payoutReceived | number }}</span>
-        <span class="kpi-sub">Won in Term #{{ summary?.selfPrizedTermNumber }}</span>
-      </div>
-    </div>
+    </article>
+  </section>
+  <div class="detail-actions">
+    <button
+      class="ui-action primary"
+      (click)="openAddTermModal()"
+      [disabled]="summary?.isFullyCompleted"
+    >
+      {{ summary?.isFullyCompleted ? 'Chit completed' : '＋ Add term ' + summary?.nextTermNumber }}
+    </button>
+    <button class="ui-action" (click)="goToAuction()">
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#calc"></use></svg> Bid
+      calculator
+    </button>
   </div>
-
-  <!-- Terms Transactions Table -->
-  <div class="terms-section">
-    <div class="section-header">
-      <h2>Term Transactions History</h2>
-      <span class="terms-count">{{ terms.length }} Terms Recorded</span>
-    </div>
-
-    <div *ngIf="terms.length > 0; else noTerms">
-      <!-- Desktop Table View (visible on desktop > 768px) -->
+  <section class="ui-panel terms-section">
+    <h2 class="ui-heading">
+      <svg class="ui-icon chip" aria-hidden="true">
+        <use href="assets/ui-icons.svg#calendar"></use>
+      </svg>
+      Term history
+    </h2>
+    <div *ngIf="terms.length; else empty">
       <div class="table-responsive desktop-terms-table">
         <table class="terms-table">
           <thead>
             <tr>
               <th>
                 Term #
-                <span class="info-icon" (click)="toggleTooltip('colTerm')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colTerm'"
+                  (click)="toggleTooltip('colTerm')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTerm'">
                   Sequence number of the auction term (1 to Total Members).
                 </div>
               </th>
               <th>
                 Auction Date
-                <span class="info-icon" (click)="toggleTooltip('colDate')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colDate'"
+                  (click)="toggleTooltip('colDate')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colDate'">
                   Date when the auction was conducted for this term.
                 </div>
               </th>
               <th>
                 Your Dividend Share
-                <span class="info-icon" (click)="toggleTooltip('colDiv')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colDiv'"
+                  (click)="toggleTooltip('colDiv')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colDiv'">
-                  Your rounded dividend share after applying this chit’s distribution type and commission treatment.
+                  Your rounded dividend share after applying this chit’s distribution type and
+                  commission treatment.
                 </div>
               </th>
               <th>
                 Net Installment Paid
-                <span class="info-icon" (click)="toggleTooltip('colNet')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colNet'"
+                  (click)="toggleTooltip('colNet')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colNet'">
-              Your actual out-of-pocket contribution after this chit’s dividend share is applied.
+                  Your actual out-of-pocket contribution after this chit’s dividend share is
+                  applied.
                 </div>
               </th>
               <th>
                 Winning Bid (Discount)
-                <span class="info-icon" (click)="toggleTooltip('colBid')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colBid'"
+                  (click)="toggleTooltip('colBid')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colBid'">
                   Discount amount foregone by the auction winner to claim prize money early.
                 </div>
               </th>
               <th>
                 Agent Commission
-                <span class="info-icon" (click)="toggleTooltip('colComm')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colComm'"
+                  (click)="toggleTooltip('colComm')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colComm'">
                   Foreman fee retained by organizer from the winning bid discount.
                 </div>
               </th>
               <th>
                 Total Dividend
-                <span class="info-icon" (click)="toggleTooltip('colTotDiv')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colTotDiv'"
+                  (click)="toggleTooltip('colTotDiv')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTotDiv'">
                   Total dividend pool using this chit’s selected commission treatment.
                 </div>
               </th>
               <th>
                 Prize Winner
-                <span class="info-icon" (click)="toggleTooltip('colWinner')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colWinner'"
+                  (click)="toggleTooltip('colWinner')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colWinner'">
                   Participant who won and claimed the chit payout in this term.
                 </div>
               </th>
               <th>
                 Actions
-                <span class="info-icon" (click)="toggleTooltip('colActions')" title="Click for info">ℹ️</span>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About this column"
+                  [attr.aria-expanded]="activeTooltip === 'colActions'"
+                  (click)="toggleTooltip('colActions')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colActions'">
                   Edit or delete this term transaction record.
                 </div>
@@ -148,13 +239,15 @@
                 <span class="term-number">Term {{ t.termNumber }}</span>
                 <span class="self-tag" *ngIf="t.isSelfPrized">YOU WON</span>
               </td>
-              <td>{{ t.auctionDate | date:'dd/MM/yyyy' }}</td>
+              <td>{{ t.auctionDate | date: 'dd/MM/yyyy' }}</td>
               <td class="text-success text-semibold">₹{{ t.dividendPerMember | number }}</td>
               <td class="text-primary text-bold">₹{{ t.netInstallmentPaid | number }}</td>
               <td class="text-semibold">₹{{ t.winningBidAmount | number }}</td>
               <td class="text-muted">₹{{ t.agentCommission | number }}</td>
               <td class="text-success">
-                <span *ngIf="t.winningBidAmount !== t.totalDividend">₹{{ t.totalDividend | number }}</span>
+                <span *ngIf="t.winningBidAmount !== t.totalDividend"
+                  >₹{{ t.totalDividend | number }}</span
+                >
                 <span *ngIf="t.winningBidAmount === t.totalDividend" class="text-muted">-</span>
               </td>
               <td>
@@ -162,199 +255,384 @@
                 <span *ngIf="!t.winnerName" class="text-muted">-</span>
               </td>
               <td class="td-actions">
-                <button class="btn-icon" (click)="openEditTermModal(t)" title="Edit Term">✏️</button>
-                <button class="btn-icon btn-icon-danger" (click)="deleteTerm(t.id, t.termNumber)" title="Delete Term">🗑️</button>
+                <button class="btn-icon" (click)="openEditTermModal(t)" title="Edit Term">
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#pencil"></use>
+                  </svg>
+                </button>
+                <button
+                  class="btn-icon btn-icon-danger"
+                  (click)="deleteTerm(t.id, t.termNumber)"
+                  title="Delete Term"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#trash"></use>
+                  </svg>
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-
-      <!-- Mobile Cards View (Visible on screens <= 768px, no horizontal scroll needed) -->
-      <div class="mobile-terms-list">
-        <div class="term-mobile-card" *ngFor="let t of terms" [class.term-card-self]="t.isSelfPrized">
-          <!-- Card Header -->
-          <div class="term-card-header">
-            <div class="term-card-title-group">
-              <span class="term-card-badge">Term {{ t.termNumber }}</span>
-              <span class="term-card-date">{{ t.auctionDate | date:'dd MMM yyyy' }}</span>
+      <div class="mobile-history">
+        <article class="term-card" *ngFor="let t of terms">
+          <header>
+            <b>Term {{ t.termNumber }}</b
+            ><time>{{ t.auctionDate | date: 'dd MMM yyyy' }}</time>
+            <button class="text-action" (click)="openEditTermModal(t)">
+              <svg class="ui-icon" aria-hidden="true">
+                <use href="assets/ui-icons.svg#pencil"></use>
+              </svg>
+              Edit
+            </button>
+          </header>
+          <dl class="term-numbers">
+            <div>
+              <dt>Amount paid</dt>
+              <dd>₹{{ t.netInstallmentPaid | number }}</dd>
             </div>
-            <div class="term-card-tags">
-              <span class="self-tag" *ngIf="t.isSelfPrized">🏆 YOU WON</span>
-              <span class="winner-pill" *ngIf="!t.isSelfPrized && t.winnerName">Winner: {{ t.winnerName }}</span>
+            <div>
+              <dt>Bid discount</dt>
+              <dd>₹{{ t.winningBidAmount | number }}</dd>
             </div>
-            <div class="term-card-actions">
-              <button class="btn-icon" (click)="openEditTermModal(t)" title="Edit Term">✏️</button>
-              <button class="btn-icon btn-icon-danger" (click)="deleteTerm(t.id, t.termNumber)" title="Delete Term">🗑️</button>
+            <div>
+              <dt>Your dividend</dt>
+              <dd>₹{{ t.dividendPerMember | number }}</dd>
             </div>
-          </div>
-
-          <!-- Self Prized Payout Banner if won -->
-          <div class="term-card-payout" *ngIf="t.isSelfPrized">
-            <span class="payout-lbl">Prize Money Claimed:</span>
-            <strong class="payout-val">₹{{ (t.payoutReceived || ((chit.chitValue - t.winningBidAmount - (t.agentCommission || 0)) - ((chit.excludeCurrentTermShare ?? true) ? chit.installmentAmount : 0))) | number }}</strong>
-          </div>
-
-          <!-- Key Financial Row -->
-          <div class="term-card-kpi-row">
-            <div class="term-kpi-col">
-              <span class="kpi-lbl">Paid Out-of-Pocket</span>
-              <strong class="kpi-amt text-primary">₹{{ t.netInstallmentPaid | number }}</strong>
-            </div>
-            <div class="term-kpi-col">
-              <span class="kpi-lbl">Dividend Discount</span>
-              <strong class="kpi-amt text-success">₹{{ t.dividendPerMember | number }}</strong>
-            </div>
-          </div>
-
-          <!-- Detailed Key-Value Grid -->
-          <div class="term-card-grid">
-            <div class="term-grid-item">
-              <span>Winning Bid (Discount)</span>
-              <strong>₹{{ t.winningBidAmount | number }}</strong>
-            </div>
-            <div class="term-grid-item">
-              <span>Total Pool Dividend</span>
-              <strong>₹{{ t.totalDividend | number }}</strong>
-            </div>
-            <div class="term-grid-item" *ngIf="t.agentCommission !== undefined && t.agentCommission !== null">
-              <span>Commission</span>
-              <strong>₹{{ t.agentCommission | number }}</strong>
-            </div>
-            <div class="term-grid-item" *ngIf="!t.isSelfPrized">
-              <span>Auction Winner</span>
-              <strong>{{ t.winnerName || '-' }}</strong>
-            </div>
-          </div>
-
-          <!-- Notes if any -->
-          <div class="term-card-notes" *ngIf="t.notes">
-            <small>📝 {{ t.notes }}</small>
-          </div>
-        </div>
+          </dl>
+          <p class="won" *ngIf="t.isSelfPrized">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#trophy"></use>
+            </svg>
+            You won · ₹{{ payoutForTerm(t) | number }}
+          </p>
+          <details>
+            <summary>Term details</summary>
+            <dl class="term-more">
+              <div>
+                <dt>Total pool dividend</dt>
+                <dd>₹{{ t.totalDividend | number }}</dd>
+              </div>
+              <div>
+                <dt>Commission</dt>
+                <dd>₹{{ t.agentCommission | number }}</dd>
+              </div>
+              <div *ngIf="t.winnerName">
+                <dt>Auction winner</dt>
+                <dd>{{ t.winnerName }}</dd>
+              </div>
+              <div *ngIf="t.notes">
+                <dt>Notes</dt>
+                <dd>{{ t.notes }}</dd>
+              </div>
+            </dl>
+            <button class="text-action danger" (click)="deleteTerm(t.id, t.termNumber)">
+              <svg class="ui-icon" aria-hidden="true">
+                <use href="assets/ui-icons.svg#trash"></use>
+              </svg>
+              Delete term
+            </button>
+          </details>
+        </article>
       </div>
     </div>
-
-    <ng-template #noTerms>
-      <div class="no-data">
-        <p>No term transactions recorded yet for this chit.</p>
-        <button class="btn btn-secondary" (click)="openAddTermModal()">➕ Record First Term</button>
-      </div>
+    <ng-template #empty
+      ><p>No term transactions recorded yet for this chit.</p>
+      <button class="ui-action" (click)="openAddTermModal()">＋ Record first term</button>
     </ng-template>
-  </div>
-
-  <!-- Add/Edit Term Modal -->
-  <div class="modal-backdrop" *ngIf="showAddModal" (click)="closeModal()">
-    <div class="modal-card" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>{{ isEditing ? 'Edit Term Transaction' : 'Record a term' }}</h3>
-        <button class="btn-close" (click)="closeModal()">✕</button>
+  </section>
+  <details class="ui-panel group-rules">
+    <summary>Group rules and timeline</summary>
+    <p>
+      {{
+        chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION
+          ? 'Always Commission'
+          : 'Standard (Non-winners only)'
+      }}
+    </p>
+    <p>
+      Commission
+      {{
+        chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
+          ? 'added to'
+          : 'deducted from'
+      }}
+      the discount
+    </p>
+    <p *ngIf="effectiveStartDate">
+      {{ effectiveStartDate | date: 'dd MMM yyyy' }} –
+      {{ estimatedEndDate | date: 'dd MMM yyyy' }} (estimated)
+    </p>
+  </details>
+  <dialog
+    appSheet
+    aria-labelledby="record-title"
+    (cancel)="closeModal()"
+    class="ui-overlay"
+    *ngIf="showAddModal"
+    (click)="closeModal()"
+  >
+    <div class="ui-sheet" (click)="$event.stopPropagation()">
+      <div class="sheet-head">
+        <h2 id="record-title">{{ isEditing ? 'Edit Term Transaction' : 'Record a term' }}</h2>
+        <button class="ui-close" aria-label="Close term form" (click)="closeModal()">✕</button>
       </div>
 
-      <form (ngSubmit)="saveTerm()" #termForm="ngForm">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>
-              Term Number
-              <span class="info-icon" (click)="toggleTooltip('termNumber')" title="Click for info">ℹ️</span>
-            </label>
-            <div class="tooltip-box" *ngIf="activeTooltip === 'termNumber'">
-              The current sequence term index (1 to Total Members).
+      <form class="term-form" (ngSubmit)="saveTerm()" #termForm="ngForm">
+        <div class="sheet-body">
+          <p class="term-context">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#groups"></use>
+            </svg>
+            {{ chit.name }} · ₹{{ chit.chitValue | number }} chit
+          </p>
+          <div class="ui-fields">
+            <div class="form-group">
+              <div class="field-title">
+                <label for="term-termNumber">Term Number</label>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About Term Number"
+                  [attr.aria-expanded]="activeTooltip === 'termNumber'"
+                  (click)="toggleTooltip('termNumber')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
+              </div>
+              <div class="tooltip-box" *ngIf="activeTooltip === 'termNumber'">
+                The current sequence term index (1 to Total Members).
+              </div>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newTerm.termNumber"
+                (ngModelChange)="onTermNumberChange()"
+                id="term-termNumber"
+                name="termNumber"
+                required
+                min="1"
+                [max]="chit.totalMembers"
+              />
             </div>
-            <input type="number" class="form-control" [(ngModel)]="newTerm.termNumber" (ngModelChange)="onTermNumberChange()" name="termNumber" required min="1" [max]="chit.totalMembers">
-          </div>
 
-          <div class="form-group">
-            <label>
-              Auction Date
-              <span class="info-icon" (click)="toggleTooltip('auctionDate')" title="Click for info">ℹ️</span>
-            </label>
-            <div class="tooltip-box" *ngIf="activeTooltip === 'auctionDate'">
-              Date when the auction was conducted for this term.
+            <div class="form-group">
+              <div class="field-title">
+                <label for="term-auctionDate">Auction Date</label>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About Auction Date"
+                  [attr.aria-expanded]="activeTooltip === 'auctionDate'"
+                  (click)="toggleTooltip('auctionDate')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
+              </div>
+              <div class="tooltip-box" *ngIf="activeTooltip === 'auctionDate'">
+                Date when the auction was conducted for this term.
+              </div>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="newTerm.auctionDate"
+                id="term-auctionDate"
+                name="auctionDate"
+                required
+              />
             </div>
-            <input type="date" class="form-control" [(ngModel)]="newTerm.auctionDate" name="auctionDate" required>
-          </div>
 
-          <div class="form-group">
-            <label>
-              Investment Amount (Net Paid)
-              <span class="info-icon" (click)="toggleTooltip('investmentAmount')" title="Click for info">ℹ️</span>
-            </label>
-            <div class="tooltip-box" *ngIf="activeTooltip === 'investmentAmount'">
-              Your actual contribution after applying the dividend share for this chit type.
+            <div class="form-group">
+              <div class="field-title">
+                <label for="term-winningBidAmount">Winning Bid Amount (Discount)</label>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About Winning Bid Amount (Discount)"
+                  [attr.aria-expanded]="activeTooltip === 'winningBidAmount'"
+                  (click)="toggleTooltip('winningBidAmount')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
+              </div>
+              <div class="tooltip-box" *ngIf="activeTooltip === 'winningBidAmount'">
+                The discount foregone by the auction winner to claim prize money early.
+              </div>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="newTerm.winningBidAmount"
+                (ngModelChange)="onWinningBidChange()"
+                id="term-winningBidAmount"
+                name="winningBidAmount"
+                required
+                min="0"
+                placeholder="0"
+              />
             </div>
-            <input type="number" class="form-control text-primary" [(ngModel)]="newTerm.investmentAmount" (ngModelChange)="onInvestmentAmountChange()" name="investmentAmount" required min="0" placeholder="0" [disabled]="newTerm.isSelfPrized">
-            <small class="help-text" *ngIf="newTerm.isSelfPrized">Winning term — no investment required (₹0)</small>
-            <small class="help-text" *ngIf="!newTerm.isSelfPrized">Actual amount paid per member</small>
-          </div>
 
-          <div class="form-group">
-            <label>
-              Winning Bid Amount (Discount)
-              <span class="info-icon" (click)="toggleTooltip('winningBidAmount')" title="Click for info">ℹ️</span>
-            </label>
-            <div class="tooltip-box" *ngIf="activeTooltip === 'winningBidAmount'">
-              The discount foregone by the auction winner to claim prize money early.
+            <div class="form-group">
+              <div class="field-title">
+                <label for="term-investmentAmount">Investment Amount (Net Paid)</label>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About Investment Amount (Net Paid)"
+                  [attr.aria-expanded]="activeTooltip === 'investmentAmount'"
+                  (click)="toggleTooltip('investmentAmount')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
+              </div>
+              <div class="tooltip-box" *ngIf="activeTooltip === 'investmentAmount'">
+                Your actual contribution after applying the dividend share for this chit type.
+              </div>
+              <input
+                type="number"
+                class="form-control text-primary"
+                [(ngModel)]="newTerm.investmentAmount"
+                (ngModelChange)="onInvestmentAmountChange()"
+                id="term-investmentAmount"
+                name="investmentAmount"
+                required
+                min="0"
+                placeholder="0"
+                [disabled]="newTerm.isSelfPrized"
+              />
+              <small class="help-text" *ngIf="newTerm.isSelfPrized"
+                >Winning term — no investment required (₹0)</small
+              >
             </div>
-            <input type="number" class="form-control" [(ngModel)]="newTerm.winningBidAmount" (ngModelChange)="onWinningBidChange()" name="winningBidAmount" required min="0" placeholder="0">
-            <small class="help-text">Discount foregone in auction</small>
-          </div>
 
-          <div class="form-group full-width">
-            <div class="already-taken-banner dividend-explanation">
-              <ng-container *ngIf="eligibleDividendMembers > 0">
-                <p *ngIf="chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT">We add the ₹{{ chit.agentCommissionAmount | number }} organizer commission to the ₹{{ newTerm.winningBidAmount | number }} bid discount. That gives ₹{{ dividendPoolAmount | number }} to share.</p>
-                <p *ngIf="chit.commissionTreatmentType !== CommissionTreatment.ADD_TO_DISCOUNT">The organizer’s ₹{{ chit.agentCommissionAmount | number }} commission is deducted from the ₹{{ newTerm.winningBidAmount | number }} bid discount, leaving ₹{{ dividendPoolAmount | number }} to share.</p>
-                <p>That is shared by {{ eligibleDividendMembers }} eligible {{ eligibleDividendMembers === 1 ? 'member' : 'members' }}. Each gets about ₹{{ dividendPerEligibleMember | number }} off their installment.</p>
-              </ng-container>
-              <p *ngIf="eligibleDividendMembers === 0">No members are eligible for a dividend in this term, so no discount share will be applied.</p>
-              <p *ngIf="!isUserEligibleForDividend">You have already won, so you do not receive a share for this term.</p>
+            <div class="form-group full-width">
+              <div class="already-taken-banner dividend-explanation">
+                <ng-container *ngIf="eligibleDividendMembers > 0">
+                  <p>
+                    <strong
+                      >{{ eligibleDividendMembers }} eligible
+                      {{ eligibleDividendMembers === 1 ? 'member shares' : 'members share' }} ₹{{
+                        dividendPoolAmount | number
+                      }}.</strong
+                    >
+                    Each saves about ₹{{ dividendPerEligibleMember | number }} this term.
+                  </p>
+                  <details>
+                    <summary>How this is calculated</summary>
+                    <p *ngIf="chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT">
+                      We add the ₹{{ chit.agentCommissionAmount | number }} organizer commission to
+                      the ₹{{ newTerm.winningBidAmount | number }} bid discount. That gives ₹{{
+                        dividendPoolAmount | number
+                      }}
+                      to share.
+                    </p>
+                    <p *ngIf="chit.commissionTreatmentType !== CommissionTreatment.ADD_TO_DISCOUNT">
+                      The organizer’s ₹{{ chit.agentCommissionAmount | number }} commission is
+                      deducted from the ₹{{ newTerm.winningBidAmount | number }} bid discount,
+                      leaving ₹{{ dividendPoolAmount | number }} to share.
+                    </p>
+                  </details>
+                </ng-container>
+                <p *ngIf="eligibleDividendMembers === 0">
+                  No members are eligible for a dividend in this term, so no discount share will be
+                  applied.
+                </p>
+                <p *ngIf="!isUserEligibleForDividend">
+                  You do not receive a dividend share for this term.
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div class="form-group full-width" *ngIf="isSelfPrizedAlreadyWon">
-            <div class="already-taken-banner">
-              🏆 Chit is already taken (Won in Term #{{ selfPrizedTermNumber }})
+            <div class="form-group full-width" *ngIf="isSelfPrizedAlreadyWon">
+              <div class="already-taken-banner">
+                🏆 Chit is already taken (Won in Term #{{ selfPrizedTermNumber }})
+              </div>
             </div>
-          </div>
 
-          <div class="form-group full-width checkbox-group" *ngIf="!isSelfPrizedAlreadyWon">
-            <label class="checkbox-label">
-              <input type="checkbox" [(ngModel)]="newTerm.isSelfPrized" (ngModelChange)="onSelfPrizedChange()" name="isSelfPrized">
-              <span><strong>Did you win this chit payout?</strong> (Mark as Self-Prized)</span>
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label>
-              Winner Name (Optional)
-              <span class="info-icon" (click)="toggleTooltip('winnerName')" title="Click for info">ℹ️</span>
-            </label>
-            <div class="tooltip-box" *ngIf="activeTooltip === 'winnerName'">
-              Name of the participant who won the auction payout for this term.
+            <div class="form-group full-width checkbox-group" *ngIf="!isSelfPrizedAlreadyWon">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="newTerm.isSelfPrized"
+                  (ngModelChange)="onSelfPrizedChange()"
+                  id="term-isSelfPrized"
+                  name="isSelfPrized"
+                />
+                <span><strong>Did you win this chit payout?</strong> (Mark as Self-Prized)</span>
+              </label>
             </div>
-            <input type="text" class="form-control" [(ngModel)]="newTerm.winnerName" name="winnerName" placeholder="Participant Name">
-          </div>
 
-          <div class="form-group">
-            <label>
-              Notes / Remarks (Optional)
-              <span class="info-icon" (click)="toggleTooltip('notes')" title="Click for info">ℹ️</span>
-            </label>
-            <div class="tooltip-box" *ngIf="activeTooltip === 'notes'">
-              Additional notes or references for this term transaction.
+            <div class="form-group">
+              <div class="field-title">
+                <label for="term-winnerName">Winner Name (Optional)</label>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About Winner Name (Optional)"
+                  [attr.aria-expanded]="activeTooltip === 'winnerName'"
+                  (click)="toggleTooltip('winnerName')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
+              </div>
+              <div class="tooltip-box" *ngIf="activeTooltip === 'winnerName'">
+                Name of the participant who won the auction payout for this term.
+              </div>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="newTerm.winnerName"
+                id="term-winnerName"
+                name="winnerName"
+                placeholder="Participant Name"
+              />
             </div>
-            <input type="text" class="form-control" [(ngModel)]="newTerm.notes" name="notes" placeholder="e.g. Term 2 Auction">
+
+            <div class="form-group">
+              <div class="field-title">
+                <label for="term-notes">Notes / Remarks (Optional)</label>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About Notes / Remarks (Optional)"
+                  [attr.aria-expanded]="activeTooltip === 'notes'"
+                  (click)="toggleTooltip('notes')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
+              </div>
+              <div class="tooltip-box" *ngIf="activeTooltip === 'notes'">
+                Additional notes or references for this term transaction.
+              </div>
+              <textarea
+                class="form-control"
+                rows="2"
+                [(ngModel)]="newTerm.notes"
+                id="term-notes"
+                name="notes"
+                placeholder="e.g. Term 2 Auction"
+              ></textarea>
+            </div>
           </div>
         </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="!termForm.form.valid">
+        <div class="sheet-actions">
+          <button type="button" class="ui-action" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="ui-action primary" [disabled]="!termForm.form.valid">
             {{ isEditing ? 'Update Term' : 'Save term' }}
           </button>
         </div>
       </form>
     </div>
-  </div>
+  </dialog>
 </div>

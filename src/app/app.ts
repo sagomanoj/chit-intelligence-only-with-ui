@@ -1,5 +1,5 @@
 import { Component, signal, OnInit, OnDestroy, isDevMode } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
@@ -33,7 +33,11 @@ export class App implements OnInit, OnDestroy {
   importSuccess: string | null = null;
   importError: string | null = null;
 
-  constructor(private chitService: ChitService, private appAds: AppAdsService) {}
+  constructor(private chitService: ChitService, private appAds: AppAdsService, private router: Router) {}
+
+  get inChitCalculator(): boolean {
+    return this.router.url.split(/[?#]/, 1)[0].endsWith('/auction');
+  }
 
   openSettings(): void {
     this.importSuccess = null;
@@ -129,6 +133,7 @@ export class App implements OnInit, OnDestroy {
             };
             this.bannerSizeHandle = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, size => {
               document.documentElement.style.setProperty('--ad-height', Math.max(0, size.height) + 'px');
+              document.documentElement.classList.toggle('android-banner-visible', platform === 'android' && size.height > 0);
             });
             await AdMob.showBanner(options);
 
@@ -218,6 +223,7 @@ export class App implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     void this.bannerSizeHandle?.remove();
     document.documentElement.style.removeProperty('--ad-height');
+    document.documentElement.classList.remove('android-banner-visible');
     if (this.keyboardShowHandle) {
       this.keyboardShowHandle.remove();
     }

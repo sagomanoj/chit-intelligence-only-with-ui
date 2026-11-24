@@ -1,146 +1,155 @@
-<div class="chit-container">
-  <div class="header-section">
-    <div>
-      <h1 class="page-title">My Chit Groups</h1>
-
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-primary" (click)="createChit()">
+<div class="ui-page">
+  <header class="ui-titlebar">
+    <h1>My Chit Groups</h1>
+    <button class="ui-action primary" (click)="createChit()">＋ Create chit group</button>
+  </header>
+  <div class="search-box">
+    <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#search"></use></svg>
+    <input
+      type="search"
+      aria-label="Search chit groups"
+      placeholder="Search chit groups"
+      [(ngModel)]="searchQuery"
+    />
+  </div>
+  <div class="filters">
+    <button [attr.aria-pressed]="activeTab === 'ALL'" (click)="setTab('ALL')">
+      All {{ chitSummaries.length }}
+    </button>
+    <button [attr.aria-pressed]="activeTab === 'ONGOING'" (click)="setTab('ONGOING')">
+      Ongoing {{ ongoingCount }}
+    </button>
+    <button [attr.aria-pressed]="activeTab === 'COMPLETED'" (click)="setTab('COMPLETED')">
+      Completed {{ completedCount }}
+    </button>
+    <button class="toggle-all" *ngIf="filteredChits.length" (click)="toggleExpandAll()">
+      {{ allExpanded ? 'Collapse All' : 'Expand All' }}
+    </button>
+  </div>
+  <div class="folder-list" *ngIf="filteredChits.length; else empty">
+    <article class="chit-folder" *ngFor="let item of filteredChits" [attr.data-color]="item.color">
+      <button
+        class="folder-toggle"
+        [attr.aria-expanded]="isExpanded(item.chit.id)"
+        (click)="toggleExpand($event, item.chit.id)"
+      >
+        <span class="folder-tab"
+          ><svg class="ui-icon" aria-hidden="true">
+            <use href="assets/ui-icons.svg#groups"></use>
+          </svg>
+          {{ item.chit.name }}</span
+        >
+        <span class="folder-cover">
+          <span class="folder-status"
+            >{{
+              item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers
+                ? 'Completed'
+                : 'Ongoing'
+            }}
+            <span aria-hidden="true">{{ isExpanded(item.chit.id) ? '⌃' : '⌄' }}</span></span
+          >
+          <span class="folder-value"
+            ><small>Chit value</small><strong>₹{{ item.chit.chitValue | number }}</strong></span
+          >
+          <span class="folder-terms"
+            ><b>₹{{ item.chit.installmentAmount | number }}</b> per term<small
+              >{{ item.termsCompleted }} of {{ item.chit.totalMembers }} terms recorded</small
+            ></span
+          >
+        </span>
+      </button>
+      <div class="folder-details" *ngIf="isExpanded(item.chit.id)">
+        <div class="amounts">
+          <div>
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#wallet"></use></svg
+            ><span
+              >Total invested<strong>₹{{ item.totalInvested | number }}</strong></span
+            >
+          </div>
+          <div>
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#savings"></use></svg
+            ><span
+              >Dividends earned<strong>₹{{ item.totalDividendEarned | number }}</strong></span
+            >
+          </div>
+          <div *ngIf="item.isSelfPrized">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#trophy"></use></svg
+            ><span
+              >Payout received<strong>₹{{ item.payoutReceived | number }}</strong></span
+            >
+          </div>
+        </div>
+        <details class="rules">
+          <summary>Group rules</summary>
+          <p>
+            {{
+              item.chit.dividendDistributionType === 1
+                ? 'Always Commission · All members receive a share'
+                : 'Standard · Non-winners only'
+            }}
+          </p>
+          <p>
+            Commission
+            {{ item.chit.commissionTreatmentType === 2 ? 'added to' : 'deducted from' }} the
+            discount.
+          </p>
+        </details>
+        <div class="folder-actions">
+          <button class="ui-action" (click)="viewChit(item.chit.id)">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#calendar"></use>
+            </svg>
+            Term history
+          </button>
+          <button class="ui-action" (click)="openCalculator(item.chit.id)">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#calc"></use>
+            </svg>
+            Bid calculator
+          </button>
+          <button class="minor-action" (click)="editChit($event, item.chit.id)">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#pencil"></use>
+            </svg>
+            Edit
+          </button>
+          <button
+            class="minor-action danger"
+            (click)="deleteChit($event, item.chit.id, item.chit.name)"
+          >
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#trash"></use>
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    </article>
+  </div>
+  <ng-template #empty>
+    <div class="ui-panel empty">
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#folder"></use></svg>
+      <h2>{{ chitSummaries.length ? 'No matching chit groups' : 'No chit groups yet' }}</h2>
+      <p>
+        {{
+          chitSummaries.length
+            ? 'Try another name or filter.'
+            : 'Create your first chit group or restore a backup from Settings.'
+        }}
+      </p>
+      <button *ngIf="!chitSummaries.length" class="ui-action primary" (click)="createChit()">
         ＋ Create chit group
       </button>
-    </div>
-  </div>
-
-  <div class="search-filter-section">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Search chits by name..."
-        [(ngModel)]="searchQuery"
-      />
-      <button class="clear-search-btn" *ngIf="searchQuery" (click)="searchQuery = ''">✕</button>
-    </div>
-
-    <div class="tab-filters">
       <button
-        class="tab-btn"
-        [class.active]="activeTab === 'ALL'"
-        (click)="setTab('ALL')"
+        *ngIf="chitSummaries.length"
+        class="ui-action"
+        (click)="searchQuery = ''; setTab('ALL')"
       >
-        All <span class="tab-count">{{ chitSummaries.length }}</span>
+        Show all chits
       </button>
-      <button
-        class="tab-btn"
-        [class.active]="activeTab === 'ONGOING'"
-        (click)="setTab('ONGOING')"
-      >
-        Ongoing <span class="tab-count">{{ ongoingCount }}</span>
-      </button>
-      <button
-        class="tab-btn"
-        [class.active]="activeTab === 'COMPLETED'"
-        (click)="setTab('COMPLETED')"
-      >
-        Completed <span class="tab-count">{{ completedCount }}</span>
-      </button>
-
-      <button type="button" class="btn-toggle-all" (click)="toggleExpandAll()" *ngIf="filteredChits.length > 0">
-        {{ allExpanded ? '▲ Collapse All' : '▼ Expand All' }}
-      </button>
-    </div>
-  </div>
-
-  <div class="chit-grid" *ngIf="filteredChits.length > 0; else emptyState">
-    <div class="chit-card" [attr.data-color]="item.color" *ngFor="let item of filteredChits" [class.is-expanded]="isExpanded(item.chit.id)">
-      <!-- Compact Header (Always visible - Click to Expand) -->
-      <button type="button" class="folder-tab" (click)="toggleExpand($event, item.chit.id)" [attr.aria-expanded]="isExpanded(item.chit.id)">{{ item.chit.name }}</button>
-      <div class="card-compact-header" (click)="toggleExpand($event, item.chit.id)">
-        <div class="header-left">
-          <div class="title-row">
-
-            <span class="status-badge" [class.badge-completed]="item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers">
-              {{ (item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers) ? 'COMPLETED' : 'ONGOING' }}
-            </span>
-          </div>
-          <div class="compact-meta">
-            <span class="meta-term">Term {{ item.termsCompleted }}/{{ item.chit.totalMembers }}</span>
-            <span class="meta-dot">•</span>
-            <span class="meta-inst">₹{{ item.chit.installmentAmount | number }} per term</span>
-            <span class="meta-dot">•</span>
-            <span class="compact-progress-tag" *ngIf="!isExpanded(item.chit.id)">{{ item.progressPercent }}% Complete</span>
-          </div>
-        </div>
-
-        <div class="header-right">
-          <div class="pool-amount">
-            <span class="amount-label">Chit Value</span>
-            <span class="amount-value">₹{{ item.chit.chitValue | number }}</span>
-          </div>
-          <button type="button" class="btn-chevron" [attr.aria-expanded]="isExpanded(item.chit.id)" [attr.aria-label]="'Show or hide details for ' + item.chit.name">
-            <span class="chevron-icon">{{ isExpanded(item.chit.id) ? '▲' : '▼' }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Expandable Details Section (Shown when expanded) -->
-      <div class="card-expandable-content" *ngIf="isExpanded(item.chit.id)">
-        <div class="card-body">
-          <div class="progress-container">
-            <div class="progress-bar" [style.width.%]="item.progressPercent"></div>
-          </div>
-          <div class="progress-label">{{ item.termsCompleted }} of {{ item.chit.totalMembers }} terms completed</div>
-
-          <div class="financial-summary">
-            <div class="fin-box">
-              <span class="fin-title">Chit Type</span>
-              <span class="fin-val">{{ item.chit.dividendDistributionType === 1 ? 'Always Commission' : 'Standard' }}</span>
-              <small class="fin-note">{{ item.chit.dividendDistributionType === 1 ? 'All members receive a share' : 'Non-winners only' }}</small>
-            </div>
-            <div class="fin-box">
-              <span class="fin-title">Commission handling</span>
-              <span class="fin-val">{{ item.chit.commissionTreatmentType === 2 ? 'Added to discount' : 'Deducted from discount' }}</span>
-            </div>
-            <div class="fin-box">
-              <span class="fin-title">Total Invested</span>
-              <span class="fin-val text-primary">₹{{ item.totalInvested | number }}</span>
-            </div>
-            <div class="fin-box">
-              <span class="fin-title">Dividends Earned</span>
-              <span class="fin-val text-success">₹{{ item.totalDividendEarned | number }}</span>
-            </div>
-            <div class="fin-box" *ngIf="item.isSelfPrized">
-              <span class="fin-title">Payout Received</span>
-              <span class="fin-val text-accent">₹{{ item.payoutReceived | number }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card-actions" (click)="$event.stopPropagation()">
-          <button class="btn-action btn-calc" (click)="openCalculator(item.chit.id)">
-            🧮 Open Calculator
-          </button>
-          <button class="btn-action btn-detail" (click)="viewChit(item.chit.id)">
-            📋 Term History
-          </button>
-          <button class="btn-action btn-edit" (click)="editChit($event, item.chit.id)">
-            ✏️ Edit Chit
-          </button>
-          <button class="btn-action btn-delete" (click)="deleteChit($event, item.chit.id, item.chit.name)">
-            🗑️ Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <ng-template #emptyState>
-    <div class="empty-card">
-      <div class="empty-icon">📁</div>
-      <h3>No Chit Groups Found</h3>
-      <p>Get started by creating your first Chit Fund group or import existing data from a JSON file.</p>
-      <button class="btn btn-primary" (click)="createChit()">➕ Create First Chit</button>
     </div>
   </ng-template>
 </div>

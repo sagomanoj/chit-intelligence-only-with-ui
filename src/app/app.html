@@ -1,42 +1,101 @@
 <nav class="app-nav">
-  <div class="nav-brand" routerLink="/dashboard">
+  <a class="nav-brand" routerLink="/dashboard" (click)="closeSettings()">
     <img src="assets/ribbon.svg" alt="Chit Intelligence Logo" class="brand-logo-img" />
     <span class="brand-text">Chit Intelligence</span>
-  </div>
+  </a>
   <div class="nav-links" [class.settings-open]="showSettingsModal">
-    <a routerLink="/dashboard" routerLinkActive="active-link" class="nav-item" title="Portfolio Dashboard">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 3v18h18"/>
-        <rect x="7" y="10" width="3" height="7" rx="1"/>
-        <rect x="12" y="5" width="3" height="12" rx="1"/>
-        <rect x="17" y="8" width="3" height="9" rx="1"/>
+    <a
+      (click)="closeSettings()"
+      routerLink="/dashboard"
+      routerLinkActive="active-link"
+      class="nav-item"
+      title="Portfolio Dashboard"
+    >
+      <svg
+        class="nav-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M3 3v18h18" />
+        <rect x="7" y="10" width="3" height="7" rx="1" />
+        <rect x="12" y="5" width="3" height="12" rx="1" />
+        <rect x="17" y="8" width="3" height="9" rx="1" />
       </svg>
       <span>Dashboard</span>
     </a>
-    <a routerLink="/chits" routerLinkActive="active-link" class="nav-item" title="My Chit Groups">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <ellipse cx="12" cy="5" rx="9" ry="3"/>
-        <path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
-        <path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6"/>
+    <a
+      (click)="closeSettings()"
+      routerLink="/chits"
+      [routerLinkActive]="inChitCalculator ? '' : 'active-link'"
+      class="nav-item"
+      title="My Chit Groups"
+    >
+      <svg
+        class="nav-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <ellipse cx="12" cy="5" rx="9" ry="3" />
+        <path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+        <path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6" />
       </svg>
       <span>My Chits</span>
     </a>
-    <a routerLink="/calculator" routerLinkActive="active-link" class="nav-item" title="Auction & Bid Calculator">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="3"/>
-        <line x1="8" y1="7" x2="16" y2="7"/>
-        <line x1="16" y1="13" x2="16" y2="17"/>
-        <circle cx="8.5" cy="12" r="1"/>
-        <circle cx="12" cy="12" r="1"/>
-        <circle cx="8.5" cy="16" r="1"/>
-        <circle cx="12" cy="16" r="1"/>
+    <a
+      (click)="closeSettings()"
+      routerLink="/calculator"
+      routerLinkActive="active-link"
+      [class.context-active]="inChitCalculator"
+      class="nav-item"
+      title="Auction & Bid Calculator"
+    >
+      <svg
+        class="nav-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="4" y="2" width="16" height="20" rx="3" />
+        <line x1="8" y1="7" x2="16" y2="7" />
+        <line x1="16" y1="13" x2="16" y2="17" />
+        <circle cx="8.5" cy="12" r="1" />
+        <circle cx="12" cy="12" r="1" />
+        <circle cx="8.5" cy="16" r="1" />
+        <circle cx="12" cy="16" r="1" />
       </svg>
       <span>Calculator</span>
     </a>
-    <button type="button" class="nav-item nav-btn-settings" [class.active-settings]="showSettingsModal" (click)="openSettings()" title="Settings & JSON Backup">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    <button
+      type="button"
+      class="nav-item nav-btn-settings"
+      [class.active-settings]="showSettingsModal"
+      (click)="openSettings()"
+      title="Settings & JSON Backup"
+    >
+      <svg
+        class="nav-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+        />
       </svg>
       <span>Settings</span>
     </button>
@@ -45,94 +104,112 @@
 
 <section class="app-update-banner" *ngIf="showUpdateBanner" role="status" aria-live="polite">
   <div class="app-update-copy">
-    <strong>{{ updateDownloaded ? 'Update ready to install' : 'A new app version is available' }}</strong>
-    <span *ngIf="updateAvailableVersion">Google Play version code {{ updateAvailableVersion }}</span>
+    <strong>{{
+      updateDownloaded ? 'Update ready to install' : 'A new app version is available'
+    }}</strong>
+    <span *ngIf="updateAvailableVersion"
+      >Google Play version code {{ updateAvailableVersion }}</span
+    >
     <span *ngIf="updateDownloaded">Restart the app to finish updating.</span>
   </div>
-  <button type="button" class="app-update-action" (click)="installAppUpdate()" [disabled]="updateBusy">
-    {{ updateBusy ? 'Please wait…' : (updateDownloaded ? 'Restart now' : 'Update now') }}
+  <button
+    type="button"
+    class="app-update-action"
+    (click)="installAppUpdate()"
+    [disabled]="updateBusy"
+  >
+    {{ updateBusy ? 'Please wait…' : updateDownloaded ? 'Restart now' : 'Update now' }}
   </button>
-  <button type="button" class="app-update-dismiss" aria-label="Dismiss update notice" (click)="dismissUpdateBanner()">×</button>
+  <button
+    type="button"
+    class="app-update-dismiss"
+    aria-label="Dismiss update notice"
+    (click)="dismissUpdateBanner()"
+  >
+    ×
+  </button>
 </section>
 
 <main class="app-content">
-  <router-outlet></router-outlet>
+  <div [hidden]="showSettingsModal"><router-outlet></router-outlet></div>
+  <section *ngIf="showSettingsModal" class="ui-page settings-page" aria-labelledby="settings-title">
+    <div class="ui-heading-line">
+      <h1 id="settings-title">Settings &amp; backup</h1>
+      <button class="ui-close" aria-label="Close settings" (click)="closeSettings()">×</button>
+    </div>
+    <div *ngIf="importSuccess" class="alert-success" role="status">{{ importSuccess }}</div>
+    <div *ngIf="importError" class="alert-danger" role="alert">{{ importError }}</div>
+    <section class="ui-panel">
+      <h2 class="ui-heading">
+        <svg class="ui-icon chip" aria-hidden="true">
+          <use href="assets/ui-icons.svg#backup"></use>
+        </svg>
+        Backup &amp; restore
+      </h2>
+      <p>
+        Your chits and term records are saved on this device. Export a backup before changing or
+        resetting your device.
+      </p>
+      <button type="button" class="settings-row" (click)="exportData()">
+        <svg class="ui-icon chip" aria-hidden="true">
+          <use href="assets/ui-icons.svg#upload"></use></svg
+        ><span><b>Export backup</b><small>Download a JSON file</small></span
+        ><span class="arrow">›</span>
+      </button>
+      <button type="button" class="settings-row" (click)="backupFile.click()">
+        <svg class="ui-icon chip mint" aria-hidden="true">
+          <use href="assets/ui-icons.svg#download"></use></svg
+        ><span><b>Import backup</b><small>Restore from a backup file</small></span
+        ><span class="arrow">›</span>
+      </button>
+      <input
+        #backupFile
+        type="file"
+        (change)="onFileSelected($event); backupFile.value = ''"
+        accept=".json"
+        hidden
+      />
+    </section>
+    <section class="ui-panel">
+      <h2 class="ui-heading">
+        <svg class="ui-icon chip violet" aria-hidden="true">
+          <use href="assets/ui-icons.svg#layers"></use>
+        </svg>
+        App &amp; storage
+      </h2>
+      <dl class="settings-data">
+        <div>
+          <dt>App version</dt>
+          <dd>1.0.8</dd>
+        </div>
+        <div>
+          <dt>Storage</dt>
+          <dd>Local device storage</dd>
+        </div>
+      </dl>
+    </section>
+    <section *ngIf="showAdPrivacyOptions" class="ui-panel">
+      <h2 class="ui-heading">
+        <svg class="ui-icon chip mint" aria-hidden="true">
+          <use href="assets/ui-icons.svg#shield"></use>
+        </svg>
+        Ad privacy
+      </h2>
+      <button class="settings-row" (click)="openAdPrivacyOptions()">
+        Manage ad privacy choices <span class="arrow">›</span>
+      </button>
+    </section>
+    <section class="ui-panel">
+      <h2 class="ui-heading">
+        <svg class="ui-icon chip violet" aria-hidden="true">
+          <use href="assets/ui-icons.svg#refresh"></use>
+        </svg>
+        App updates
+      </h2>
+      <button class="settings-row" (click)="checkForAppUpdate(true)">
+        Check for updates <span class="arrow">›</span>
+      </button>
+      <p *ngIf="updateMessage" aria-live="polite">{{ updateMessage }}</p>
+    </section>
+  </section>
 </main>
-
-<!-- Settings & Local Backup Modal -->
-<div class="settings-modal-overlay" *ngIf="showSettingsModal" (click)="closeSettings()">
-  <div class="settings-modal-card" (click)="$event.stopPropagation()">
-    <div class="settings-modal-header">
-      <div class="settings-title-row">
-        <span class="settings-icon">⚙️</span>
-        <h3>Settings & Backup</h3>
-      </div>
-      <button class="settings-close-btn" aria-label="Close settings" (click)="closeSettings()">&times;</button>
-    </div>
-
-    <div class="settings-modal-body">
-      <!-- Alerts -->
-      <div *ngIf="importSuccess" class="alert-banner alert-success">
-        ✓ {{ importSuccess }}
-      </div>
-      <div *ngIf="importError" class="alert-banner alert-danger">
-        ⚠️ {{ importError }}
-      </div>
-
-      <!-- Backup & Restore -->
-      <div class="settings-section">
-        <h4>📦 Backup & Restore</h4>
-        <p class="settings-hint">
-          Your chits and term records are saved on this device. Export a JSON backup before changing or resetting your device, then import it here to restore your data.
-        </p>
-
-        <div class="backup-actions-grid">
-          <button type="button" class="btn-backup btn-export" (click)="exportData()">
-            <span class="btn-icon">📥</span>
-            <div class="btn-text">
-              <strong>Export Backup</strong>
-              <small>Download JSON file</small>
-            </div>
-          </button>
-
-          <label class="btn-backup btn-import">
-            <span class="btn-icon">📤</span>
-            <div class="btn-text">
-              <strong>Import Backup</strong>
-              <small>Restore from JSON file</small>
-            </div>
-            <input type="file" (change)="onFileSelected($event)" accept=".json" hidden />
-          </label>
-        </div>
-      </div>
-
-      <!-- Storage Info -->
-      <div class="settings-section">
-        <h4>ℹ️ App & Storage Details</h4>
-        <div class="settings-info-grid">
-          <div class="info-item">
-            <span>App Version</span>
-            <strong>1.0.8</strong>
-          </div>
-          <div class="info-item">
-            <span>Storage Mode</span>
-            <strong class="text-success">Local device storage</strong>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-section" *ngIf="showAdPrivacyOptions">
-        <h4>Ad privacy choices</h4>
-        <p class="settings-hint">Review or update the choices used to show ads.</p>
-        <button type="button" class="btn-backup" (click)="openAdPrivacyOptions()">Manage ad privacy choices</button>
-      </div>
-
-      <div class="settings-section">
-        <h4>App updates</h4>
-        <p class="settings-hint">Check Google Play for a newer version of Chit Intelligence.</p>
-        <button type="button" class="btn-backup" (click)="checkForAppUpdate(true)">Check for updates</button>
-        <p class="settings-hint update-check-message" *ngIf="updateMessage" aria-live="polite">{{ updateMessage }}</p>
-      </div>
-    </div>
-  </div>
-</div>
