@@ -1,9 +1,9 @@
 <nav class="app-nav">
   <div class="nav-brand" routerLink="/dashboard">
-    <img src="assets/logo.png" alt="Chit Intelligence Logo" class="brand-logo-img" />
+    <img src="assets/ribbon.svg" alt="Chit Intelligence Logo" class="brand-logo-img" />
     <span class="brand-text">Chit Intelligence</span>
   </div>
-  <div class="nav-links">
+  <div class="nav-links" [class.settings-open]="showSettingsModal">
     <a routerLink="/dashboard" routerLinkActive="active-link" class="nav-item" title="Portfolio Dashboard">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 3v18h18"/>
@@ -33,7 +33,7 @@
       </svg>
       <span>Calculator</span>
     </a>
-    <button type="button" class="nav-item nav-btn-settings" (click)="openSettings()" title="Settings & Backup">
+    <button type="button" class="nav-item nav-btn-settings" [class.active-settings]="showSettingsModal" (click)="openSettings()" title="Settings & JSON Backup">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -43,19 +43,31 @@
   </div>
 </nav>
 
+<section class="app-update-banner" *ngIf="showUpdateBanner" role="status" aria-live="polite">
+  <div class="app-update-copy">
+    <strong>{{ updateDownloaded ? 'Update ready to install' : 'A new app version is available' }}</strong>
+    <span *ngIf="updateAvailableVersion">Google Play version code {{ updateAvailableVersion }}</span>
+    <span *ngIf="updateDownloaded">Restart the app to finish updating.</span>
+  </div>
+  <button type="button" class="app-update-action" (click)="installAppUpdate()" [disabled]="updateBusy">
+    {{ updateBusy ? 'Please wait…' : (updateDownloaded ? 'Restart now' : 'Update now') }}
+  </button>
+  <button type="button" class="app-update-dismiss" aria-label="Dismiss update notice" (click)="dismissUpdateBanner()">×</button>
+</section>
+
 <main class="app-content">
   <router-outlet></router-outlet>
 </main>
 
-<!-- Universal Settings & Data Backup Modal -->
+<!-- Settings & Local Backup Modal -->
 <div class="settings-modal-overlay" *ngIf="showSettingsModal" (click)="closeSettings()">
   <div class="settings-modal-card" (click)="$event.stopPropagation()">
     <div class="settings-modal-header">
       <div class="settings-title-row">
         <span class="settings-icon">⚙️</span>
-        <h3>Settings & Data Backup</h3>
+        <h3>Settings & Backup</h3>
       </div>
-      <button class="settings-close-btn" (click)="closeSettings()">&times;</button>
+      <button class="settings-close-btn" aria-label="Close settings" (click)="closeSettings()">&times;</button>
     </div>
 
     <div class="settings-modal-body">
@@ -69,9 +81,9 @@
 
       <!-- Backup & Restore -->
       <div class="settings-section">
-        <h4>📦 Local Data Backup & Restore</h4>
+        <h4>📦 Backup & Restore</h4>
         <p class="settings-hint">
-          All your chits and monthly term records are saved securely inside this app. You can download a backup file to keep your data safe or transfer it to another device.
+          Your chits and term records are saved on this device. Export a JSON backup before changing or resetting your device, then import it here to restore your data.
         </p>
 
         <div class="backup-actions-grid">
@@ -100,24 +112,26 @@
         <div class="settings-info-grid">
           <div class="info-item">
             <span>App Version</span>
-            <strong>1.0.7 (Production Ready)</strong>
+            <strong>1.0.8</strong>
           </div>
           <div class="info-item">
             <span>Storage Mode</span>
-            <strong class="text-success">100% Offline (Local Storage)</strong>
+            <strong class="text-success">Local device storage</strong>
           </div>
         </div>
       </div>
 
-      <!-- Danger Section -->
-      <div class="settings-section danger-section">
-        <h4>⚠️ Reset Data</h4>
-        <p class="settings-hint">
-          Restore initial sample chits if you want to test from scratch.
-        </p>
-        <button type="button" class="btn-danger-reset" (click)="resetSampleData()">
-          🔄 Reset to Sample Data
-        </button>
+      <div class="settings-section" *ngIf="showAdPrivacyOptions">
+        <h4>Ad privacy choices</h4>
+        <p class="settings-hint">Review or update the choices used to show ads.</p>
+        <button type="button" class="btn-backup" (click)="openAdPrivacyOptions()">Manage ad privacy choices</button>
+      </div>
+
+      <div class="settings-section">
+        <h4>App updates</h4>
+        <p class="settings-hint">Check Google Play for a newer version of Chit Intelligence.</p>
+        <button type="button" class="btn-backup" (click)="checkForAppUpdate(true)">Check for updates</button>
+        <p class="settings-hint update-check-message" *ngIf="updateMessage" aria-live="polite">{{ updateMessage }}</p>
       </div>
     </div>
   </div>

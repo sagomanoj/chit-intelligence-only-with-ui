@@ -857,3 +857,20 @@
   }
 }
 
+.chit-detail-container { max-width:920px; margin:auto; padding-bottom:16px; }
+.chit-header-card { background:transparent; border:0; padding:0; box-shadow:none; }
+.value-card h1 { margin:0 0 4px; font-size:1.45rem; }
+.detail-value { display:block; font-size:clamp(1.8rem,7vw,3.1rem); padding-right:18%; overflow-wrap:anywhere; }
+.value-card p { margin:4px 0; }
+.detail-status { display:inline-block; padding:3px 10px; background:#e1fbf3; color:#183d52; margin-top:8px; border-radius:12px; }
+.group-rules { margin-top:10px; color:#355376; }
+.group-rules summary { cursor:pointer; }
+.kpi-card { background:#e4f2ff; box-shadow:var(--card-shadow); border-radius:13px; }
+.kpi-card:nth-child(2) { background:#fff2d7; }
+.kpi-card:nth-child(3) { background:#f4ecff; }
+.kpi-card.text-card-primary { background:#dbf5ef; }
+.kpi-card.text-card-success { background:#e9f9df; }
+.term-mobile-card,.terms-section { box-shadow:var(--card-shadow); }
+.modal-backdrop { height:auto; inset:0; padding:12px 12px var(--bottom-space); }
+.modal-card { max-height:100%; margin:0; }
+@media(max-width:640px) { .modal-card { width:100%!important; max-width:550px!important; border-radius:17px!important; } }

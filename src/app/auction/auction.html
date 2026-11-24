@@ -18,7 +18,7 @@
 
   <header class="page-header" *ngIf="!chit">
     <div class="header-title-row">
-      <h1 class="main-title"><span class="eyebrow">Chit Intelligence</span> Bid Profit Calculator</h1>
+      <h1 class="main-title">Bid calculator</h1>
     </div>
   </header>
 
@@ -138,7 +138,7 @@
           <div class="form-group wide checkbox-row">
             <label class="checkbox-label">
               <input type="checkbox" [(ngModel)]="excludeOwnShare" (ngModelChange)="onInputChange()" name="excludeOwnShare">
-              <span>Exclude my current ₹{{ getShareAmount() | number:'1.0-0' }} installment from the payout and profit estimate</span>
+              <span>Exclude my monthly contribution (₹{{ getShareAmount() | number:'1.0-0' }}) from the winner payout and profit/loss calculation</span>
             </label>
           </div>
         </div>
@@ -198,7 +198,8 @@
 
 
     <aside class="insight-rail" [class.is-calculating]="isCalculating" [class.modal-open]="showModalResults">
-      <button class="close-modal-btn" (click)="toggleModalResults()">&times;</button>
+      <h2 class="result-heading">Bid results</h2>
+      <button aria-label="Close bid results" class="close-modal-btn" (click)="toggleModalResults()">&times;</button>
       <div class="loading-overlay" *ngIf="isCalculating">
         <div class="spinner"></div>
       </div>
@@ -209,25 +210,6 @@
       </div>
 
       <ng-container *ngIf="profit">
-        <article class="result-slider-card">
-          <div class="result-slider-header">
-            <div class="result-slider-title">
-              <span class="slider-badge">Live Adjuster</span>
-              <h3>Bid Discount Adjuster</h3>
-            </div>
-            <div class="slider-header-values">
-              <strong class="result-slider-value">₹{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
-              <span class="slider-pay-tag">Pay: ₹{{ getAmountToBePaid() | number:'1.0-0' }}</span>
-            </div>
-          </div>
-          <input type="range" class="result-slider-input" min="0" [max]="getDiscountUpperBound()" step="1000"
-                 [value]="discountAmount || 0" (input)="onDiscountSliderChange($event)">
-          <div class="result-slider-meta">
-            <span>₹0</span>
-            <span>Max Limit: ₹{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
-          </div>
-        </article>
-
         <article class="hero-result" [class.loss-card]="profit.status === 'LOSS'" [class.neutral-card]="profit.status === 'NO PROFIT / NO LOSS'">
           <div>
             <span>{{ profit.status }}</span>
@@ -257,6 +239,25 @@
             <small>past + future</small>
           </article>
         </section>
+
+        <article class="result-slider-card">
+          <div class="result-slider-header">
+            <div class="result-slider-title">
+              <span class="slider-badge">Live Adjuster</span>
+              <h3>Bid Discount Adjuster</h3>
+            </div>
+            <div class="slider-header-values">
+              <strong class="result-slider-value">₹{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
+              <span class="slider-pay-tag">Pay: ₹{{ getAmountToBePaid() | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <input type="range" class="result-slider-input" min="0" [max]="getDiscountUpperBound()" step="1000"
+                 [value]="discountAmount || 0" (input)="onDiscountSliderChange($event)">
+          <div class="result-slider-meta">
+            <span>₹0</span>
+            <span>Max Limit: ₹{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
+          </div>
+        </article>
 
         <section class="compact-panel">
           <h2>Bid Breakdown</h2>

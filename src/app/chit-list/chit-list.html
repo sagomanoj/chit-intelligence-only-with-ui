@@ -2,11 +2,11 @@
   <div class="header-section">
     <div>
       <h1 class="page-title">My Chit Groups</h1>
-      <p class="subtitle">Manage chit terms, track transactions, and run term profit calculations locally.</p>
+
     </div>
     <div class="header-actions">
       <button class="btn btn-primary" (click)="createChit()">
-        ➕ Create New Chit
+        ＋ Create chit group
       </button>
     </div>
   </div>
@@ -53,12 +53,13 @@
   </div>
 
   <div class="chit-grid" *ngIf="filteredChits.length > 0; else emptyState">
-    <div class="chit-card" *ngFor="let item of filteredChits" [class.is-expanded]="isExpanded(item.chit.id)">
+    <div class="chit-card" [attr.data-color]="item.color" *ngFor="let item of filteredChits" [class.is-expanded]="isExpanded(item.chit.id)">
       <!-- Compact Header (Always visible - Click to Expand) -->
+      <button type="button" class="folder-tab" (click)="toggleExpand($event, item.chit.id)" [attr.aria-expanded]="isExpanded(item.chit.id)">{{ item.chit.name }}</button>
       <div class="card-compact-header" (click)="toggleExpand($event, item.chit.id)">
         <div class="header-left">
           <div class="title-row">
-            <h3 class="chit-name">{{ item.chit.name }}</h3>
+
             <span class="status-badge" [class.badge-completed]="item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers">
               {{ (item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers) ? 'COMPLETED' : 'ONGOING' }}
             </span>
@@ -66,7 +67,7 @@
           <div class="compact-meta">
             <span class="meta-term">Term {{ item.termsCompleted }}/{{ item.chit.totalMembers }}</span>
             <span class="meta-dot">•</span>
-            <span class="meta-inst">₹{{ item.chit.installmentAmount | number }}/mo</span>
+            <span class="meta-inst">₹{{ item.chit.installmentAmount | number }} per term</span>
             <span class="meta-dot">•</span>
             <span class="compact-progress-tag" *ngIf="!isExpanded(item.chit.id)">{{ item.progressPercent }}% Complete</span>
           </div>
@@ -77,7 +78,7 @@
             <span class="amount-label">Chit Value</span>
             <span class="amount-value">₹{{ item.chit.chitValue | number }}</span>
           </div>
-          <button type="button" class="btn-chevron" [attr.aria-expanded]="isExpanded(item.chit.id)" title="Expand / Collapse details">
+          <button type="button" class="btn-chevron" [attr.aria-expanded]="isExpanded(item.chit.id)" [attr.aria-label]="'Show or hide details for ' + item.chit.name">
             <span class="chevron-icon">{{ isExpanded(item.chit.id) ? '▲' : '▼' }}</span>
           </button>
         </div>

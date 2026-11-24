@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -8,6 +8,7 @@ import { ChitType } from '../services/dividend-rules';
 export interface MonthScheduleChitItem {
   chitId: string;
   chitName: string;
+  color: number;
   termNumber: number;
   totalMembers: number;
   scheduledDate: string; // YYYY-MM-DD
@@ -41,7 +42,6 @@ export interface MonthScheduleGroup {
   styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit {
-  @ViewChildren('monthButton') monthButtons!: QueryList<ElementRef<HTMLButtonElement>>;
   readonly today = new Date();
   chits: Chit[] = [];
 
@@ -152,7 +152,7 @@ export class DashboardComponent implements OnInit {
 
     const groupsMap = new Map<string, MonthScheduleChitItem[]>();
 
-    this.chits.forEach(chit => {
+    this.chits.forEach((chit, index) => {
       portfolioVal += chit.chitValue;
       const terms = this.chitService.getTermsSync(chit.id);
 
@@ -221,6 +221,7 @@ export class DashboardComponent implements OnInit {
         const item: MonthScheduleChitItem = {
           chitId: chit.id,
           chitName: chit.name,
+          color: index % 4,
           termNumber: tNum,
           totalMembers: chit.totalMembers,
           scheduledDate,
@@ -301,7 +302,7 @@ export class DashboardComponent implements OnInit {
       this.currentMonthMaxOutflow = 0;
       this.selectedMonthIndex = 0;
     }
-    setTimeout(() => this.scrollSelectedMonthIntoView());
+
   }
 
   // Carousel navigation controls
@@ -315,21 +316,21 @@ export class DashboardComponent implements OnInit {
   nextMonth(): void {
     if (this.selectedMonthIndex < this.monthGroups.length - 1) {
       this.selectedMonthIndex++;
-      this.scrollSelectedMonthIntoView();
+
     }
   }
 
   prevMonth(): void {
     if (this.selectedMonthIndex > 0) {
       this.selectedMonthIndex--;
-      this.scrollSelectedMonthIntoView();
+
     }
   }
 
   goToMonth(index: number): void {
     if (index >= 0 && index < this.monthGroups.length) {
       this.selectedMonthIndex = index;
-      this.scrollSelectedMonthIntoView();
+
     }
   }
 
@@ -337,12 +338,16 @@ export class DashboardComponent implements OnInit {
     const currentIdx = this.monthGroups.findIndex(g => g.isCurrentMonth);
     if (currentIdx !== -1) {
       this.selectedMonthIndex = currentIdx;
-      this.scrollSelectedMonthIntoView();
+
     }
   }
 
-  private scrollSelectedMonthIntoView(): void {
-    requestAnimationFrame(() => this.monthButtons?.get(this.selectedMonthIndex)?.nativeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+  dueDay(date: string, monthKey: string): string {
+    // Overdue entries can be grouped into the current month. Keep their original date visible.
+    if (!date.startsWith(monthKey)) return new Date(date + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const day = Number(date.slice(8, 10));
+    const suffix = day >= 11 && day <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[day % 10] || 'th';
+    return day + suffix;
   }
 
   openMonthModal(group: MonthScheduleGroup): void {

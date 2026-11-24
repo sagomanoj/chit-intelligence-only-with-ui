@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ChitType, CommissionTreatment, getDividendPool, getEligibleMemberCount, getRoundedDividendPerMember } from '../services/dividend-rules';
+import { AppAdsService } from '../services/app-ads.service';
 
 @Component({
   selector: 'app-auction',
@@ -54,7 +55,8 @@ export class AuctionComponent implements OnInit {
     private chitService: ChitService,
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private appAds: AppAdsService
   ) { }
 
   ngOnInit(): void {
@@ -155,8 +157,11 @@ export class AuctionComponent implements OnInit {
     this.chitService.addTerm(termData).subscribe(() => {
       this.saveSuccessMessage = `Term ${this.currentChitNumber} record saved successfully!`;
       setTimeout(() => {
-        this.saveSuccessMessage = null;
-        this.router.navigate(['/chits', this.chitId]);
+        void (async () => {
+          this.saveSuccessMessage = null;
+          await this.appAds.showInterstitialAtNaturalBreak();
+          this.router.navigate(['/chits', this.chitId]);
+        })();
       }, 1500);
     });
   }

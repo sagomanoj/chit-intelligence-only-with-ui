@@ -224,3 +224,15 @@
     text-align: center;
   }
 }
+
+.create-container { max-width:740px; margin:auto; }
+.form-card { background:transparent; border:0; box-shadow:none; padding:0; }
+.form-card h2 { font-size:1.05rem; margin:14px 0 0; padding:14px 16px 0; border-radius:15px 15px 0 0; background:white; color:#233a66; }
+.form-grid { padding:16px; border-radius:0 0 15px 15px; box-shadow:var(--card-shadow); background:white; }
+.form-control { border-color:#bcd0e8; border-radius:9px; min-height:44px; }
+.form-actions { margin-top:12px; }
+@media(min-width:380px) and (max-width:640px) {
+ .form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .form-group { min-width:0; }
+ .full-width,.form-group:has(select),.form-group:has(.help-text) { grid-column:1/-1; }
+}

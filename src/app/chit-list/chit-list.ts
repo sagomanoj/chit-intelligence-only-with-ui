@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 
 interface ChitSummaryItem {
   chit: Chit;
+  color: number;
   termsCompleted: number;
   totalInvested: number;
   totalDividendEarned: number;
@@ -88,7 +89,7 @@ export class ChitListComponent implements OnInit {
 
   loadChits(): void {
     this.chitService.getChits().subscribe(chits => {
-      this.chitSummaries = chits.map(chit => {
+      this.chitSummaries = chits.map((chit, index) => {
         const summary = this.chitService.getChitSummary(chit.id);
         const termsCompleted = summary ? summary.termsCompleted : 0;
         const totalInvested = summary ? summary.totalInvested : 0;
@@ -101,6 +102,7 @@ export class ChitListComponent implements OnInit {
 
         return {
           chit,
+          color: index % 4,
           termsCompleted,
           totalInvested,
           totalDividendEarned,

@@ -1,196 +1,71 @@
 <div class="dashboard-container">
-  <header class="dashboard-hero">
-    <div class="hero-copy">
-      <span class="eyebrow">PORTFOLIO OVERVIEW <span class="eyebrow-dot"></span> {{ today | date:'EEEE, d MMMM' }}</span>
-      <h1>Your chit portfolio,<br /><span>all in one view.</span></h1>
-      <p>Track contributions, dividend savings, and upcoming commitments with confidence.</p>
-      <div class="hero-actions">
-        <a class="hero-primary-action" routerLink="/chits/create">
-          <span class="action-plus" aria-hidden="true">+</span> Create a chit group
-        </a>
-        <a class="hero-secondary-action" routerLink="/calculator">Open bid calculator <span aria-hidden="true">↗</span></a>
-      </div>
-    </div>
-    <div class="hero-portfolio" aria-label="Portfolio summary">
-      <span class="hero-orbit orbit-one"></span>
-      <span class="hero-orbit orbit-two"></span>
-      <div class="portfolio-mark" aria-hidden="true">
-        <svg viewBox="0 0 48 48" fill="none"><path d="M8 39V25m10 14V14m11 25V20m11 19V8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M5 39h38" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
-      </div>
-      <span class="hero-stat-label">Chit groups</span>
-      <strong class="hero-stat-value">{{ chits.length }}</strong>
-      <span class="hero-stat-footnote">Portfolio up to date</span>
+  <header class="value-card">
+    <span>Total chit value</span>
+    <h1>₹{{ totalPortfolioValue | number }}</h1>
+    <p>Across {{ chits.length }} chit {{ chits.length === 1 ? 'group' : 'groups' }}</p>
+    <i class="gold-rings" aria-hidden="true"></i>
+    <div class="value-actions">
+      <a routerLink="/chits/create">＋ Create chit group</a>
+      <a routerLink="/calculator">Bid calculator ↗</a>
     </div>
   </header>
 
-  <section class="kpi-grid" aria-label="Portfolio highlights">
-    <article class="kpi-card kpi-portfolio">
-      <div class="kpi-card-top"><span class="kpi-icon icon-indigo" aria-hidden="true">₹</span><span class="kpi-context">ALL GROUPS</span></div>
-      <span class="kpi-label">Total portfolio value</span>
-      <strong class="kpi-value">₹{{ totalPortfolioValue | number }}</strong>
-      <span class="kpi-sub">Combined chit pool value</span>
-    </article>
-
-    <article class="kpi-card kpi-outflow">
-      <div class="kpi-card-top"><span class="kpi-icon icon-blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18m7-7-7 7-7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="kpi-context">THIS MONTH</span></div>
-      <span class="kpi-label">Expected outflow</span>
-      <strong class="kpi-value" *ngIf="currentMonthMinOutflow !== currentMonthMaxOutflow">₹{{ currentMonthMinOutflow | number }} <span class="value-range">– ₹{{ currentMonthMaxOutflow | number }}</span></strong>
-      <strong class="kpi-value" *ngIf="currentMonthMinOutflow === currentMonthMaxOutflow">₹{{ currentMonthMinOutflow | number }}</strong>
-      <span class="kpi-sub">Estimated monthly contribution</span>
-    </article>
-
-    <article class="kpi-card kpi-dividends">
-      <div class="kpi-card-top"><span class="kpi-icon icon-green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16.5 9 11l3.5 3.5L20 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="kpi-context">RECORDED TERMS</span></div>
-      <span class="kpi-label">Dividend savings</span>
-      <strong class="kpi-value">₹{{ totalDividendsRealized | number }}</strong>
-      <span class="kpi-sub">Savings from recorded auctions</span>
-    </article>
-
-    <article class="kpi-card kpi-prize">
-      <div class="kpi-card-top"><span class="kpi-icon icon-amber" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Zm0 2H5v2a4 4 0 0 0 4 4m7-6h3v2a4 4 0 0 1-4 4m-3 1v4m-4 3h8m-6-3h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="kpi-context">SELF-PRIZED</span></div>
-      <span class="kpi-label">Prize payouts received</span>
-      <strong class="kpi-value">₹{{ totalPrizeMoneyWon | number }}</strong>
-      <span class="kpi-sub">Take-home payouts recorded</span>
-    </article>
+  <section class="metrics" aria-label="Portfolio highlights">
+    <article class="metric payment"><span class="metric-symbol" aria-hidden="true">▦</span>
+      <div>Estimated payment this month<strong>₹{{ currentMonthMinOutflow | number }}<ng-container *ngIf="currentMonthMinOutflow !== currentMonthMaxOutflow">–₹{{ currentMonthMaxOutflow | number }}</ng-container></strong></div></article>
+    <article class="metric savings"><span>Dividend savings</span><strong>₹{{ totalDividendsRealized | number }}</strong></article>
+    <article class="metric prize"><span>Prize payouts received</span><strong>₹{{ totalPrizeMoneyWon | number }}</strong></article>
   </section>
+  <button type="button" class="estimate-control" (click)="openBufferModal()">
+    <span>Dividend estimate <b>{{ minBufferPercent }}–{{ maxBufferPercent }}%</b></span><strong>✎ Edit</strong>
+  </button>
 
-  <section class="schedule-section" aria-labelledby="schedule-heading">
-    <div class="section-heading">
-      <div class="section-heading-copy">
-        <span class="section-eyebrow">PLAN AHEAD</span>
-        <h2 id="schedule-heading">Monthly cash flow</h2>
-        <p>Review your expected payments and keep every group on track.</p>
-      </div>
-      <div class="schedule-tools">
-        <button type="button" class="buffer-control" (click)="openBufferModal()" aria-label="Edit estimated dividend share per member">
-          <span class="buffer-control-icon" aria-hidden="true">↗</span>
-          <span><small>Dividend share / member</small><strong>{{ minBufferPercent }}%–{{ maxBufferPercent }}%</strong></span>
-          <span class="edit-label">Edit</span>
-        </button>
-        <button type="button" class="current-month-button" *ngIf="monthGroups.length > 0" (click)="goToCurrentMonth()" [attr.aria-pressed]="activeMonthGroup?.isCurrentMonth">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>
-          Current month
-        </button>
+  <section class="payment-panel">
+    <div class="section-head"><h2>Scheduled payments</h2>
+      <div class="month-picker" *ngIf="activeMonthGroup as group">
+        <button type="button" (click)="prevMonth()" [disabled]="selectedMonthIndex === 0" aria-label="Previous month">‹</button>
+        <select aria-label="Payment month" [ngModel]="selectedMonthIndex" (ngModelChange)="goToMonth($event)">
+          <option *ngFor="let month of monthGroups; index as i" [ngValue]="i">{{ month.monthLabel }}</option>
+        </select>
+        <button type="button" (click)="nextMonth()" [disabled]="selectedMonthIndex === monthGroups.length - 1" aria-label="Next month">›</button>
       </div>
     </div>
-
-    <ng-container *ngIf="monthGroups.length > 0 && activeMonthGroup; else noSchedule">
-      <div class="month-card" [class.is-current-month]="activeMonthGroup.isCurrentMonth">
-        <div class="month-card-header">
-          <div class="month-heading">
-            <div class="month-title-line">
-              <h3>{{ activeMonthGroup.monthLabel }}</h3>
-              <span class="current-month-pill" *ngIf="activeMonthGroup.isCurrentMonth"><span></span> CURRENT</span>
-            </div>
-            <p>{{ activeMonthGroup.items.length }} {{ activeMonthGroup.items.length === 1 ? 'group' : 'groups' }} scheduled <span *ngIf="activeMonthGroup.recordedCount > 0">· {{ activeMonthGroup.recordedCount }} recorded</span></p>
-          </div>
-          <div class="month-stepper" aria-label="Change month">
-            <button type="button" (click)="prevMonth()" [disabled]="selectedMonthIndex === 0" aria-label="Previous month">‹</button>
-            <span>{{ selectedMonthIndex + 1 }} <small>/ {{ monthGroups.length }}</small></span>
-            <button type="button" (click)="nextMonth()" [disabled]="selectedMonthIndex === monthGroups.length - 1" aria-label="Next month">›</button>
-          </div>
-        </div>
-
-        <div class="outflow-summary">
-          <div class="outflow-total">
-            <span>Estimated out-of-pocket</span>
-            <strong *ngIf="activeMonthGroup.minTotalPayment !== activeMonthGroup.maxTotalPayment">₹{{ activeMonthGroup.minTotalPayment | number }} <small>– ₹{{ activeMonthGroup.maxTotalPayment | number }}</small></strong>
-            <strong *ngIf="activeMonthGroup.minTotalPayment === activeMonthGroup.maxTotalPayment">₹{{ activeMonthGroup.minTotalPayment | number }}</strong>
-            <button type="button" class="breakdown-link" (click)="openMonthModal(activeMonthGroup)">View payment breakdown <span aria-hidden="true">→</span></button>
-          </div>
-          <div class="outflow-load">
-            <div class="load-copy"><span>Monthly commitment</span><strong>{{ getOutflowPercent(activeMonthGroup) }}% of peak</strong></div>
-            <div class="outflow-track" role="progressbar" aria-label="Monthly commitment relative to projected peak" [attr.aria-valuenow]="getOutflowPercent(activeMonthGroup)" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="getOutflowPercent(activeMonthGroup)"></span></div>
-          </div>
-        </div>
-
-        <div class="commitments-heading"><h4>Scheduled contributions</h4><span>Based on your estimated share per eligible member</span></div>
-
-        <p *ngIf="activeMonthGroup.items.length === 0">No contributions are scheduled for this month.</p>
-
-        <div class="desktop-commitment-table" *ngIf="activeMonthGroup.items.length > 0">
-          <div class="table-scroll">
-            <table class="detail-table">
-              <thead><tr><th>Chit group</th><th>Term</th><th>Payment date</th><th>Status</th><th class="align-right">Estimated payment</th><th></th></tr></thead>
-              <tbody>
-                <tr *ngFor="let item of activeMonthGroup.items">
-                  <td class="chit-cell"><span class="group-avatar" aria-hidden="true">{{ item.chitName.charAt(0) }}</span><strong>{{ item.chitName }}</strong></td>
-                  <td><span class="term-value">{{ item.termNumber }}</span><span class="term-total"> / {{ item.totalMembers }}</span></td>
-                  <td>{{ item.scheduledDate | date:'d MMM yyyy' }}</td>
-                  <td>
-                    <span class="status-tag tag-recorded" *ngIf="item.isRecorded">Recorded</span>
-                    <span class="status-tag tag-won" *ngIf="!item.isRecorded && item.isSelfPrizedInThisTerm">Prize payout</span>
-                    <span class="status-tag tag-prior-won" *ngIf="!item.isRecorded && item.isSelfPrizedInPriorTerm">Won previously</span>
-                    <span class="status-tag tag-upcoming" *ngIf="!item.isRecorded && !item.isSelfPrizedInThisTerm && !item.isSelfPrizedInPriorTerm">Upcoming</span>
-                  </td>
-                  <td class="align-right amount-cell">
-                    <strong *ngIf="item.minExpectedPayment !== item.maxExpectedPayment">₹{{ item.minExpectedPayment | number }} – ₹{{ item.maxExpectedPayment | number }}</strong>
-                    <strong *ngIf="item.minExpectedPayment === item.maxExpectedPayment" [class.zero-amount]="item.minExpectedPayment === 0">₹{{ item.minExpectedPayment | number }}</strong>
-                  </td>
-                  <td class="table-action"><button type="button" class="view-link" (click)="viewChit(item.chitId)">View <span aria-hidden="true">→</span></button></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="mobile-commitment-list" *ngIf="activeMonthGroup.items.length > 0">
-          <article class="commitment-mobile-card" *ngFor="let item of activeMonthGroup.items" [class.card-recorded]="item.isRecorded" [class.card-won]="item.isSelfPrizedInThisTerm">
-            <div class="mobile-card-top">
-              <span class="group-avatar" aria-hidden="true">{{ item.chitName.charAt(0) }}</span>
-              <div class="mobile-group-name"><strong>{{ item.chitName }}</strong><span>Term {{ item.termNumber }} of {{ item.totalMembers }}</span></div>
-              <span class="status-tag tag-recorded" *ngIf="item.isRecorded">Recorded</span>
-              <span class="status-tag tag-won" *ngIf="!item.isRecorded && item.isSelfPrizedInThisTerm">Prize payout</span>
-              <span class="status-tag tag-prior-won" *ngIf="!item.isRecorded && item.isSelfPrizedInPriorTerm">Won previously</span>
-              <span class="status-tag tag-upcoming" *ngIf="!item.isRecorded && !item.isSelfPrizedInThisTerm && !item.isSelfPrizedInPriorTerm">Upcoming</span>
-            </div>
-            <div class="mobile-card-bottom">
-              <div><span class="mobile-detail-label">PAYMENT DATE</span><strong>{{ item.scheduledDate | date:'d MMM yyyy' }}</strong></div>
-              <div class="mobile-payment"><span class="mobile-detail-label">ESTIMATED PAYMENT</span><strong *ngIf="item.minExpectedPayment !== item.maxExpectedPayment">₹{{ item.minExpectedPayment | number }} – ₹{{ item.maxExpectedPayment | number }}</strong><strong *ngIf="item.minExpectedPayment === item.maxExpectedPayment" [class.zero-amount]="item.minExpectedPayment === 0">₹{{ item.minExpectedPayment | number }}</strong></div>
-              <button type="button" class="mobile-view-button" (click)="viewChit(item.chitId)" [attr.aria-label]="'View ' + item.chitName">→</button>
-            </div>
-          </article>
-        </div>
+    <ng-container *ngIf="activeMonthGroup as group">
+      <ng-container *ngTemplateOutlet="payments; context: { $implicit: group }"></ng-container>
+      <div class="month-links">
+        <button type="button" *ngIf="!group.isCurrentMonth" (click)="goToCurrentMonth()">Current month</button>
+        <button type="button" (click)="openMonthModal(group)">View payment breakdown →</button>
       </div>
-
-      <nav class="timeline-navigation" aria-label="Monthly projection navigation">
-        <button type="button" class="timeline-step" (click)="prevMonth()" [disabled]="selectedMonthIndex === 0" aria-label="Previous month">‹</button>
-        <div class="timeline-track">
-          <button #monthButton type="button" class="timeline-month" *ngFor="let group of monthGroups; let i = index" [class.active]="i === selectedMonthIndex" [class.current]="group.isCurrentMonth" (click)="goToMonth(i)" [attr.aria-label]="group.monthLabel + (group.isCurrentMonth ? ', current month' : '')" [attr.aria-current]="i === selectedMonthIndex ? 'date' : null">
-            <span class="timeline-dot"></span><span class="timeline-label">{{ group.monthLabel.split(' ')[0] }}</span><small class="timeline-year">{{ group.year }}</small>
-          </button>
-        </div>
-        <button type="button" class="timeline-step" (click)="nextMonth()" [disabled]="selectedMonthIndex === monthGroups.length - 1" aria-label="Next month">›</button>
-      </nav>
     </ng-container>
-
-    <ng-template #noSchedule>
-      <div class="empty-schedule">
-        <span class="empty-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><rect x="7" y="11" width="34" height="30" rx="5" stroke="currentColor" stroke-width="2.5"/><path d="M15 7v8m18-8v8M7 20h34" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M17 28h5m5 0h5m-15 6h5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></span>
-        <h3>No upcoming payments yet</h3>
-        <p>Create a chit group to see your monthly contribution plan here.</p>
-        <a routerLink="/chits/create" class="empty-action">Create your first group <span aria-hidden="true">→</span></a>
-      </div>
-    </ng-template>
+    <p *ngIf="!monthGroups.length">No upcoming payments yet. <a routerLink="/chits/create">Create a chit group</a></p>
   </section>
-
-  <div class="modal-backdrop" *ngIf="showMonthModal && selectedMonthGroup" (click)="closeMonthModal()">
-    <section class="modal-card modal-lg" role="dialog" aria-modal="true" [attr.aria-label]="'Payment breakdown for ' + selectedMonthGroup.monthLabel" (click)="$event.stopPropagation()">
-      <header class="modal-header"><div><span class="section-eyebrow">MONTHLY BREAKDOWN</span><h3>{{ selectedMonthGroup.monthLabel }}</h3><p class="modal-sub">Estimated out-of-pocket: <strong>₹{{ selectedMonthGroup.minTotalPayment | number }}<span *ngIf="selectedMonthGroup.minTotalPayment !== selectedMonthGroup.maxTotalPayment"> – ₹{{ selectedMonthGroup.maxTotalPayment | number }}</span></strong></p></div><button type="button" class="btn-close" (click)="closeMonthModal()" aria-label="Close">×</button></header>
-      <div class="modal-body table-scroll">
-        <table class="detail-table modal-table"><thead><tr><th>Chit group</th><th>Term</th><th>Date</th><th>Status</th><th class="align-right">Payment</th><th></th></tr></thead><tbody>
-          <tr *ngFor="let item of selectedMonthGroup.items"><td class="chit-cell"><span class="group-avatar" aria-hidden="true">{{ item.chitName.charAt(0) }}</span><strong>{{ item.chitName }}</strong></td><td>{{ item.termNumber }} / {{ item.totalMembers }}</td><td>{{ item.scheduledDate | date:'d MMM yyyy' }}</td><td><span class="status-tag tag-recorded" *ngIf="item.isRecorded">Recorded</span><span class="status-tag tag-won" *ngIf="!item.isRecorded && item.isSelfPrizedInThisTerm">Prize payout</span><span class="status-tag tag-prior-won" *ngIf="!item.isRecorded && item.isSelfPrizedInPriorTerm">Won previously</span><span class="status-tag tag-upcoming" *ngIf="!item.isRecorded && !item.isSelfPrizedInThisTerm && !item.isSelfPrizedInPriorTerm">Upcoming</span></td><td class="align-right"><strong *ngIf="item.minExpectedPayment !== item.maxExpectedPayment">₹{{ item.minExpectedPayment | number }} – ₹{{ item.maxExpectedPayment | number }}</strong><strong *ngIf="item.minExpectedPayment === item.maxExpectedPayment">₹{{ item.minExpectedPayment | number }}</strong></td><td><button type="button" class="view-link" (click)="viewChit(item.chitId)">View →</button></td></tr>
-        </tbody></table>
-      </div>
-      <footer class="modal-footer"><button type="button" class="secondary-button" (click)="closeMonthModal()">Close</button></footer>
+  <ng-template #payments let-group>
+    <button type="button" class="folder-row" *ngFor="let item of group.items" [attr.data-color]="item.color" (click)="viewChit(item.chitId)">
+      <span class="folder-tab">{{ item.chitName }}</span>
+      <span class="folder-front">
+        <span>Due on {{ dueDay(item.scheduledDate, group.monthKey) }} · Term {{ item.termNumber }} of {{ item.totalMembers }}
+          <small *ngIf="item.isRecorded || item.isSelfPrizedInPriorTerm || item.isSelfPrizedInThisTerm">{{ item.isRecorded ? 'Recorded' : (item.isSelfPrizedInThisTerm ? 'Prize payout' : 'Won previously') }}</small>
+        </span>
+        <b>₹{{ item.minExpectedPayment | number }}<ng-container *ngIf="item.minExpectedPayment !== item.maxExpectedPayment">–₹{{ item.maxExpectedPayment | number }}</ng-container></b>
+        <span aria-hidden="true">›</span>
+      </span>
+    </button>
+    <p *ngIf="!group.items.length">No payments scheduled for this month.</p>
+  </ng-template>
+  <div class="modal-backdrop" *ngIf="showMonthModal && selectedMonthGroup as group" (click)="closeMonthModal()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Monthly payment breakdown" (click)="$event.stopPropagation()">
+      <header class="modal-header"><h2>Monthly payment breakdown</h2><button type="button" class="btn-close" (click)="closeMonthModal()" aria-label="Close">×</button></header>
+      <div class="modal-body"><p>{{ group.monthLabel }}</p>
+        <div class="month-total">Estimated payment this month<strong>₹{{ group.minTotalPayment | number }}<ng-container *ngIf="group.minTotalPayment !== group.maxTotalPayment">–₹{{ group.maxTotalPayment | number }}</ng-container></strong></div>
+        <ng-container *ngTemplateOutlet="payments; context: { $implicit: group }"></ng-container>
+      </div><footer class="modal-footer"><button type="button" (click)="closeMonthModal()">Close</button></footer>
     </section>
   </div>
-
   <div class="modal-backdrop" *ngIf="showBufferModal" (click)="closeBufferModal()">
     <section class="modal-card modal-md buffer-modal-card" role="dialog" aria-modal="true" aria-labelledby="buffer-modal-title" (click)="$event.stopPropagation()">
-      <header class="modal-header"><div><span class="section-eyebrow">PROJECTION SETTINGS</span><h3 id="buffer-modal-title">Dividend share per member</h3><p class="modal-sub">Set the estimated discount share each eligible member may receive.</p></div><button type="button" class="btn-close" (click)="closeBufferModal()" aria-label="Close">×</button></header>
+      <header class="modal-header"><div><h3 id="buffer-modal-title">Dividend share per member</h3><p class="modal-sub">Set the estimated discount share each eligible member may receive.</p></div><button type="button" class="btn-close" (click)="closeBufferModal()" aria-label="Close">×</button></header>
       <div class="modal-body">
-        <p class="buffer-modal-desc">This estimate is an expected per-member share after applying the chit’s distribution settings. A larger share lowers the projected out-of-pocket amount.</p>
+
         <div class="buffer-inputs-grid">
           <div class="buffer-field"><label for="min-buffer">Minimum estimate (%)</label><input id="min-buffer" type="number" class="form-control" [(ngModel)]="minBufferPercent" (ngModelChange)="onBufferRangeChange()" min="0" max="50" /></div>
           <span class="buffer-separator" aria-hidden="true">to</span>

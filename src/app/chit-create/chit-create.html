@@ -1,11 +1,12 @@
 <div class="create-container">
   <div class="header-row">
     <button class="btn btn-back" (click)="cancel()">← Back</button>
-    <h1 class="page-title">{{ isEditMode ? 'Edit Chit Group' : 'Create New Chit Fund Group' }}</h1>
+    <h1 class="page-title">{{ isEditMode ? 'Edit Chit Group' : 'Create chit group' }}</h1>
   </div>
 
   <div class="form-card">
     <form (ngSubmit)="save()" #chitForm="ngForm">
+      <h2>Group details</h2>
       <div class="form-grid">
         <div class="form-group full-width">
           <label class="required">
@@ -70,6 +71,9 @@
           </select>
         </div>
 
+      </div>
+      <h2>Group rules</h2>
+      <div class="form-grid">
         <div class="form-group">
           <label>
             Organizer Commission (%)

@@ -1044,4 +1044,21 @@ input[type="range"] {
   }
 }
 
-
+:host { background:transparent; color:var(--text-dark); font-family:var(--font-body); }
+.page-header { position:static; border:none; background:transparent; }
+.calculator-shell { padding-bottom:60px; }
+.panel,.compact-panel { border-color:var(--line); box-shadow:var(--card-shadow); }
+.large-submit,.calculate-btn.primary { background:var(--blue-action); color:white; }
+.hero-result { background:#e2f8ef; color:#14583e; }
+.hero-result.loss-card { background:#fff0f4; color:#85183a; }
+.hero-result.neutral-card { background:#e9f2ff; color:#123e76; }
+.hero-result small,.hero-result span,.hero-result strong { color:inherit; }
+.result-heading { font-size:1.4rem; margin-bottom:12px; }
+.insight-rail { z-index:1510; bottom:var(--bottom-space); }
+.modal-overlay { z-index:1500; }
+.mobile-results-toggle { bottom:var(--bottom-space); }
+@media(max-width:640px) {
+ .insight-rail { bottom:var(--bottom-space); max-height:calc(95dvh - var(--bottom-space)); }
+ .metric-strip.three-col { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .metric-strip article:last-child { grid-column:1/-1; }
+}
