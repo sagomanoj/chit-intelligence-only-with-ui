@@ -1,6 +1,7 @@
-import { Component, signal, OnInit, OnDestroy, isDevMode } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, signal, OnInit, OnDestroy, isDevMode } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT, Location } from '@angular/common';
+import { App as NativeApp } from '@capacitor/app';
 import { FormsModule } from '@angular/forms';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { AdMob, BannerAdPluginEvents, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
@@ -22,6 +23,10 @@ export class App implements OnInit, OnDestroy {
   private keyboardHideHandle: PluginListenerHandle | null = null;
   private appUpdateListener: PluginListenerHandle | null = null;
   private appUpdateInfo: AppUpdateInfo | null = null;
+  private readonly document = inject(DOCUMENT);
+  private readonly location = inject(Location);
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  private backListener?: Promise<PluginListenerHandle>;
 
   showSettingsModal = false;
   showAdPrivacyOptions = false;
@@ -92,6 +97,7 @@ export class App implements OnInit, OnDestroy {
 
   async ngOnInit() {
     if (Capacitor.getPlatform() === 'android') {
+      this.backListener = NativeApp.addListener('backButton', ({ canGoBack }) => this.androidBack(canGoBack));
       try {
         this.appUpdateListener = await AppUpdate.addListener('onFlexibleUpdateStateChange', state => {
           if (state.installStatus === FlexibleUpdateInstallStatus.DOWNLOADED) {
@@ -153,6 +159,38 @@ export class App implements OnInit, OnDestroy {
       } catch (e) {
         console.error('AdMob initialization error:', e);
       }
+    }
+  }
+
+  androidBack(canGoBack: boolean): void {
+    const sheets = this.document.querySelectorAll('dialog[appSheet][open]');
+    const sheet = sheets.item(sheets.length - 1);
+    if (sheet) {
+      // Use the same cancel action as Escape so the component also clears its open state.
+      sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
+      return;
+    }
+    if (this.showSettingsModal) {
+      this.closeSettings();
+      this.changeDetector.markForCheck();
+      return;
+    }
+    if (canGoBack) {
+      this.location.back();
+      return;
+    }
+
+    // A restored or directly opened screen can be the first entry in WebView history.
+    const route = this.router.routerState.snapshot.root.firstChild;
+    const path = route?.routeConfig?.path;
+    if (route && (path === 'chits/:id/edit' || path === 'chits/:id/auction')) {
+      void this.router.navigate(['/chits', route.paramMap.get('id')], { replaceUrl: true });
+    } else if (path === 'chits/:id' || path === 'chits/create') {
+      void this.router.navigate(['/chits'], { replaceUrl: true });
+    } else if (path && path !== 'dashboard') {
+      void this.router.navigate(['/dashboard'], { replaceUrl: true });
+    } else {
+      void NativeApp.minimizeApp();
     }
   }
 
@@ -226,6 +264,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    void this.backListener?.then(listener => listener.remove());
     void this.bannerSizeHandle?.remove();
     document.documentElement.style.removeProperty('--ad-height');
     document.documentElement.classList.remove('android-banner-visible');
