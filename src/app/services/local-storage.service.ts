@@ -158,7 +158,7 @@ export class LocalStorageService implements IStorageProvider {
         isSelfPrized: false,
         payoutReceived: 0,
         winnerName: 'Organizer',
-        notes: 'Term 1 Organizer Payout',
+        notes: 'Organizer’s payout in cycle 1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -175,7 +175,7 @@ export class LocalStorageService implements IStorageProvider {
         isSelfPrized: false,
         payoutReceived: 0,
         winnerName: 'Participant A',
-        notes: 'Term 2 Auction Winner',
+        notes: 'Payout winner for cycle 2',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
@@ -442,7 +442,7 @@ export class LocalStorageService implements IStorageProvider {
         this.persist(parsed);
         return true;
       }
-      throw new Error('Invalid JSON format: missing chits or termTransactions arrays.');
+      throw new Error('This file is missing the chit groups or cycle records needed to restore a backup.');
     } catch (e) {
       console.error('Import failed:', e);
       throw e;

@@ -188,7 +188,7 @@ export class ChitDetailComponent implements OnInit {
       this.newTerm.isSelfPrized = false;
       this.newTerm.investmentAmount = this.chit.installmentAmount;
       this.newTerm.winningBidAmount = 0;
-      this.newTerm.winnerName = `Term ${termNumber} Winner`;
+      this.newTerm.winnerName = `Cycle ${termNumber} winner`;
       this.newTerm.notes = '';
       return;
     }
@@ -196,10 +196,10 @@ export class ChitDetailComponent implements OnInit {
     if (termNumber === this.chit.organizerPayoutTerm) {
       this.newTerm.winningBidAmount = this.chit.agentCommissionAmount || 0;
       this.newTerm.winnerName = 'Organizer';
-      this.newTerm.notes = `Term ${termNumber} Organizer Payout`;
+      this.newTerm.notes = `Organizer’s payout in cycle ${termNumber}`;
     } else {
       this.newTerm.winningBidAmount = 0;
-      this.newTerm.winnerName = `Term ${termNumber} Winner`;
+      this.newTerm.winnerName = `Cycle ${termNumber} winner`;
       this.newTerm.notes = '';
     }
     this.calculateInvestmentFromWinningBid();
@@ -316,7 +316,7 @@ export class ChitDetailComponent implements OnInit {
   }
 
   deleteTerm(termId: string, termNumber: number): void {
-    if (confirm(`Delete Term ${termNumber} record?`)) {
+    if (confirm(`Delete the record for cycle ${termNumber}?`)) {
       this.chitService.deleteTerm(termId).subscribe(() => {
         this.loadChitDetails();
       });

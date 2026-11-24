@@ -87,7 +87,7 @@ export class ChitCreateComponent implements OnInit {
           this.hasRecordedTerms = existingChit.hasRecordedTerms === true;
           this.chitService.getTerms(id).subscribe(terms => this.hasRecordedTerms ||= terms.length > 0);
         } else {
-          alert('Chit group not found.');
+          alert('This chit group could not be found.');
           this.router.navigate(['/chits']);
         }
       });
@@ -120,12 +120,12 @@ export class ChitCreateComponent implements OnInit {
 
   save(): void {
     if (!this.chit.name || !this.chit.chitValue || this.chit.chitValue <= 0 || !this.chit.totalMembers || this.chit.totalMembers <= 0) {
-      alert('Please fill out all required fields with valid numbers.');
+      alert('Enter a group name, a payout amount above ₹0 and at least one member.');
       return;
     }
 
     if (this.chit.organizerPayoutTerm > this.chit.totalMembers) {
-      alert(`Organizer Payout Term cannot exceed Total Members (${this.chit.totalMembers}).`);
+      alert(`Choose a cycle from 1 to ${this.chit.totalMembers} for the organizer’s payout.`);
       return;
     }
 

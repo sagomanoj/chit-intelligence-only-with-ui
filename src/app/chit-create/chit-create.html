@@ -1,7 +1,7 @@
 <div class="create-container ui-page">
   <div class="header-row">
     <button class="ui-action" (click)="cancel()">← Back</button>
-    <h1 class="page-title">{{ isEditMode ? 'Edit Chit Group' : 'Create chit group' }}</h1>
+    <h1 class="page-title">{{ isEditMode ? 'Edit chit group' : 'Create chit group' }}</h1>
   </div>
 
   <div class="form-card">
@@ -19,7 +19,7 @@
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Group name"
+                aria-label="About the group name"
                 [attr.aria-expanded]="activeTooltip === 'name'"
                 (click)="toggleTooltip('name')"
               >
@@ -29,7 +29,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'name'">
-              Enter a descriptive title for your chit fund group (e.g. 5 Lakhs 20 Months Chit).
+              Choose a name you’ll recognise, such as Family Chit.
             </div>
             <input
               type="text"
@@ -38,17 +38,17 @@
               id="create-name"
               name="name"
               required
-              placeholder="e.g. 5 Lakhs 20 Months Chit"
+              placeholder="e.g. Family Chit"
             />
           </div>
 
           <div class="form-group">
             <div class="field-title">
-              <label for="create-chitValue" class="required">Chit value (₹)</label>
+              <label for="create-chitValue" class="required">Total payout amount (₹)</label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Chit value (₹)"
+                aria-label="About the total payout amount"
                 [attr.aria-expanded]="activeTooltip === 'chitValue'"
                 (click)="toggleTooltip('chitValue')"
               >
@@ -58,7 +58,8 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'chitValue'">
-              The total lump sum prize amount of the chit fund group (e.g. ₹5,00,000 or ₹12,00,000).
+              The full value of the chit before the winner’s discount and the organizer’s fee are
+              taken out.
             </div>
             <input
               type="number"
@@ -75,11 +76,11 @@
 
           <div class="form-group">
             <div class="field-title">
-              <label for="create-totalMembers" class="required">Members</label>
+              <label for="create-totalMembers" class="required">Number of members</label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Total Members"
+                aria-label="About the number of members"
                 [attr.aria-expanded]="activeTooltip === 'totalMembers'"
                 (click)="toggleTooltip('totalMembers')"
               >
@@ -89,8 +90,8 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'totalMembers'">
-              Total number of participants in the group, which also equals the total duration in
-              terms/months.
+              Each member gets one turn to receive the payout. A group of 20 members runs for 20
+              cycles.
             </div>
             <input
               type="number"
@@ -107,11 +108,11 @@
 
           <div class="form-group">
             <div class="field-title">
-              <label for="create-installmentAmount">Installment per term (₹)</label>
+              <label for="create-installmentAmount">Payment per member each cycle (₹)</label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Installment per term (₹)"
+                aria-label="How the payment per cycle is worked out"
                 [attr.aria-expanded]="activeTooltip === 'installmentAmount'"
                 (click)="toggleTooltip('installmentAmount')"
               >
@@ -121,8 +122,8 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'installmentAmount'">
-              The base contribution amount per member before subtracting auction dividend discounts
-              (Total Chit Value ÷ Total Members).
+              Divide the total payout amount by the number of members. This is each member’s payment
+              before any discount.
             </div>
             <input
               type="number"
@@ -137,11 +138,11 @@
 
           <div class="form-group">
             <div class="field-title">
-              <label for="create-frequencyInMonths">Payment frequency</label>
+              <label for="create-frequencyInMonths">How often you pay</label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Payment frequency"
+                aria-label="About the payment schedule"
                 [attr.aria-expanded]="activeTooltip === 'frequencyInMonths'"
                 (click)="toggleTooltip('frequencyInMonths')"
               >
@@ -151,8 +152,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'frequencyInMonths'">
-              How often auctions occur and installments are paid (e.g. Monthly = 1 month, Quarterly
-              = 3 months, Half-Yearly = 6 months).
+              Each cycle has one auction and one payment. Choose how often your group meets.
             </div>
             <select
               class="form-control"
@@ -160,22 +160,22 @@
               id="create-frequencyInMonths"
               name="frequencyInMonths"
             >
-              <option [ngValue]="1">Monthly</option>
+              <option [ngValue]="1">Every month</option>
               <option [ngValue]="2">Every 2 months</option>
-              <option [ngValue]="3">Quarterly</option>
-              <option [ngValue]="4">4 Months</option>
-              <option [ngValue]="5">5 Months</option>
+              <option [ngValue]="3">Every 3 months</option>
+              <option [ngValue]="4">Every 4 months</option>
+              <option [ngValue]="5">Every 5 months</option>
               <option [ngValue]="6">Every 6 months</option>
             </select>
           </div>
 
           <div class="form-group">
             <div class="field-title">
-              <label for="create-startDate">Start Date</label>
+              <label for="create-startDate">Start date</label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Start Date"
+                aria-label="About the start date"
                 [attr.aria-expanded]="activeTooltip === 'startDate'"
                 (click)="toggleTooltip('startDate')"
               >
@@ -185,7 +185,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'startDate'">
-              The starting date of Term 1 auction for this chit fund group.
+              The date of the first cycle’s auction.
             </div>
             <input
               type="date"
@@ -206,11 +206,11 @@
         <div class="ui-fields">
           <div class="form-group">
             <div class="field-title">
-              <label for="create-agentCommissionPercent">Organizer commission (%)</label>
+              <label for="create-agentCommissionPercent">Organizer’s fee (%)</label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Organizer commission (%)"
+                aria-label="About the organizer’s fee percentage"
                 [attr.aria-expanded]="activeTooltip === 'agentCommissionPercent'"
                 (click)="toggleTooltip('agentCommissionPercent')"
               >
@@ -220,7 +220,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionPercent'">
-              Percentage fee retained by the foreman/organizer per auction term from the chit pool.
+              The percentage of the total payout amount the organizer charges each cycle.
             </div>
             <input
               type="number"
@@ -237,11 +237,11 @@
 
           <div class="form-group">
             <div class="field-title">
-              <label for="create-agentCommissionAmount">Commission amount (₹)</label>
+              <label for="create-agentCommissionAmount">Organizer’s fee (₹)</label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Commission amount (₹)"
+                aria-label="About the organizer’s fee amount"
                 [attr.aria-expanded]="activeTooltip === 'agentCommissionAmount'"
                 (click)="toggleTooltip('agentCommissionAmount')"
               >
@@ -251,7 +251,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionAmount'">
-              Foreman fee expressed in Rupees (Total Chit Value × Organizer Commission %).
+              This is the same fee shown in rupees. Changing the amount also updates the percentage.
             </div>
             <input
               type="number"
@@ -263,17 +263,19 @@
               min="0"
             />
             <small class="help-text"
-              >Auto-calculated: {{ chit.agentCommissionPercent }}% of Chit Value</small
+              >{{ chit.agentCommissionPercent }}% of the total payout amount</small
             >
           </div>
 
           <div class="form-group">
             <div class="field-title">
-              <label for="create-organizerPayoutTerm">Organizer payout term</label>
+              <label for="create-organizerPayoutTerm"
+                >Cycle when the organizer gets the payout</label
+              >
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About Organizer payout term"
+                aria-label="About the organizer’s payout cycle"
                 [attr.aria-expanded]="activeTooltip === 'organizerPayoutTerm'"
                 (click)="toggleTooltip('organizerPayoutTerm')"
               >
@@ -283,8 +285,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'organizerPayoutTerm'">
-              The term number reserved for the foreman/organizer to take the full chit payout
-              without discount.
+              Choose the cycle when the organizer takes the payout without offering a bid discount.
             </div>
             <input
               type="number"
@@ -299,11 +300,14 @@
           </div>
 
           <div class="form-group full-width">
-            <label for="create-dividendDistributionType" class="required">Chit Type</label>
+            <label for="create-dividendDistributionType" class="required"
+              >Who shares the discount?</label
+            >
             <select
               class="form-control"
               [(ngModel)]="chit.dividendDistributionType"
               id="create-dividendDistributionType"
+              aria-describedby="sharing-help"
               name="dividendDistributionType"
               [disabled]="hasRecordedTerms"
             >
@@ -311,52 +315,55 @@
                 Always Commission (all members)
               </option>
               <option [ngValue]="ChitType.STANDARD_NON_WINNERS_ONLY">
-                Standard (non-winners only)
+                Only members who haven’t won
               </option>
             </select>
-            <small class="help-text">{{
+            <small id="sharing-help" class="help-text">{{
               chit.dividendDistributionType === ChitType.ALWAYS_COMMISSION
-                ? 'Every member continues to receive a dividend share, including prior winners.'
-                : 'Only members who have not won yet receive a dividend share.'
+                ? 'All members share the discount, even after they win.'
+                : 'Only members still waiting for their payout share the discount.'
             }}</small>
           </div>
 
           <div class="form-group full-width">
             <label for="create-commissionTreatmentType" class="required"
-              >Commission Treatment</label
+              >How the organizer’s fee is handled</label
             >
             <select
               class="form-control"
               [(ngModel)]="chit.commissionTreatmentType"
               id="create-commissionTreatmentType"
+              aria-describedby="fee-help"
               name="commissionTreatmentType"
               [disabled]="hasRecordedTerms"
             >
               <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">
-                Deduct commission from discount
+                Take the fee out of the discount
               </option>
               <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">
-                Add commission to discount
+                Add the fee to the discount
               </option>
             </select>
-            <small class="help-text">{{
+            <small id="fee-help" class="help-text">{{
               chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
-                ? 'The organizer’s commission is added to the discount before members share it.'
-                : 'Members share the discount left after the organizer’s commission is deducted.'
+                ? 'Members share the discount plus the organizer’s fee.'
+                : 'Members share what is left after the fee is taken out.'
             }}</small>
             <details class="commission-help">
               <summary>Compare both options</summary>
               <p>
-                <strong>Deduct commission</strong> — members share the bid discount minus the fee.
+                <strong>Take the fee out</strong> — for a ₹10,000 discount and a ₹1,000 fee, members
+                share ₹9,000.
               </p>
-              <p><strong>Add commission</strong> — members share the bid discount plus the fee.</p>
+              <p>
+                <strong>Add the fee</strong> — for the same discount and fee, members share ₹11,000.
+              </p>
             </details>
           </div>
 
           <div class="form-group full-width" *ngIf="hasRecordedTerms">
             <small class="help-text"
-              >Chit Type and Commission Treatment are locked because this chit already has a
-              recorded term.</small
+              >These two rules are fixed once you record the first cycle.</small
             >
           </div>
 
@@ -371,17 +378,15 @@
                 />
                 <span>
                   <strong
-                    >When you win, exclude your ₹{{
-                      chit.installmentAmount || 0 | number
-                    }}
-                    contribution from profit/loss</strong
+                    >When you win, leave your ₹{{ chit.installmentAmount || 0 | number }} payment
+                    out of the gain or loss calculation.</strong
                   >
                 </span>
               </label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About winning term contribution"
+                aria-label="How your winning cycle payment affects your payout"
                 [attr.aria-expanded]="activeTooltip === 'excludeCurrentTermShare'"
                 (click)="toggleTooltip('excludeCurrentTermShare')"
               >
@@ -391,9 +396,9 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'excludeCurrentTermShare'">
-              When checked, your contribution for the month you win is taken off your payout and is
-              not counted in your profit/loss. Turn this off to keep the full payout and count that
-              contribution as part of your investment.
+              When this is on, your payment for that cycle comes out of your payout. Turn it off to
+              keep that amount in your payout and count your payment after discount in the
+              calculator.
             </div>
           </div>
         </div>
@@ -401,7 +406,7 @@
       <div class="form-actions">
         <button type="button" class="ui-action" (click)="cancel()">Cancel</button>
         <button type="submit" class="ui-action primary" [disabled]="!chitForm.form.valid">
-          {{ isEditMode ? 'Update Chit Group' : 'Create Chit Group' }}
+          {{ isEditMode ? 'Save changes' : 'Create chit group' }}
         </button>
       </div>
     </form>

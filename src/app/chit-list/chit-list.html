@@ -1,6 +1,6 @@
 <div class="ui-page">
   <header class="ui-titlebar">
-    <h1>My Chit Groups</h1>
+    <h1>My chit groups</h1>
     <button class="ui-action primary" (click)="createChit()">＋ Create chit group</button>
   </header>
   <div class="search-box">
@@ -17,13 +17,13 @@
       All {{ chitSummaries.length }}
     </button>
     <button [attr.aria-pressed]="activeTab === 'ONGOING'" (click)="setTab('ONGOING')">
-      Ongoing {{ ongoingCount }}
+      In progress {{ ongoingCount }}
     </button>
     <button [attr.aria-pressed]="activeTab === 'COMPLETED'" (click)="setTab('COMPLETED')">
-      Completed {{ completedCount }}
+      Finished {{ completedCount }}
     </button>
     <button class="toggle-all" *ngIf="filteredChits.length" (click)="toggleExpandAll()">
-      {{ allExpanded ? 'Collapse All' : 'Expand All' }}
+      {{ allExpanded ? 'Hide all details' : 'Show all details' }}
     </button>
   </div>
   <div class="folder-list" *ngIf="filteredChits.length; else empty">
@@ -43,17 +43,18 @@
           <span class="folder-status"
             >{{
               item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers
-                ? 'Completed'
-                : 'Ongoing'
+                ? 'Finished'
+                : 'In progress'
             }}
             <span aria-hidden="true">{{ isExpanded(item.chit.id) ? '⌃' : '⌄' }}</span></span
           >
           <span class="folder-value"
-            ><small>Chit value</small><strong>₹{{ item.chit.chitValue | number }}</strong></span
+            ><small>Total payout amount</small
+            ><strong>₹{{ item.chit.chitValue | number }}</strong></span
           >
           <span class="folder-terms"
-            ><b>₹{{ item.chit.installmentAmount | number }}</b> per term<small
-              >{{ item.termsCompleted }} of {{ item.chit.totalMembers }} terms recorded</small
+            ><b>₹{{ item.chit.installmentAmount | number }}</b> each cycle<small
+              >{{ item.termsCompleted }} of {{ item.chit.totalMembers }} cycles recorded</small
             ></span
           >
         </span>
@@ -64,14 +65,14 @@
             <svg class="ui-icon" aria-hidden="true">
               <use href="assets/ui-icons.svg#wallet"></use></svg
             ><span
-              >Total invested<strong>₹{{ item.totalInvested | number }}</strong></span
+              >Total paid so far<strong>₹{{ item.totalInvested | number }}</strong></span
             >
           </div>
           <div>
             <svg class="ui-icon" aria-hidden="true">
               <use href="assets/ui-icons.svg#savings"></use></svg
             ><span
-              >Dividends earned<strong>₹{{ item.totalDividendEarned | number }}</strong></span
+              >Discounts received<strong>₹{{ item.totalDividendEarned | number }}</strong></span
             >
           </div>
           <div *ngIf="item.isSelfPrized">
@@ -87,13 +88,13 @@
           <p>
             {{
               item.chit.dividendDistributionType === 1
-                ? 'Always Commission · All members receive a share'
-                : 'Standard · Non-winners only'
+                ? 'Always Commission · All members share the discount'
+                : 'Only members who haven’t won share the discount'
             }}
           </p>
           <p>
-            Commission
-            {{ item.chit.commissionTreatmentType === 2 ? 'added to' : 'deducted from' }} the
+            Organizer’s fee
+            {{ item.chit.commissionTreatmentType === 2 ? 'added to' : 'taken out of' }} the
             discount.
           </p>
         </details>
@@ -102,7 +103,7 @@
             <svg class="ui-icon" aria-hidden="true">
               <use href="assets/ui-icons.svg#calendar"></use>
             </svg>
-            Term history
+            Cycle history
           </button>
           <button class="ui-action" (click)="openCalculator(item.chit.id)">
             <svg class="ui-icon" aria-hidden="true">

@@ -9,7 +9,7 @@
       routerLink="/dashboard"
       routerLinkActive="active-link"
       class="nav-item"
-      title="Portfolio Dashboard"
+      title="Dashboard"
     >
       <svg
         class="nav-icon"
@@ -32,7 +32,7 @@
       routerLink="/chits"
       [routerLinkActive]="inChitCalculator ? '' : 'active-link'"
       class="nav-item"
-      title="My Chit Groups"
+      title="My chits"
     >
       <svg
         class="nav-icon"
@@ -55,7 +55,7 @@
       routerLinkActive="active-link"
       [class.context-active]="inChitCalculator"
       class="nav-item"
-      title="Auction & Bid Calculator"
+      title="Bid calculator"
     >
       <svg
         class="nav-icon"
@@ -81,7 +81,7 @@
       class="nav-item nav-btn-settings"
       [class.active-settings]="showSettingsModal"
       (click)="openSettings()"
-      title="Settings & JSON Backup"
+      title="Settings and backup"
     >
       <svg
         class="nav-icon"
@@ -105,11 +105,9 @@
 <section class="app-update-banner" *ngIf="showUpdateBanner" role="status" aria-live="polite">
   <div class="app-update-copy">
     <strong>{{
-      updateDownloaded ? 'Update ready to install' : 'A new app version is available'
+      updateDownloaded ? 'Update ready to install' : 'An app update is available'
     }}</strong>
-    <span *ngIf="updateAvailableVersion"
-      >Google Play version code {{ updateAvailableVersion }}</span
-    >
+    <span *ngIf="updateAvailableVersion">Google Play update {{ updateAvailableVersion }}</span>
     <span *ngIf="updateDownloaded">Restart the app to finish updating.</span>
   </div>
   <button
@@ -137,8 +135,8 @@
       <h1 id="settings-title">Settings &amp; backup</h1>
       <button class="ui-close" aria-label="Close settings" (click)="closeSettings()">×</button>
     </div>
-    <div *ngIf="importSuccess" class="alert-success" role="status">{{ importSuccess }}</div>
-    <div *ngIf="importError" class="alert-danger" role="alert">{{ importError }}</div>
+    <div *ngIf="importSuccess() as message" class="alert-success" role="status">{{ message }}</div>
+    <div *ngIf="importError() as message" class="alert-danger" role="alert">{{ message }}</div>
     <section class="ui-panel">
       <h2 class="ui-heading">
         <svg class="ui-icon chip" aria-hidden="true">
@@ -147,19 +145,21 @@
         Backup &amp; restore
       </h2>
       <p>
-        Your chits and term records are saved on this device. Export a backup before changing or
-        resetting your device.
+        Your chit groups and cycle history are saved on this device. Save a backup before you switch
+        or reset your phone.
       </p>
       <button type="button" class="settings-row" (click)="exportData()">
         <svg class="ui-icon chip" aria-hidden="true">
           <use href="assets/ui-icons.svg#upload"></use></svg
-        ><span><b>Export backup</b><small>Download a JSON file</small></span
+        ><span><b>Save a backup file</b><small>Download a copy of your chit records</small></span
         ><span class="arrow">›</span>
       </button>
       <button type="button" class="settings-row" (click)="backupFile.click()">
         <svg class="ui-icon chip mint" aria-hidden="true">
           <use href="assets/ui-icons.svg#download"></use></svg
-        ><span><b>Import backup</b><small>Restore from a backup file</small></span
+        ><span
+          ><b>Restore from a backup file</b
+          ><small>Replace the records on this device with your saved copy</small></span
         ><span class="arrow">›</span>
       </button>
       <input
@@ -184,7 +184,7 @@
         </div>
         <div>
           <dt>Storage</dt>
-          <dd>Local device storage</dd>
+          <dd>On this device</dd>
         </div>
       </dl>
     </section>

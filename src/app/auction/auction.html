@@ -10,25 +10,25 @@
       </div>
       <h2 class="context-title">{{ chit.name }}</h2>
       <span class="context-sub"
-        >Term {{ currentChitNumber }} ·
+        >Cycle {{ currentChitNumber }} ·
         {{
           dividendDistributionType === ChitType.ALWAYS_COMMISSION
-            ? 'Always Commission'
-            : 'Standard (Non-winners only)'
+            ? 'Always Commission · All members share the discount'
+            : 'Only members who haven’t won share the discount'
         }}</span
       >
       <span class="context-sub"
-        >Organizer commission
+        >Organizer’s fee
         {{
           commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
             ? 'added to'
-            : 'deducted from'
+            : 'taken out of'
         }}
-        the discount · Past paid: ₹{{ pastInvestment || 0 | number }}</span
+        the discount · Paid so far ₹{{ pastInvestment || 0 | number }}</span
       >
     </div>
     <div class="context-actions">
-      <button class="ui-action" (click)="goBackToChit()">← Back to Chit</button>
+      <button class="ui-action" (click)="goBackToChit()">← Back to chit</button>
     </div>
   </div>
 
@@ -46,7 +46,7 @@
     </div>
   </header>
 
-  <p class="helper-text">Please fill all required fields marked with an asterisk (*).</p>
+  <p class="helper-text">Fill in the fields marked *.</p>
 
   <div *ngIf="errorMessage" class="error-banner">
     {{ errorMessage }}
@@ -67,7 +67,7 @@
 
         <div class="ui-fields">
           <div class="form-group">
-            <label for="totalAmount" class="required">Total Amount</label>
+            <label for="totalAmount" class="required">Total payout amount (₹)</label>
             <input
               type="number"
               id="totalAmount"
@@ -80,7 +80,7 @@
           </div>
 
           <div class="form-group">
-            <label for="participants" class="required">Total Members</label>
+            <label for="participants" class="required">Number of members</label>
             <input
               type="number"
               id="participants"
@@ -93,37 +93,53 @@
           </div>
 
           <div class="form-group wide" *ngIf="!chit">
-            <label for="dividendDistributionType">Chit Type</label>
+            <label for="dividendDistributionType">Who shares the discount?</label>
             <select
               id="dividendDistributionType"
               [(ngModel)]="dividendDistributionType"
               (ngModelChange)="onInputChange()"
               name="dividendDistributionType"
+              aria-describedby="calculator-sharing-help"
             >
-              <option [ngValue]="ChitType.ALWAYS_COMMISSION">Always Commission</option>
+              <option [ngValue]="ChitType.ALWAYS_COMMISSION">
+                Always Commission (all members)
+              </option>
               <option [ngValue]="ChitType.STANDARD_NON_WINNERS_ONLY">
-                Standard (Non Winners Only)
+                Only members who haven’t won
               </option>
             </select>
+            <small id="calculator-sharing-help">{{
+              dividendDistributionType === ChitType.ALWAYS_COMMISSION
+                ? 'All members share the discount, even after they win.'
+                : 'Only members still waiting for their payout share the discount.'
+            }}</small>
           </div>
 
           <div class="form-group wide" *ngIf="!chit">
-            <label for="commissionTreatmentType">Commission Treatment</label>
+            <label for="commissionTreatmentType">How the organizer’s fee is handled</label>
             <select
               id="commissionTreatmentType"
               [(ngModel)]="commissionTreatmentType"
               (ngModelChange)="onInputChange()"
               name="commissionTreatmentType"
+              aria-describedby="calculator-fee-help"
             >
               <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">
-                Deduct commission
+                Take the fee out of the discount
               </option>
-              <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">Add commission</option>
+              <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">
+                Add the fee to the discount
+              </option>
             </select>
+            <small id="calculator-fee-help">{{
+              commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
+                ? 'Members share the discount plus the organizer’s fee.'
+                : 'Members share what is left after the fee is taken out.'
+            }}</small>
           </div>
 
           <div class="form-group wide">
-            <label for="frequency" class="required">Chit Frequency</label>
+            <label for="frequency" class="required">How often you pay</label>
             <select
               id="frequency"
               [(ngModel)]="frequency"
@@ -131,12 +147,12 @@
               name="frequency"
               [class.error]="isFieldInvalid('frequency')"
             >
-              <option [ngValue]="1">1 month</option>
-              <option [ngValue]="2">2 months</option>
-              <option [ngValue]="3">3 months</option>
-              <option [ngValue]="4">4 months</option>
-              <option [ngValue]="5">5 months</option>
-              <option [ngValue]="6">6 months</option>
+              <option [ngValue]="1">Every month</option>
+              <option [ngValue]="2">Every 2 months</option>
+              <option [ngValue]="3">Every 3 months</option>
+              <option [ngValue]="4">Every 4 months</option>
+              <option [ngValue]="5">Every 5 months</option>
+              <option [ngValue]="6">Every 6 months</option>
             </select>
           </div>
         </div>
@@ -154,7 +170,7 @@
 
         <div class="ui-fields">
           <div class="form-group">
-            <label for="currentChitNumber" class="required">Current Chit Term</label>
+            <label for="currentChitNumber" class="required">Cycle number</label>
             <input
               type="number"
               id="currentChitNumber"
@@ -177,12 +193,12 @@
                 (ngModelChange)="onInputChange()"
                 name="hasPreviouslyWon"
               />
-              <span>I have already won in an earlier term</span>
+              <span>I won the payout in an earlier cycle</span>
             </label>
           </div>
 
           <div class="form-group">
-            <label for="pastInvestment" class="required">Past Investment</label>
+            <label for="pastInvestment" class="required">Total paid so far (₹)</label>
             <input
               type="number"
               id="pastInvestment"
@@ -195,7 +211,7 @@
           </div>
 
           <div class="form-group">
-            <label for="agentCommissionAmount" class="required">Commission Amount</label>
+            <label for="agentCommissionAmount" class="required">Organizer’s fee (₹)</label>
             <input
               type="number"
               id="agentCommissionAmount"
@@ -209,7 +225,7 @@
           </div>
 
           <div class="form-group wide">
-            <label for="discountAmount" class="required">Bid Discount Amount</label>
+            <label for="discountAmount" class="required">Discount offered by the winner (₹)</label>
             <input
               type="number"
               id="discountAmount"
@@ -223,14 +239,14 @@
 
           <div class="discount-slider">
             <div class="slider-header">
-              <span>Discount Bid Range</span>
+              <span>Adjust the bid discount</span>
               <div class="slider-header-values">
                 <strong>₹{{ discountAmount || 0 | number: '1.0-0' }}</strong>
               </div>
             </div>
             <input
               type="range"
-              aria-label="Bid discount amount"
+              aria-label="Adjust the bid discount"
               id="discountSlider"
               min="0"
               [max]="getDiscountUpperBound()"
@@ -246,8 +262,8 @@
           </div>
           <div class="form-group amount-to-pay-group">
             <div class="label-with-badge">
-              <label for="amountToBePaid">Amount to be paid</label>
-              <span class="highlight-badge">Auto</span>
+              <label for="amountToBePaid">Your payment after discount (₹)</label>
+              <span class="highlight-badge">Calculated</span>
             </div>
             <input
               type="number"
@@ -260,30 +276,29 @@
             />
             <span class="amount-to-pay-sub" *ngIf="participants && currentChitNumber">
               <span *ngIf="commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT"
-                >We add ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} commission to the ₹{{
-                  discountAmount || 0 | number: '1.0-0'
-                }}
-                discount.</span
+                >Members share the ₹{{ discountAmount || 0 | number: '1.0-0' }} discount plus the
+                ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} fee.</span
               >
               <span *ngIf="commissionTreatmentType !== CommissionTreatment.ADD_TO_DISCOUNT"
-                >The organizer’s ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} commission is
-                deducted from the ₹{{ discountAmount || 0 | number: '1.0-0' }} bid discount.</span
+                >Members share what is left from the ₹{{
+                  discountAmount || 0 | number: '1.0-0'
+                }}
+                discount after the ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} fee.</span
               >
               <span *ngIf="getEligibleMembersCount() > 0"
-                >₹{{ getDividendPool() | number: '1.0-0' }} is shared among
-                {{ getEligibleMembersCount() }} eligible
-                {{ getEligibleMembersCount() === 1 ? 'member' : 'members' }}; each gets about ₹{{
-                  getSharePerEligibleMember() | number: '1.0-0'
-                }}
-                off the installment.</span
+                >{{ getEligibleMembersCount() }}
+                {{ getEligibleMembersCount() === 1 ? 'member gets' : 'members share' }} ₹{{
+                  getDividendPool() | number: '1.0-0'
+                }}. That’s about ₹{{ getSharePerEligibleMember() | number: '1.0-0' }} off each
+                member’s payment.</span
               >
               <span *ngIf="getEligibleMembersCount() === 0"
-                >No members are eligible for a dividend this term.</span
+                >No members get a discount this cycle.</span
               >
               <span
                 *ngIf="hasPreviouslyWon && dividendDistributionType !== ChitType.ALWAYS_COMMISSION"
               >
-                You have already won, so you do not receive a share.</span
+                You’ve already won, so you don’t get a discount share this cycle.</span
               >
             </span>
           </div>
@@ -297,8 +312,8 @@
                 name="excludeOwnShare"
               />
               <span
-                >Exclude my monthly contribution (₹{{ getShareAmount() | number: '1.0-0' }}) from
-                the winner payout and profit/loss calculation</span
+                >When you win, take your ₹{{ getShareAmount() | number: '1.0-0' }} payment out of
+                your payout and leave it out of the gain or loss calculation.</span
               >
             </label>
           </div>
@@ -308,8 +323,10 @@
       <article class="ui-panel reinvest-panel">
         <div class="panel-header compact">
           <div>
-            <h2 class="ui-heading"><label for="reinvestEnabled">Re-investment</label></h2>
-            <p>Use monthly interest from take-home amount to offset future installments.</p>
+            <h2 class="ui-heading">
+              <label for="reinvestEnabled">Use payout interest for future payments</label>
+            </h2>
+            <p>See how much of each future payment the interest on your payout could cover.</p>
           </div>
           <input
             class="toggle"
@@ -323,7 +340,7 @@
 
         <div *ngIf="reinvestEnabled" class="ui-fields two-column">
           <div class="form-group">
-            <label for="annualInterest">Annual Interest (%)</label>
+            <label for="annualInterest">Interest per year (%)</label>
             <input
               type="number"
               id="annualInterest"
@@ -335,7 +352,7 @@
             />
           </div>
           <div class="form-group">
-            <label for="monthlyRupee">Interest (Rupee/100)</label>
+            <label for="monthlyRupee">Monthly interest for every ₹100</label>
             <input
               type="number"
               id="monthlyRupee"
@@ -355,10 +372,10 @@
           (click)="validateAndCalculate()"
           [disabled]="isCalculating"
         >
-          Calculate & View Results
+          Show bid results
         </button>
         <button class="ui-action" *ngIf="chitId && profit" (click)="saveAsTermRecord()">
-          Save as Term {{ currentChitNumber }} Record
+          Save as cycle {{ currentChitNumber }}
         </button>
       </div>
     </section>
@@ -393,18 +410,20 @@
               <div>
                 {{
                   p.status === 'LOSS'
-                    ? 'Estimated loss'
+                    ? 'Money you could lose'
                     : p.status === 'PROFIT'
-                      ? 'Estimated profit'
-                      : 'No profit / no loss'
+                      ? 'Money you could gain'
+                      : 'No gain or loss'
                 }}
                 <strong>₹{{ p.netProfit | number: '1.0-0' }}</strong>
               </div>
             </div>
             <div class="hero-stats">
               <span>{{ p.profitPercentage | number: '1.2-2' }}% overall</span
-              ><span>{{ getAnnualizedProfitPercentage() | number: '1.2-2' }}% annualized</span
-              ><span>{{ getProfitInterestRupee() | number: '1.2-2' }} rupee / month</span>
+              ><span
+                >Estimated return per year
+                {{ getAnnualizedProfitPercentage() | number: '1.2-2' }}%</span
+              ><span>₹{{ getProfitInterestRupee() | number: '1.2-2' }} per ₹100 each month</span>
             </div>
           </article>
           <div class="metric-pair">
@@ -413,7 +432,7 @@
                 <use href="assets/ui-icons.svg#wallet"></use>
               </svg>
               <div>
-                Take-home payout<strong>₹{{ p.takeHomeAmount | number: '1.0-0' }}</strong>
+                Payout you would receive<strong>₹{{ p.takeHomeAmount | number: '1.0-0' }}</strong>
               </div>
             </article>
             <article>
@@ -421,7 +440,7 @@
                 <use href="assets/ui-icons.svg#coin"></use>
               </svg>
               <div>
-                Total investment<strong>₹{{ p.totalInvestment | number: '1.0-0' }}</strong>
+                Total you expect to pay<strong>₹{{ p.totalInvestment | number: '1.0-0' }}</strong>
               </div>
             </article>
           </div>
@@ -442,19 +461,19 @@
             <h3>Bid breakdown</h3>
             <dl class="result-list">
               <div>
-                <dt>Chit value</dt>
+                <dt>Total payout amount</dt>
                 <dd>₹{{ totalAmount | number }}</dd>
               </div>
               <div>
-                <dt>Organizer commission</dt>
+                <dt>Organizer’s fee</dt>
                 <dd>₹{{ p.agentCommissionAmount | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Your dividend this term</dt>
+                <dt>Your discount this cycle</dt>
                 <dd>₹{{ getDividendPerMember() | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Amount to pay</dt>
+                <dt>Your payment after discount</dt>
                 <dd>₹{{ getAmountToBePaid() | number: '1.0-0' }}</dd>
               </div>
               <div>
@@ -462,22 +481,22 @@
                 <dd>₹{{ p.futureInvestment | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Terms left</dt>
+                <dt>Cycles left</dt>
                 <dd>{{ p.remainingTerms }}</dd>
               </div>
               <div>
-                <dt>Installment per term</dt>
+                <dt>Payment each cycle</dt>
                 <dd>₹{{ p.installmentAmount | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Max bid limit (no profit/loss)</dt>
+                <dt>Largest discount before you lose money</dt>
                 <dd>₹{{ p.breakEvenDiscountAmount | number: '1.0-0' }}</dd>
               </div>
             </dl>
           </section>
           <section class="ui-panel">
             <div class="ui-heading-line">
-              <h3><label for="reinvestEnabledResult">Re-investment</label></h3>
+              <h3><label for="reinvestEnabledResult">Interest on your payout</label></h3>
               <input
                 class="toggle"
                 id="reinvestEnabledResult"
@@ -489,31 +508,29 @@
             </div>
             <dl class="result-list" *ngIf="p.reinvestmentEnabled">
               <div>
-                <dt>Coverage</dt>
+                <dt>Future payments</dt>
                 <dd>
                   {{
                     p.coverageStatus === 'FULLY_COVERED'
-                      ? 'Fully covered'
-                      : p.coverageStatus === 'PARTIAL'
-                        ? 'Partially covered'
-                        : p.coverageStatus
+                      ? 'Interest covers the full payment'
+                      : 'You pay the rest'
                   }}
                 </dd>
               </div>
               <div>
-                <dt>Monthly interest</dt>
+                <dt>Interest each month</dt>
                 <dd>₹{{ p.monthlyInterest | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Interest per term</dt>
+                <dt>Interest each cycle</dt>
                 <dd>₹{{ p.interestPerTerm | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Extra pay per term</dt>
+                <dt>You still pay each cycle</dt>
                 <dd>₹{{ p.extraPaymentPerTerm | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Total extra pay</dt>
+                <dt>Total you still pay</dt>
                 <dd>₹{{ p.totalExtraPayment | number: '1.0-0' }}</dd>
               </div>
             </dl>
@@ -529,7 +546,7 @@
           ← Back to calculator
         </button>
         <button *ngIf="chitId && profit" class="ui-action primary" (click)="saveAsTermRecord()">
-          Save as term {{ currentChitNumber }}
+          Save as cycle {{ currentChitNumber }}
         </button>
       </footer>
     </section>

@@ -1,6 +1,6 @@
 <div class="dashboard-container">
   <header class="value-card">
-    <span>Total chit value</span>
+    <span>Total payout amount</span>
     <h1>₹{{ totalPortfolioValue | number }}</h1>
     <p>Across {{ chits.length }} chit {{ chits.length === 1 ? 'group' : 'groups' }}</p>
     <i class="gold-rings" aria-hidden="true"></i>
@@ -10,7 +10,7 @@
     </div>
   </header>
 
-  <section class="metrics" aria-label="Portfolio highlights">
+  <section class="metrics" aria-label="Your chit groups at a glance">
     <article class="metric payment">
       <svg class="ui-icon chip" aria-hidden="true">
         <use href="assets/ui-icons.svg#calendar"></use>
@@ -29,7 +29,7 @@
         ><svg class="ui-icon chip mint" aria-hidden="true">
           <use href="assets/ui-icons.svg#savings"></use>
         </svg>
-        Dividend savings</span
+        Discounts received</span
       ><strong>₹{{ totalDividendsRealized | number }}</strong>
     </article>
     <article class="metric prize">
@@ -37,13 +37,13 @@
         ><svg class="ui-icon chip gold" aria-hidden="true">
           <use href="assets/ui-icons.svg#trophy"></use>
         </svg>
-        Prize payouts received</span
+        Payouts received</span
       ><strong>₹{{ totalPrizeMoneyWon | number }}</strong>
     </article>
   </section>
   <button type="button" class="estimate-control" (click)="openBufferModal()">
     <span
-      >Dividend estimate <b>{{ minBufferPercent }}–{{ maxBufferPercent }}%</b></span
+      >Estimated discount per member <b>{{ minBufferPercent }}–{{ maxBufferPercent }}%</b></span
     ><strong
       ><svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#pencil"></use></svg>
       Edit</strong
@@ -52,7 +52,7 @@
 
   <section class="payment-panel">
     <div class="section-head">
-      <h2>Scheduled payments</h2>
+      <h2>Payments by month</h2>
       <div class="month-picker" *ngIf="activeMonthGroup as group">
         <button
           type="button"
@@ -87,7 +87,7 @@
         <button type="button" *ngIf="!group.isCurrentMonth" (click)="goToCurrentMonth()">
           Current month
         </button>
-        <button type="button" (click)="openMonthModal(group)">View payment breakdown →</button>
+        <button type="button" (click)="openMonthModal(group)">View payment details →</button>
       </div>
     </ng-container>
     <p *ngIf="!monthGroups.length">
@@ -112,15 +112,15 @@
           item.isRecorded
             ? 'Recorded'
             : item.isSelfPrizedInThisTerm
-              ? 'Prize payout'
+              ? 'You won the payout'
               : item.isSelfPrizedInPriorTerm
-                ? 'Won previously'
+                ? 'Already won'
                 : 'Upcoming'
         }}</small></span
       >
       <span class="folder-front">
         <span
-          >Due on {{ dueDay(item.scheduledDate, group.monthKey) }} · Term {{ item.termNumber }} of
+          >Due on {{ dueDay(item.scheduledDate, group.monthKey) }} · Cycle {{ item.termNumber }} of
           {{ item.totalMembers }}
         </span>
         <b
@@ -144,8 +144,13 @@
   >
     <section class="ui-sheet" (click)="$event.stopPropagation()">
       <header class="sheet-head">
-        <h2 id="breakdown-title">Monthly payment breakdown</h2>
-        <button type="button" class="ui-close" (click)="closeMonthModal()" aria-label="Close">
+        <h2 id="breakdown-title">Payments by group</h2>
+        <button
+          type="button"
+          class="ui-close"
+          (click)="closeMonthModal()"
+          aria-label="Close payment details"
+        >
           ×
         </button>
       </header>
@@ -157,7 +162,7 @@
           {{ group.monthLabel }}
         </p>
         <div class="month-total value-card">
-          Estimated payment this month<strong
+          Estimated payment<strong
             >₹{{ group.minTotalPayment | number
             }}<ng-container *ngIf="group.minTotalPayment !== group.maxTotalPayment"
               >–₹{{ group.maxTotalPayment | number }}</ng-container
@@ -184,16 +189,24 @@
   >
     <section class="ui-sheet" (click)="$event.stopPropagation()">
       <header class="sheet-head">
-        <h2 id="buffer-modal-title">Dividend share per member</h2>
-        <button type="button" class="ui-close" (click)="closeBufferModal()" aria-label="Close">
+        <h2 id="buffer-modal-title">Estimated discount per member</h2>
+        <button
+          type="button"
+          class="ui-close"
+          (click)="closeBufferModal()"
+          aria-label="Close discount estimate"
+        >
           ×
         </button>
       </header>
       <div class="sheet-body">
-        <p class="sheet-intro">Estimate how much each eligible member saves on an installment.</p>
+        <p class="sheet-intro">
+          Your discount share (dividend) is the part of the group’s discount that reduces your
+          payment. Estimate it as a percentage of one payment.
+        </p>
         <div class="ui-fields buffer-fields">
           <div class="form-group">
-            <label for="min-buffer">Minimum (%)</label
+            <label for="min-buffer">Lowest estimate (%)</label
             ><input
               id="min-buffer"
               type="number"
@@ -204,7 +217,7 @@
             />
           </div>
           <div class="form-group">
-            <label for="max-buffer">Maximum (%)</label
+            <label for="max-buffer">Highest estimate (%)</label
             ><input
               id="max-buffer"
               type="number"
@@ -215,27 +228,27 @@
             />
           </div>
         </div>
-        <div class="preset-pills" aria-label="Quick presets">
+        <div class="preset-pills" aria-label="Choose a discount range">
           <button
             type="button"
             [attr.aria-pressed]="minBufferPercent === 10 && maxBufferPercent === 20"
             (click)="setBufferPreset(10, 20)"
           >
-            10–20%<small>Conservative</small>
+            10–20%<small>Lower</small>
           </button>
           <button
             type="button"
             [attr.aria-pressed]="minBufferPercent === 20 && maxBufferPercent === 30"
             (click)="setBufferPreset(20, 30)"
           >
-            20–30%<small>Standard</small>
+            20–30%<small>Middle</small>
           </button>
           <button
             type="button"
             [attr.aria-pressed]="minBufferPercent === 25 && maxBufferPercent === 35"
             (click)="setBufferPreset(25, 35)"
           >
-            25–35%<small>Optimistic</small>
+            25–35%<small>Higher</small>
           </button>
         </div>
         <div class="buffer-preview">
@@ -243,11 +256,11 @@
             <svg class="ui-icon" aria-hidden="true">
               <use href="assets/ui-icons.svg#calendar"></use>
             </svg>
-            On a ₹{{ sampleInstallment | number }} installment
+            On a ₹{{ sampleInstallment | number }} payment
           </h3>
           <dl>
             <div>
-              <dt>Estimated share</dt>
+              <dt>Discount per member</dt>
               <dd>₹{{ sampleMinDiscount | number }}–₹{{ sampleMaxDiscount | number }}</dd>
             </div>
             <div>

@@ -133,7 +133,7 @@ export class ChitListComponent implements OnInit {
 
   deleteChit(event: Event, id: string, name: string): void {
     event.stopPropagation();
-    if (confirm(`Are you sure you want to delete "${name}" and all its term history?`)) {
+    if (confirm(`Delete “${name}” and all its cycle records?`)) {
       this.chitService.deleteChit(id).subscribe(() => {
         this.loadChits();
       });
@@ -161,16 +161,21 @@ export class ChitListComponent implements OnInit {
           const content = e.target?.result as string;
           const success = this.chitService.importData(content);
           if (success) {
-            this.importSuccess = 'Data successfully imported from JSON file!';
+            this.importSuccess = 'Your backup was restored.';
             this.importError = null;
             this.loadChits();
             setTimeout(() => this.importSuccess = null, 4000);
           }
-        } catch (err: any) {
-          this.importError = err.message || 'Failed to import JSON file. Please check structure.';
+        } catch {
+          this.importError = 'This backup file can’t be read. Choose a backup saved from Chit Intelligence.';
           this.importSuccess = null;
         }
       };
+      reader.onerror = () => {
+        this.importError = 'Couldn’t open this file. Choose it again or try another backup.';
+        this.importSuccess = null;
+      };
+      reader.onloadend = () => { input.value = ''; };
       reader.readAsText(file);
     }
   }

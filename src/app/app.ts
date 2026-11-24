@@ -30,8 +30,8 @@ export class App implements OnInit, OnDestroy {
   updateDownloaded = false;
   updateBusy = false;
   updateMessage: string | null = null;
-  importSuccess: string | null = null;
-  importError: string | null = null;
+  readonly importSuccess = signal<string | null>(null);
+  readonly importError = signal<string | null>(null);
 
   constructor(private chitService: ChitService, private appAds: AppAdsService, private router: Router) {}
 
@@ -40,8 +40,8 @@ export class App implements OnInit, OnDestroy {
   }
 
   openSettings(): void {
-    this.importSuccess = null;
-    this.importError = null;
+    this.importSuccess.set(null);
+    this.importError.set(null);
     this.showSettingsModal = true;
   }
 
@@ -58,8 +58,9 @@ export class App implements OnInit, OnDestroy {
     a.download = `chit_intelligence_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     window.URL.revokeObjectURL(url);
-    this.importSuccess = 'Backup JSON downloaded successfully!';
-    setTimeout(() => this.importSuccess = null, 4000);
+    this.importError.set(null);
+    this.importSuccess.set('Backup download started.');
+    setTimeout(() => this.importSuccess.set(null), 4000);
   }
 
   onFileSelected(event: Event): void {
@@ -72,14 +73,18 @@ export class App implements OnInit, OnDestroy {
           const content = e.target?.result as string;
           const success = this.chitService.importData(content);
           if (success) {
-            this.importSuccess = 'Data successfully imported from backup file!';
-            this.importError = null;
-            setTimeout(() => this.importSuccess = null, 4000);
+            this.importSuccess.set('Your backup was restored.');
+            this.importError.set(null);
+            setTimeout(() => this.importSuccess.set(null), 4000);
           }
-        } catch (err: any) {
-          this.importError = err.message || 'Failed to import JSON file. Please check file structure.';
-          this.importSuccess = null;
+        } catch {
+          this.importError.set('This backup file can’t be read. Choose a backup saved from Chit Intelligence.');
+          this.importSuccess.set(null);
         }
+      };
+      reader.onerror = () => {
+        this.importError.set('Couldn’t open this file. Choose it again or try another backup.');
+        this.importSuccess.set(null);
       };
       reader.readAsText(file);
     }
@@ -169,7 +174,7 @@ export class App implements OnInit, OnDestroy {
 
       if (manual) {
         this.updateMessage = this.showUpdateBanner
-          ? `Version ${this.updateAvailableVersion ?? ''} is available through Google Play.`.trim()
+          ? 'An update is available on Google Play.'
           : 'No update was found. This may also happen when the app was installed outside Google Play.';
       }
     } catch (error) {

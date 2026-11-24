@@ -117,7 +117,7 @@ export class AuctionComponent implements OnInit {
       const total = this.totalAmount || 0;
 
       if (discount + commission >= total) {
-        this.errorMessage = 'Bid Discount plus Commission Amount must be less than Total Chit Amount.';
+        this.errorMessage = 'The discount and the organizer’s fee together must be less than the total payout amount.';
         return;
       }
 
@@ -139,7 +139,7 @@ export class AuctionComponent implements OnInit {
 
     const isSelfPrized = this.hasPreviouslyWon
       ? false
-      : confirm(`Mark Term ${this.currentChitNumber} payout as WON by YOU? Click OK for YES, Cancel for NO.`);
+      : confirm(`Did you win the payout in cycle ${this.currentChitNumber}? Choose OK if you won, or Cancel to record a different winner.`);
 
     const termData = {
       chitId: this.chitId,
@@ -152,11 +152,11 @@ export class AuctionComponent implements OnInit {
       netInstallmentPaid: isSelfPrized ? 0 : this.getAmountToBePaid(),
       isSelfPrized,
       payoutReceived: 0,
-      notes: `Saved from calculator (Discount: ₹${this.discountAmount})`
+      notes: `Saved from the bid calculator with a discount of ₹${this.discountAmount}.`
     };
 
     this.chitService.addTerm(termData).subscribe(() => {
-      this.saveSuccessMessage = `Term ${this.currentChitNumber} record saved successfully!`;
+      this.saveSuccessMessage = `Cycle ${this.currentChitNumber} saved.`;
       setTimeout(() => {
         void (async () => {
           this.saveSuccessMessage = null;
@@ -338,7 +338,7 @@ export class AuctionComponent implements OnInit {
       },
       error: () => {
         this.isCalculating = false;
-        alert('Unable to calculate profit/loss. Please check calculation parameters.');
+        alert('Couldn’t work out your gain or loss. Check the amounts and try again.');
         this.cdr.detectChanges();
       }
     });
@@ -411,7 +411,7 @@ export class AuctionComponent implements OnInit {
 
   calculateWait(): void {
     const potentialFutureDiscount = (this.totalAmount || 0) * 0.15;
-    this.waitResult = `Potential additional profit: Rs.${potentialFutureDiscount.toLocaleString()}`;
+    this.waitResult = `You could gain an extra ₹${potentialFutureDiscount.toLocaleString()}`;
   }
 
   goBackToChit(): void {
