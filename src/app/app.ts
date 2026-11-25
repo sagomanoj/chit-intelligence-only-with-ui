@@ -133,8 +133,8 @@ export class App implements OnInit, OnDestroy {
           }
           this.showAdPrivacyOptions = consentInfo.privacyOptionsRequirementStatus === 'REQUIRED';
 
+          this.appAds.setConsent(consentInfo.canRequestAds);
           if (consentInfo.canRequestAds) {
-            void this.appAds.prepareInterstitial();
             const options: BannerAdOptions = {
               adId,
               adSize: BannerAdSize.ADAPTIVE_BANNER,
@@ -256,10 +256,16 @@ export class App implements OnInit, OnDestroy {
   }
 
   async openAdPrivacyOptions(): Promise<void> {
+    this.appAds.setConsent(false);
     try {
       await AdMob.showPrivacyOptionsForm();
     } catch (error) {
       console.error('Unable to open ad privacy options:', error);
+    }
+    try {
+      this.appAds.setConsent((await AdMob.requestConsentInfo()).canRequestAds);
+    } catch (error) {
+      console.warn('Could not refresh ad consent:', error);
     }
   }
 

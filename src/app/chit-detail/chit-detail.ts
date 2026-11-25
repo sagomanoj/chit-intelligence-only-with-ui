@@ -1,4 +1,5 @@
 import { SheetDirective } from '../sheet.directive';
+import { AppAdsService } from '../services/app-ads.service';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChitService, Chit, ChitTerm } from '../services/chit.service';
@@ -41,7 +42,8 @@ export class ChitDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private chitService: ChitService,
-    private router: Router
+    private router: Router,
+    private appAds: AppAdsService
   ) { }
 
   ngOnInit(): void {
@@ -257,6 +259,7 @@ export class ChitDetailComponent implements OnInit {
 
   openAddTermModal(): void {
     if (this.summary?.isFullyCompleted) return;
+    void this.appAds.prepareInterstitial();
     this.isEditing = false;
     this.editingTermId = null;
     this.newTerm.isSelfPrized = false;
@@ -312,6 +315,7 @@ export class ChitDetailComponent implements OnInit {
     this.chitService.addTerm(termPayload).subscribe(() => {
       this.closeModal();
       this.loadChitDetails();
+      if (!termPayload.id) void this.appAds.showInterstitialAtNaturalBreak();
     });
   }
 

@@ -7,21 +7,29 @@ const PRODUCTION_ANDROID_INTERSTITIAL_ID = 'ca-app-pub-1256592546820339/93014095
 
 @Injectable({ providedIn: 'root' })
 export class AppAdsService {
-  private interstitialReady = false;
+  private canRequestAds = false;
+  private readyUntil = 0;
+  private showingInterstitial = false;
   private preparingInterstitial = false;
+
+  setConsent(canRequestAds: boolean): void {
+    this.canRequestAds = canRequestAds;
+    if (canRequestAds) void this.prepareInterstitial();
+    else this.readyUntil = 0;
+  }
 
   async prepareInterstitial(): Promise<void> {
     const isAndroid = Capacitor.getPlatform() === 'android';
-    if (!isAndroid || this.preparingInterstitial || this.interstitialReady) return;
+    if (!isAndroid || !this.canRequestAds || this.showingInterstitial ||
+        this.preparingInterstitial || Date.now() < this.readyUntil) return;
 
     const testMode = isDevMode();
     const adId = testMode ? TEST_ANDROID_INTERSTITIAL_ID : PRODUCTION_ANDROID_INTERSTITIAL_ID;
-    if (!adId) return;
 
     this.preparingInterstitial = true;
     try {
       await AdMob.prepareInterstitial({ adId, isTesting: testMode });
-      this.interstitialReady = true;
+      if (this.canRequestAds) this.readyUntil = Date.now() + 60 * 60_000;
     } catch (error) {
       console.warn('Interstitial ad could not be prepared:', error);
     } finally {
@@ -30,8 +38,14 @@ export class AppAdsService {
   }
 
   async showInterstitialAtNaturalBreak(): Promise<void> {
-    if (!this.interstitialReady || Capacitor.getPlatform() !== 'android') return;
-    this.interstitialReady = false;
+    if (!this.canRequestAds || this.showingInterstitial || Capacitor.getPlatform() !== 'android') return;
+    if (Date.now() >= this.readyUntil) {
+      // Load for the next break. Never interrupt the user after they have moved on.
+      void this.prepareInterstitial();
+      return;
+    }
+    this.readyUntil = 0;
+    this.showingInterstitial = true;
 
     let finish!: () => void;
     const dismissed = new Promise<void>(resolve => { finish = resolve; });
@@ -59,6 +73,7 @@ export class AppAdsService {
       console.warn('Interstitial ad could not be shown:', error);
     } finally {
       await Promise.all(handles.map(handle => handle.remove().catch(() => undefined)));
+      this.showingInterstitial = false;
       void this.prepareInterstitial();
     }
   }

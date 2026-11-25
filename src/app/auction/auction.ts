@@ -64,6 +64,7 @@ export class AuctionComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
+        void this.appAds.prepareInterstitial();
         this.chitId = id;
         this.loadChitContext(id);
       }
