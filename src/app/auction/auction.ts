@@ -118,7 +118,7 @@ export class AuctionComponent implements OnInit {
       const total = this.totalAmount || 0;
 
       if (discount + commission >= total) {
-        this.errorMessage = 'The discount and the organizer’s fee together must be less than the total payout amount.';
+        this.errorMessage = 'The discount and the organizer’s commission together must be less than the total payout amount.';
         return;
       }
 
@@ -140,7 +140,7 @@ export class AuctionComponent implements OnInit {
 
     const isSelfPrized = this.hasPreviouslyWon
       ? false
-      : confirm(`Did you win the payout in cycle ${this.currentChitNumber}? Choose OK if you won, or Cancel to record a different winner.`);
+      : confirm(`Did you win the payout in auction ${this.currentChitNumber}? Choose OK if you won, or Cancel to record a different winner.`);
 
     const termData = {
       chitId: this.chitId,
@@ -157,7 +157,7 @@ export class AuctionComponent implements OnInit {
     };
 
     this.chitService.addTerm(termData).subscribe(() => {
-      this.saveSuccessMessage = `Cycle ${this.currentChitNumber} saved.`;
+      this.saveSuccessMessage = `Auction ${this.currentChitNumber} saved.`;
       setTimeout(() => {
         void (async () => {
           this.saveSuccessMessage = null;
@@ -225,6 +225,14 @@ export class AuctionComponent implements OnInit {
     const totalAmount = this.totalAmount || 0;
     const commissionAmount = this.agentCommissionAmount || 0;
     return Math.max(0, Math.floor(totalAmount - commissionAmount - 1));
+  }
+
+  get sliderStep(): number {
+    return this.getDiscountUpperBound() < 500 ? 1 : 500;
+  }
+
+  get sliderMaximum(): number {
+    return Math.floor(this.getDiscountUpperBound() / this.sliderStep) * this.sliderStep;
   }
 
   getShareAmount(): number {
@@ -367,6 +375,7 @@ export class AuctionComponent implements OnInit {
       dividendDistributionType: this.dividendDistributionType,
       commissionTreatmentType: this.commissionTreatmentType,
       currentMemberDividend: this.getDividendPerMember(),
+      previouslyWon: this.hasPreviouslyWon,
       pastDividend: 0,
       pastInvestment: this.pastInvestment || 0,
       frequencyInMonths: this.frequency || 1,

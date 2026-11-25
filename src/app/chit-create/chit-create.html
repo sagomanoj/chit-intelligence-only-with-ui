@@ -58,7 +58,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'chitValue'">
-              The full value of the chit before the winner’s discount and the organizer’s fee are
+              The full value of the chit before the winner’s discount and the organizer’s commission are
               taken out.
             </div>
             <input
@@ -91,7 +91,7 @@
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'totalMembers'">
               Each member gets one turn to receive the payout. A group of 20 members runs for 20
-              cycles.
+              auctions.
             </div>
             <input
               type="number"
@@ -108,11 +108,11 @@
 
           <div class="form-group">
             <div class="field-title">
-              <label for="create-installmentAmount">Payment per member each cycle (₹)</label>
+              <label for="create-installmentAmount">Payment per member each auction (₹)</label>
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="How the payment per cycle is worked out"
+                aria-label="How the payment per auction is worked out"
                 [attr.aria-expanded]="activeTooltip === 'installmentAmount'"
                 (click)="toggleTooltip('installmentAmount')"
               >
@@ -152,7 +152,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'frequencyInMonths'">
-              Each cycle has one auction and one payment. Choose how often your group meets.
+              Choose how often your group holds an auction and collects a payment.
             </div>
             <select
               class="form-control"
@@ -185,7 +185,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'startDate'">
-              The date of the first cycle’s auction.
+              The date of the first auction.
             </div>
             <input
               type="date"
@@ -204,23 +204,25 @@
           >Group rules
         </h2>
         <div class="ui-fields">
-          <div class="form-group">
-            <div class="field-title">
-              <label for="create-agentCommissionPercent">Organizer’s fee (%)</label>
-              <button
-                class="help-trigger"
-                type="button"
-                aria-label="About the organizer’s fee percentage"
-                [attr.aria-expanded]="activeTooltip === 'agentCommissionPercent'"
-                (click)="toggleTooltip('agentCommissionPercent')"
-              >
-                <svg class="ui-icon" aria-hidden="true">
-                  <use href="assets/ui-icons.svg#info"></use>
-                </svg>
-              </button>
-            </div>
-            <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionPercent'">
-              The percentage of the total payout amount the organizer charges each cycle.
+          <div class="form-group commission-field">
+            <div>
+              <div class="field-title">
+                <label for="create-agentCommissionPercent">Organizer’s commission (%)</label>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About the organizer’s commission percentage"
+                  [attr.aria-expanded]="activeTooltip === 'agentCommissionPercent'"
+                  (click)="toggleTooltip('agentCommissionPercent')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
+              </div>
+              <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionPercent'">
+                The percentage of the total payout amount the organizer charges each auction.
+              </div>
             </div>
             <input
               type="number"
@@ -235,23 +237,25 @@
             />
           </div>
 
-          <div class="form-group">
-            <div class="field-title">
-              <label for="create-agentCommissionAmount">Organizer’s fee (₹)</label>
-              <button
-                class="help-trigger"
-                type="button"
-                aria-label="About the organizer’s fee amount"
-                [attr.aria-expanded]="activeTooltip === 'agentCommissionAmount'"
-                (click)="toggleTooltip('agentCommissionAmount')"
-              >
-                <svg class="ui-icon" aria-hidden="true">
-                  <use href="assets/ui-icons.svg#info"></use>
-                </svg>
-              </button>
-            </div>
-            <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionAmount'">
-              This is the same fee shown in rupees. Changing the amount also updates the percentage.
+          <div class="form-group commission-field">
+            <div>
+              <div class="field-title">
+                <label for="create-agentCommissionAmount">Organizer’s commission (₹)</label>
+                <button
+                  class="help-trigger"
+                  type="button"
+                  aria-label="About the organizer’s commission amount"
+                  [attr.aria-expanded]="activeTooltip === 'agentCommissionAmount'"
+                  (click)="toggleTooltip('agentCommissionAmount')"
+                >
+                  <svg class="ui-icon" aria-hidden="true">
+                    <use href="assets/ui-icons.svg#info"></use>
+                  </svg>
+                </button>
+              </div>
+              <div class="tooltip-box" *ngIf="activeTooltip === 'agentCommissionAmount'">
+                This is the same commission shown in rupees. Changing the amount also updates the percentage.
+              </div>
             </div>
             <input
               type="number"
@@ -270,12 +274,12 @@
           <div class="form-group">
             <div class="field-title">
               <label for="create-organizerPayoutTerm"
-                >Cycle when the organizer gets the payout</label
+                >Auction when the organizer gets the payout</label
               >
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="About the organizer’s payout cycle"
+                aria-label="About the organizer’s payout auction"
                 [attr.aria-expanded]="activeTooltip === 'organizerPayoutTerm'"
                 (click)="toggleTooltip('organizerPayoutTerm')"
               >
@@ -285,7 +289,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'organizerPayoutTerm'">
-              Choose the cycle when the organizer takes the payout without offering a bid discount.
+              Choose the auction when the organizer takes the payout without offering a bid discount.
             </div>
             <input
               type="number"
@@ -327,7 +331,7 @@
 
           <div class="form-group full-width">
             <label for="create-commissionTreatmentType" class="required"
-              >How the organizer’s fee is handled</label
+              >How the organizer’s commission is handled</label
             >
             <select
               class="form-control"
@@ -338,32 +342,32 @@
               [disabled]="hasRecordedTerms"
             >
               <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">
-                Take the fee out of the discount
+                Deduct commission from discount
               </option>
               <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">
-                Add the fee to the discount
+                Add commission to discount
               </option>
             </select>
             <small id="fee-help" class="help-text">{{
               chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
-                ? 'Members share the discount plus the organizer’s fee.'
-                : 'Members share what is left after the fee is taken out.'
+                ? 'Members share the discount plus the organizer’s commission.'
+                : 'Members share what is left after the commission is taken out.'
             }}</small>
             <details class="commission-help">
               <summary>Compare both options</summary>
               <p>
-                <strong>Take the fee out</strong> — for a ₹10,000 discount and a ₹1,000 fee, members
+                <strong>Take the commission out</strong> — for a ₹10,000 discount and a ₹1,000 commission, members
                 share ₹9,000.
               </p>
               <p>
-                <strong>Add the fee</strong> — for the same discount and fee, members share ₹11,000.
+                <strong>Add the commission</strong> — for the same discount and commission, members share ₹11,000.
               </p>
             </details>
           </div>
 
           <div class="form-group full-width" *ngIf="hasRecordedTerms">
             <small class="help-text"
-              >These two rules are fixed once you record the first cycle.</small
+              >These two rules are fixed once you record the first auction.</small
             >
           </div>
 
@@ -386,7 +390,7 @@
               <button
                 class="help-trigger"
                 type="button"
-                aria-label="How your winning cycle payment affects your payout"
+                aria-label="How your winning auction payment affects your payout"
                 [attr.aria-expanded]="activeTooltip === 'excludeCurrentTermShare'"
                 (click)="toggleTooltip('excludeCurrentTermShare')"
               >
@@ -396,7 +400,7 @@
               </button>
             </div>
             <div class="tooltip-box" *ngIf="activeTooltip === 'excludeCurrentTermShare'">
-              When this is on, your payment for that cycle comes out of your payout. Turn it off to
+              When this is on, your payment for that auction comes out of your payout. Turn it off to
               keep that amount in your payout and count your payment after discount in the
               calculator.
             </div>

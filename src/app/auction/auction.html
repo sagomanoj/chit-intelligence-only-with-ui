@@ -10,7 +10,7 @@
       </div>
       <h2 class="context-title">{{ chit.name }}</h2>
       <span class="context-sub"
-        >Cycle {{ currentChitNumber }} ·
+        >Auction {{ currentChitNumber }} ·
         {{
           dividendDistributionType === ChitType.ALWAYS_COMMISSION
             ? 'Always Commission · All members share the discount'
@@ -18,7 +18,7 @@
         }}</span
       >
       <span class="context-sub"
-        >Organizer’s fee
+        >Organizer’s commission
         {{
           commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
             ? 'added to'
@@ -116,7 +116,7 @@
           </div>
 
           <div class="form-group wide" *ngIf="!chit">
-            <label for="commissionTreatmentType">How the organizer’s fee is handled</label>
+            <label for="commissionTreatmentType">How the organizer’s commission is handled</label>
             <select
               id="commissionTreatmentType"
               [(ngModel)]="commissionTreatmentType"
@@ -125,16 +125,16 @@
               aria-describedby="calculator-fee-help"
             >
               <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">
-                Take the fee out of the discount
+                Deduct commission from discount
               </option>
               <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">
-                Add the fee to the discount
+                Add commission to discount
               </option>
             </select>
             <small id="calculator-fee-help">{{
               commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
-                ? 'Members share the discount plus the organizer’s fee.'
-                : 'Members share what is left after the fee is taken out.'
+                ? 'Members share the discount plus the organizer’s commission.'
+                : 'Members share what is left after the commission is taken out.'
             }}</small>
           </div>
 
@@ -170,7 +170,7 @@
 
         <div class="ui-fields">
           <div class="form-group">
-            <label for="currentChitNumber" class="required">Cycle number</label>
+            <label for="currentChitNumber" class="required">Auction number</label>
             <input
               type="number"
               id="currentChitNumber"
@@ -193,7 +193,7 @@
                 (ngModelChange)="onInputChange()"
                 name="hasPreviouslyWon"
               />
-              <span>I won the payout in an earlier cycle</span>
+              <span>I won the payout in an earlier auction</span>
             </label>
           </div>
 
@@ -211,7 +211,7 @@
           </div>
 
           <div class="form-group">
-            <label for="agentCommissionAmount" class="required">Organizer’s fee (₹)</label>
+            <label for="agentCommissionAmount" class="required">Organizer’s commission (₹)</label>
             <input
               type="number"
               id="agentCommissionAmount"
@@ -249,15 +249,15 @@
               aria-label="Adjust the bid discount"
               id="discountSlider"
               min="0"
-              [max]="getDiscountUpperBound()"
-              step="1000"
+              [max]="sliderMaximum"
+              [step]="sliderStep"
               [value]="discountAmount || 0"
               name="discountSlider"
               (input)="onDiscountSliderChange($event)"
             />
             <div class="slider-meta">
               <span>₹0</span>
-              <span>Max ₹{{ getDiscountUpperBound() | number: '1.0-0' }}</span>
+              <span>Max ₹{{ sliderMaximum | number: '1.0-0' }}</span>
             </div>
           </div>
           <div class="form-group amount-to-pay-group">
@@ -277,13 +277,13 @@
             <span class="amount-to-pay-sub" *ngIf="participants && currentChitNumber">
               <span *ngIf="commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT"
                 >Members share the ₹{{ discountAmount || 0 | number: '1.0-0' }} discount plus the
-                ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} fee.</span
+                ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} commission.</span
               >
               <span *ngIf="commissionTreatmentType !== CommissionTreatment.ADD_TO_DISCOUNT"
                 >Members share what is left from the ₹{{
                   discountAmount || 0 | number: '1.0-0'
                 }}
-                discount after the ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} fee.</span
+                discount after the ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} commission.</span
               >
               <span *ngIf="getEligibleMembersCount() > 0"
                 >{{ getEligibleMembersCount() }}
@@ -293,12 +293,12 @@
                 member’s payment.</span
               >
               <span *ngIf="getEligibleMembersCount() === 0"
-                >No members get a discount this cycle.</span
+                >No members get a discount this auction.</span
               >
               <span
                 *ngIf="hasPreviouslyWon && dividendDistributionType !== ChitType.ALWAYS_COMMISSION"
               >
-                You’ve already won, so you don’t get a discount share this cycle.</span
+                You’ve already won, so you don’t get a discount share this auction.</span
               >
             </span>
           </div>
@@ -375,7 +375,7 @@
           Show bid results
         </button>
         <button class="ui-action" *ngIf="chitId && profit" (click)="saveAsTermRecord()">
-          Save as cycle {{ currentChitNumber }}
+          Save as auction {{ currentChitNumber }}
         </button>
       </div>
     </section>
@@ -450,9 +450,9 @@
             <input
               id="result-discount"
               type="range"
-              min="1"
-              [max]="getDiscountUpperBound()"
-              step="1"
+              [min]="sliderStep"
+              [max]="sliderMaximum"
+              [step]="sliderStep"
               [value]="discountAmount || 0"
               (input)="onDiscountSliderChange($event)"
             />
@@ -465,11 +465,11 @@
                 <dd>₹{{ totalAmount | number }}</dd>
               </div>
               <div>
-                <dt>Organizer’s fee</dt>
+                <dt>Organizer’s commission</dt>
                 <dd>₹{{ p.agentCommissionAmount | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Your discount this cycle</dt>
+                <dt>Your discount this auction</dt>
                 <dd>₹{{ getDividendPerMember() | number: '1.0-0' }}</dd>
               </div>
               <div>
@@ -481,16 +481,16 @@
                 <dd>₹{{ p.futureInvestment | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Cycles left</dt>
+                <dt>Auctions left</dt>
                 <dd>{{ p.remainingTerms }}</dd>
               </div>
               <div>
-                <dt>Payment each cycle</dt>
+                <dt>Payment each auction</dt>
                 <dd>₹{{ p.installmentAmount | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Largest discount before you lose money</dt>
-                <dd>₹{{ p.breakEvenDiscountAmount | number: '1.0-0' }}</dd>
+                <dt>Highest discount without a loss</dt>
+                <dd>{{ p.breakEvenDiscountAmount === null ? 'None' : '₹' + (p.breakEvenDiscountAmount | number: '1.0-0') }}</dd>
               </div>
             </dl>
           </section>
@@ -522,11 +522,11 @@
                 <dd>₹{{ p.monthlyInterest | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>Interest each cycle</dt>
+                <dt>Interest each auction</dt>
                 <dd>₹{{ p.interestPerTerm | number: '1.0-0' }}</dd>
               </div>
               <div>
-                <dt>You still pay each cycle</dt>
+                <dt>You still pay each auction</dt>
                 <dd>₹{{ p.extraPaymentPerTerm | number: '1.0-0' }}</dd>
               </div>
               <div>
@@ -546,7 +546,7 @@
           ← Back to calculator
         </button>
         <button *ngIf="chitId && profit" class="ui-action primary" (click)="saveAsTermRecord()">
-          Save as cycle {{ currentChitNumber }}
+          Save as auction {{ currentChitNumber }}
         </button>
       </footer>
     </section>

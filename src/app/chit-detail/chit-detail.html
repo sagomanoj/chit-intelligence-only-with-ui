@@ -23,13 +23,13 @@
     <article>
       <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#calendar"></use></svg>
       <div>
-        Payment each cycle<strong>₹{{ chit.installmentAmount | number }}</strong>
+        Payment each auction<strong>₹{{ chit.installmentAmount | number }}</strong>
       </div>
     </article>
     <article>
       <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#layers"></use></svg>
       <div>
-        Cycles recorded<strong>{{ summary?.termsCompleted }} of {{ chit.totalMembers }}</strong>
+        Auctions recorded<strong>{{ summary?.termsCompleted }} of {{ chit.totalMembers }}</strong>
       </div>
     </article>
     <article>
@@ -48,7 +48,20 @@
       <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#trophy"></use></svg>
       <div>
         Payout you received<strong>₹{{ summary?.payoutReceived | number }}</strong
-        >Cycle {{ summary?.selfPrizedTermNumber }}
+        >Auction {{ summary?.selfPrizedTermNumber }}
+      </div>
+    </article>
+    <article *ngIf="winningReturn as result" class="return-tile"
+      [class.gain]="result.net > 0" [class.loss]="result.net < 0">
+      <div>
+        {{ result.estimated ? 'Estimated' : 'Final' }}
+        {{ result.net > 0 ? 'profit' : result.net < 0 ? 'loss' : 'result · break-even' }}
+        <strong>₹{{ result.amount | number: '1.0-2' }}</strong>
+        <ng-container *ngIf="result.hasRate; else noRate">
+          <small>{{ result.annualizedProfitPercentage | number: '1.0-2' }}% per year</small>
+          <small>₹{{ result.profitInterestRupee | number: '1.0-2' }} per ₹100 each month</small>
+        </ng-container>
+        <ng-template #noRate><small>Rate unavailable · ₹0 in payments</small></ng-template>
       </div>
     </article>
   </section>
@@ -58,7 +71,7 @@
       (click)="openAddTermModal()"
       [disabled]="summary?.isFullyCompleted"
     >
-      {{ summary?.isFullyCompleted ? 'Chit finished' : '＋ Add cycle ' + summary?.nextTermNumber }}
+      {{ summary?.isFullyCompleted ? 'Chit finished' : '＋ Add auction ' + summary?.nextTermNumber }}
     </button>
     <button class="ui-action" (click)="goToAuction()">
       <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#calc"></use></svg> Bid
@@ -70,7 +83,7 @@
       <svg class="ui-icon chip" aria-hidden="true">
         <use href="assets/ui-icons.svg#calendar"></use>
       </svg>
-      Cycle history
+      Auction history
     </h2>
     <div *ngIf="terms.length; else empty">
       <div class="table-responsive desktop-terms-table">
@@ -78,11 +91,11 @@
           <thead>
             <tr>
               <th>
-                Cycle
+                Auction
                 <button
                   class="help-trigger"
                   type="button"
-                  aria-label="About the cycle number"
+                  aria-label="About the auction number"
                   [attr.aria-expanded]="activeTooltip === 'colTerm'"
                   (click)="toggleTooltip('colTerm')"
                 >
@@ -91,7 +104,7 @@
                   </svg>
                 </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTerm'">
-                  Cycles are numbered from the first auction to the last.
+                  Auction 1 is the first time the group meets to bid.
                 </div>
               </th>
               <th>
@@ -142,7 +155,7 @@
                   </svg>
                 </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colNet'">
-                  The amount you paid for this cycle after your discount.
+                  The amount you paid for this auction after your discount.
                 </div>
               </th>
               <th>
@@ -163,11 +176,11 @@
                 </div>
               </th>
               <th>
-                Organizer’s fee
+                Organizer’s commission
                 <button
                   class="help-trigger"
                   type="button"
-                  aria-label="About the organizer’s fee"
+                  aria-label="About the organizer’s commission"
                   [attr.aria-expanded]="activeTooltip === 'colComm'"
                   (click)="toggleTooltip('colComm')"
                 >
@@ -176,7 +189,7 @@
                   </svg>
                 </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colComm'">
-                  The fee the organizer charged for this auction.
+                  The commission the organizer charged for this auction.
                 </div>
               </th>
               <th>
@@ -193,7 +206,7 @@
                   </svg>
                 </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colTotDiv'">
-                  The amount available to share after your group’s fee rule is applied.
+                  The amount available to share after your group’s commission rule is applied.
                 </div>
               </th>
               <th>
@@ -210,7 +223,7 @@
                   </svg>
                 </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colWinner'">
-                  The member who received the payout for this cycle.
+                  The member who received the payout for this auction.
                 </div>
               </th>
               <th>
@@ -218,7 +231,7 @@
                 <button
                   class="help-trigger"
                   type="button"
-                  aria-label="About the cycle actions"
+                  aria-label="About the auction actions"
                   [attr.aria-expanded]="activeTooltip === 'colActions'"
                   (click)="toggleTooltip('colActions')"
                 >
@@ -227,7 +240,7 @@
                   </svg>
                 </button>
                 <div class="tooltip-box table-tooltip" *ngIf="activeTooltip === 'colActions'">
-                  Edit or delete this cycle’s record.
+                  Edit or delete this auction’s record.
                 </div>
               </th>
             </tr>
@@ -235,7 +248,7 @@
           <tbody>
             <tr *ngFor="let t of terms" [class.highlight-self-prized]="t.isSelfPrized">
               <td class="td-term">
-                <span class="term-number">Cycle {{ t.termNumber }}</span>
+                <span class="term-number">Auction {{ t.termNumber }}</span>
                 <span class="self-tag" *ngIf="t.isSelfPrized">You won</span>
               </td>
               <td>{{ t.auctionDate | date: 'dd/MM/yyyy' }}</td>
@@ -254,7 +267,7 @@
                 <span *ngIf="!t.winnerName" class="text-muted">-</span>
               </td>
               <td class="td-actions">
-                <button class="btn-icon" (click)="openEditTermModal(t)" title="Edit cycle">
+                <button class="btn-icon" (click)="openEditTermModal(t)" title="Edit auction">
                   <svg class="ui-icon" aria-hidden="true">
                     <use href="assets/ui-icons.svg#pencil"></use>
                   </svg>
@@ -262,7 +275,7 @@
                 <button
                   class="btn-icon btn-icon-danger"
                   (click)="deleteTerm(t.id, t.termNumber)"
-                  title="Delete cycle"
+                  title="Delete auction"
                 >
                   <svg class="ui-icon" aria-hidden="true">
                     <use href="assets/ui-icons.svg#trash"></use>
@@ -276,7 +289,7 @@
       <div class="mobile-history">
         <article class="term-card" *ngFor="let t of terms">
           <header>
-            <b>Cycle {{ t.termNumber }}</b
+            <b>Auction {{ t.termNumber }}</b
             ><time>{{ t.auctionDate | date: 'dd MMM yyyy' }}</time>
             <button class="text-action" (click)="openEditTermModal(t)">
               <svg class="ui-icon" aria-hidden="true">
@@ -306,14 +319,14 @@
             You won · ₹{{ payoutForTerm(t) | number }}
           </p>
           <details>
-            <summary>Cycle details</summary>
+            <summary>Auction details</summary>
             <dl class="term-more">
               <div>
                 <dt>Total discount to share</dt>
                 <dd>₹{{ t.totalDividend | number }}</dd>
               </div>
               <div>
-                <dt>Organizer’s fee</dt>
+                <dt>Organizer’s commission</dt>
                 <dd>₹{{ t.agentCommission | number }}</dd>
               </div>
               <div *ngIf="t.winnerName">
@@ -329,15 +342,15 @@
               <svg class="ui-icon" aria-hidden="true">
                 <use href="assets/ui-icons.svg#trash"></use>
               </svg>
-              Delete cycle
+              Delete auction
             </button>
           </details>
         </article>
       </div>
     </div>
     <ng-template #empty
-      ><p>You haven’t recorded any cycles for this chit yet.</p>
-      <button class="ui-action" (click)="openAddTermModal()">＋ Record first cycle</button>
+      ><p>You haven’t recorded any auctions for this chit yet.</p>
+      <button class="ui-action" (click)="openAddTermModal()">＋ Record first auction</button>
     </ng-template>
   </section>
   <details class="ui-panel group-rules">
@@ -350,7 +363,7 @@
       }}
     </p>
     <p>
-      Organizer’s fee
+      Organizer’s commission
       {{
         chit.commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
           ? 'added to'
@@ -373,8 +386,8 @@
   >
     <div class="ui-sheet" (click)="$event.stopPropagation()">
       <div class="sheet-head">
-        <h2 id="record-title">{{ isEditing ? 'Edit cycle' : 'Record a cycle' }}</h2>
-        <button class="ui-close" aria-label="Close cycle form" (click)="closeModal()">✕</button>
+        <h2 id="record-title">{{ isEditing ? 'Edit auction' : 'Record an auction' }}</h2>
+        <button class="ui-close" aria-label="Close auction form" (click)="closeModal()">✕</button>
       </div>
 
       <form class="term-form" (ngSubmit)="saveTerm()" #termForm="ngForm">
@@ -388,11 +401,11 @@
           <div class="ui-fields">
             <div class="form-group">
               <div class="field-title">
-                <label for="term-termNumber">Cycle number</label>
+                <label for="term-termNumber">Auction number</label>
                 <button
                   class="help-trigger"
                   type="button"
-                  aria-label="About the cycle number"
+                  aria-label="About the auction number"
                   [attr.aria-expanded]="activeTooltip === 'termNumber'"
                   (click)="toggleTooltip('termNumber')"
                 >
@@ -402,7 +415,7 @@
                 </button>
               </div>
               <div class="tooltip-box" *ngIf="activeTooltip === 'termNumber'">
-                Enter 1 for the first cycle, 2 for the next, and so on.
+                Enter 1 for the first auction, 2 for the next, and so on.
               </div>
               <input
                 type="number"
@@ -492,7 +505,7 @@
                 </button>
               </div>
               <div class="tooltip-box" *ngIf="activeTooltip === 'investmentAmount'">
-                Enter how much you paid for this cycle after your discount.
+                Enter how much you paid for this auction after your discount.
               </div>
               <input
                 type="number"
@@ -507,7 +520,7 @@
                 [disabled]="newTerm.isSelfPrized"
               />
               <small class="help-text" *ngIf="newTerm.isSelfPrized"
-                >You won the payout. This record shows ₹0 paid for this cycle.</small
+                >You won the payout. This record shows ₹0 paid for this auction.</small
               >
             </div>
 
@@ -521,7 +534,7 @@
                         dividendPoolAmount | number
                       }}.</strong
                     >
-                    Each member saves about ₹{{ dividendPerEligibleMember | number }} this cycle.
+                    Each member saves about ₹{{ dividendPerEligibleMember | number }} this auction.
                   </p>
                   <details>
                     <summary>How this is calculated</summary>
@@ -529,24 +542,24 @@
                       The ₹{{ newTerm.winningBidAmount | number }} discount plus the ₹{{
                         chit.agentCommissionAmount | number
                       }}
-                      organizer’s fee gives members ₹{{ dividendPoolAmount | number }} to share.
+                      organizer’s commission gives members ₹{{ dividendPoolAmount | number }} to share.
                     </p>
                     <p *ngIf="chit.commissionTreatmentType !== CommissionTreatment.ADD_TO_DISCOUNT">
-                      After taking the ₹{{ chit.agentCommissionAmount | number }} fee out of the ₹{{
+                      After taking the ₹{{ chit.agentCommissionAmount | number }} commission out of the ₹{{
                         newTerm.winningBidAmount | number
                       }}
                       discount, members have ₹{{ dividendPoolAmount | number }} to share.
                     </p>
                   </details>
                 </ng-container>
-                <p *ngIf="eligibleDividendMembers === 0">No members get a discount this cycle.</p>
-                <p *ngIf="!isUserEligibleForDividend">You don’t get a discount share this cycle.</p>
+                <p *ngIf="eligibleDividendMembers === 0">No members get a discount this auction.</p>
+                <p *ngIf="!isUserEligibleForDividend">You don’t get a discount share this auction.</p>
               </div>
             </div>
 
             <div class="form-group full-width" *ngIf="isSelfPrizedAlreadyWon">
               <div class="already-taken-banner">
-                You already won the payout in cycle {{ selfPrizedTermNumber }}.
+                You already won the payout in auction {{ selfPrizedTermNumber }}.
               </div>
             </div>
 
@@ -559,7 +572,7 @@
                   id="term-isSelfPrized"
                   name="isSelfPrized"
                 />
-                <span><strong>Did you win the payout this cycle?</strong></span>
+                <span><strong>Did you win the payout this auction?</strong></span>
               </label>
             </div>
 
@@ -597,7 +610,7 @@
                 <button
                   class="help-trigger"
                   type="button"
-                  aria-label="About cycle notes"
+                  aria-label="About auction notes"
                   [attr.aria-expanded]="activeTooltip === 'notes'"
                   (click)="toggleTooltip('notes')"
                 >
@@ -607,7 +620,7 @@
                 </button>
               </div>
               <div class="tooltip-box" *ngIf="activeTooltip === 'notes'">
-                Add anything you want to remember about this cycle.
+                Add anything you want to remember about this auction.
               </div>
               <textarea
                 class="form-control"
@@ -623,7 +636,7 @@
         <div class="sheet-actions">
           <button type="button" class="ui-action" (click)="closeModal()">Cancel</button>
           <button type="submit" class="ui-action primary" [disabled]="!termForm.form.valid">
-            {{ isEditing ? 'Save changes' : 'Save cycle' }}
+            {{ isEditing ? 'Save changes' : 'Save auction' }}
           </button>
         </div>
       </form>

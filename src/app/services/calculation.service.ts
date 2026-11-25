@@ -11,6 +11,7 @@ export interface ProfitRequest {
   dividendDistributionType: number;
   commissionTreatmentType?: number;
   currentMemberDividend?: number;
+  previouslyWon?: boolean;
   pastDividend: number;
   pastInvestment: number;
   frequencyInMonths: number;
@@ -31,7 +32,7 @@ export interface ProfitResponse {
   auctionAmount: number;
   discountAmount: number;
   agentCommissionAmount: number;
-  breakEvenDiscountAmount: number;
+  breakEvenDiscountAmount: number | null;
   maxAllowedDiscountAmount: number;
   pastInvestment: number;
   futureInvestment: number;
@@ -69,6 +70,59 @@ export interface ReinvestmentResponse {
   providedIn: 'root'
 })
 export class CalculationService {
+  private returnRates(net: number, paid: number, months: number) {
+    const overall = paid > 0 ? net / paid * 100 : 0;
+    const annual = overall * 12 / Math.max(1, months);
+    return {
+      profitPercentage: this.toPercent(overall),
+      annualizedProfitPercentage: this.toPercent(annual),
+      profitInterestRupee: this.toPercent(annual / 12)
+    };
+  }
+
+  winningAuctionReturn(chit: Chit, terms: ChitTerm[]) {
+    const win = terms.find(term => term.isSelfPrized);
+    if (!win) return null;
+
+    const installment = chit.installmentAmount;
+    const excludeShare = chit.excludeCurrentTermShare !== false;
+    const payout = win.payoutReceived ?? Math.max(0, chit.chitValue - win.winningBidAmount
+      - (win.agentCommission ?? chit.agentCommissionAmount) - (excludeShare ? installment : 0));
+    // Winning records store zero paid. When the full payout is kept, count that payment separately.
+    const winningPayment = excludeShare ? 0 : Math.max(0, installment - (win.dividendPerMember ?? 0));
+    const recordedPayments = terms.reduce((sum, term) => sum + (term === win ? winningPayment : term.netInstallmentPaid), 0);
+    const unrecorded = Math.max(0, chit.totalMembers - terms.length);
+    const totalPayments = recordedPayments + unrecorded * installment;
+    const net = this.toCurrency(payout - totalPayments);
+    const months = (chit.totalMembers - win.termNumber || chit.totalMembers) * (chit.frequencyInMonths || 1);
+    return {
+      net, amount: Math.abs(net), estimated: unrecorded > 0, hasRate: totalPayments > 0,
+      ...this.returnRates(net, totalPayments, months)
+    };
+  }
+
+  // Find the highest whole-rupee discount that still covers payments. The member's
+  // rounded discount share can itself change as the bid changes.
+  private highestDiscountWithoutLoss(request: ProfitRequest, installment: number, remaining: number, max: number): number | null {
+    const eligible = request.dividendDistributionType === ChitType.ALWAYS_COMMISSION || !request.previouslyWon;
+    const members = getEligibleMemberCount(request.dividendDistributionType, request.totalMembers, request.currentTermNumber);
+    const coversPayments = (bid: number) => {
+      const share = eligible ? getRoundedDividendPerMember(getDividendPool(bid, request.agentCommissionAmount, request.commissionTreatmentType), members) : 0;
+      const payout = Math.max(0, request.chitValue - request.agentCommissionAmount - bid - (request.excludeOwnShare ? installment : 0));
+      const paid = request.pastInvestment + remaining * installment + (request.excludeOwnShare ? 0 : Math.max(0, installment - share));
+      return this.toCurrency(payout - paid) >= 0;
+    };
+    if (!coversPayments(0)) return null;
+    let low = 0;
+    let high = Math.floor(max);
+    while (low < high) {
+      const mid = Math.ceil((low + high) / 2);
+      if (coversPayments(mid)) low = mid;
+      else high = mid - 1;
+    }
+    return low;
+  }
+
   calculateProfit(request: ProfitRequest): Observable<ProfitResponse> {
     const frequencyInMonths = Math.max(1, request.frequencyInMonths || 1);
     const remainingTerms = Math.max(0, request.totalMembers - request.currentTermNumber);
@@ -97,17 +151,7 @@ export class CalculationService {
       : installmentAmount;
     const totalExtraPayment = extraPaymentPerTerm * remainingTerms;
     const netProfit = takeHomeAmount - totalInvestment;
-    const profitPercentage = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0;
-
-    const remainingMonths = Math.max(1, remainingTerms * frequencyInMonths);
-    const totalMonths = Math.max(1, request.totalMembers * frequencyInMonths);
-    const annualizedProfitPercentage = remainingTerms > 0
-      ? (profitPercentage * 12) / remainingMonths
-      : (profitPercentage * 12) / totalMonths;
-    const profitInterestRupee = annualizedProfitPercentage / 12;
-
-    const totalExpectedInvestment = request.pastInvestment + (remainingTerms + 1) * installmentAmount;
-    const breakEvenDiscountAmount = request.chitValue - agentCommissionAmount - totalExpectedInvestment;
+    const months = (remainingTerms || request.totalMembers) * frequencyInMonths;
     const maxAllowedDiscountAmount = Math.max(0, request.chitValue - agentCommissionAmount - 1);
 
     const coverageStatus = !request.enableReinvestment
@@ -125,15 +169,13 @@ export class CalculationService {
 
     return of({
       netProfit: this.toCurrency(Math.abs(netProfit)),
-      profitPercentage: this.toPercent(profitPercentage),
-      annualizedProfitPercentage: this.toPercent(annualizedProfitPercentage),
-      profitInterestRupee: this.toPercent(profitInterestRupee),
+      ...this.returnRates(netProfit, totalInvestment, months),
       status: status,
       takeHomeAmount: this.toCurrency(takeHomeAmount),
       auctionAmount: this.toCurrency(discountAmount),
       discountAmount: this.toCurrency(discountAmount),
       agentCommissionAmount: this.toCurrency(agentCommissionAmount),
-      breakEvenDiscountAmount: this.toCurrency(Math.max(0, breakEvenDiscountAmount)),
+      breakEvenDiscountAmount: this.highestDiscountWithoutLoss(request, installmentAmount, remainingTerms, maxAllowedDiscountAmount),
       maxAllowedDiscountAmount: this.toCurrency(maxAllowedDiscountAmount),
       pastInvestment: this.toCurrency(request.pastInvestment),
       futureInvestment: this.toCurrency(futureInvestment),
@@ -185,6 +227,7 @@ export class CalculationService {
       dividendDistributionType: distributionType,
       commissionTreatmentType,
       currentMemberDividend: memberDividend,
+      previouslyWon: userPreviouslyWon,
       pastDividend,
       pastInvestment,
       frequencyInMonths: chit.frequencyInMonths || 1,

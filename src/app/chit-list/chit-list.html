@@ -53,8 +53,8 @@
             ><strong>₹{{ item.chit.chitValue | number }}</strong></span
           >
           <span class="folder-terms"
-            ><b>₹{{ item.chit.installmentAmount | number }}</b> each cycle<small
-              >{{ item.termsCompleted }} of {{ item.chit.totalMembers }} cycles recorded</small
+            ><b>₹{{ item.chit.installmentAmount | number }}</b> each auction<small
+              >{{ item.termsCompleted }} of {{ item.chit.totalMembers }} auctions recorded</small
             ></span
           >
         </span>
@@ -93,7 +93,7 @@
             }}
           </p>
           <p>
-            Organizer’s fee
+            Organizer’s commission
             {{ item.chit.commissionTreatmentType === 2 ? 'added to' : 'taken out of' }} the
             discount.
           </p>
@@ -103,7 +103,7 @@
             <svg class="ui-icon" aria-hidden="true">
               <use href="assets/ui-icons.svg#calendar"></use>
             </svg>
-            Cycle history
+            Auction history
           </button>
           <button class="ui-action" (click)="openCalculator(item.chit.id)">
             <svg class="ui-icon" aria-hidden="true">

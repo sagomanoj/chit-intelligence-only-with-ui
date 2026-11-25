@@ -201,8 +201,8 @@ input[type='range'] {
   margin: 6px 0 0;
 }
 .result-list div {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) fit-content(58%);
   align-items: baseline;
   gap: 10px;
   border-top: 1px solid #dae7f2;
@@ -212,9 +212,14 @@ input[type='range'] {
 .result-list dd {
   margin: 0;
   text-align: end;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  font-variant-numeric: tabular-nums;
   font-weight: 750;
 }
 .result-sheet {
   max-width: 650px;
+}
+
+.ui-fields .form-group > input[type=number]:last-child {
+  margin-top: auto;
 }

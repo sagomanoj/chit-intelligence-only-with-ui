@@ -125,7 +125,7 @@ export class ChitCreateComponent implements OnInit {
     }
 
     if (this.chit.organizerPayoutTerm > this.chit.totalMembers) {
-      alert(`Choose a cycle from 1 to ${this.chit.totalMembers} for the organizer’s payout.`);
+      alert(`Choose an auction from 1 to ${this.chit.totalMembers} for the organizer’s payout.`);
       return;
     }
 

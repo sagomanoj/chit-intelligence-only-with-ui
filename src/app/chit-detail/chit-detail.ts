@@ -1,4 +1,5 @@
 import { SheetDirective } from '../sheet.directive';
+import { CalculationService } from '../services/calculation.service';
 import { AppAdsService } from '../services/app-ads.service';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -19,6 +20,7 @@ export class ChitDetailComponent implements OnInit {
   chit: Chit | null = null;
   terms: ChitTerm[] = [];
   summary: any = null;
+  winningReturn: ReturnType<CalculationService['winningAuctionReturn']> = null;
 
   showAddModal = false;
   isEditing = false;
@@ -43,6 +45,7 @@ export class ChitDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private chitService: ChitService,
     private router: Router,
+    private calculations: CalculationService,
     private appAds: AppAdsService
   ) { }
 
@@ -89,7 +92,10 @@ export class ChitDetailComponent implements OnInit {
       this.chitService.getChit(id).subscribe(chit => {
         if (chit) {
           this.chit = chit;
-          this.chitService.getTerms(id).subscribe(terms => this.terms = terms);
+          this.chitService.getTerms(id).subscribe(terms => {
+            this.terms = terms;
+            this.winningReturn = this.calculations.winningAuctionReturn(chit, terms);
+          });
           this.summary = this.chitService.getChitSummary(id);
           this.newTerm.termNumber = this.summary ? this.summary.nextTermNumber : 1;
           this.updateDefaultTermFields(this.newTerm.termNumber);
@@ -190,7 +196,7 @@ export class ChitDetailComponent implements OnInit {
       this.newTerm.isSelfPrized = false;
       this.newTerm.investmentAmount = this.chit.installmentAmount;
       this.newTerm.winningBidAmount = 0;
-      this.newTerm.winnerName = `Cycle ${termNumber} winner`;
+      this.newTerm.winnerName = `Auction ${termNumber} winner`;
       this.newTerm.notes = '';
       return;
     }
@@ -198,10 +204,10 @@ export class ChitDetailComponent implements OnInit {
     if (termNumber === this.chit.organizerPayoutTerm) {
       this.newTerm.winningBidAmount = this.chit.agentCommissionAmount || 0;
       this.newTerm.winnerName = 'Organizer';
-      this.newTerm.notes = `Organizer’s payout in cycle ${termNumber}`;
+      this.newTerm.notes = `Organizer’s payout in auction ${termNumber}`;
     } else {
       this.newTerm.winningBidAmount = 0;
-      this.newTerm.winnerName = `Cycle ${termNumber} winner`;
+      this.newTerm.winnerName = `Auction ${termNumber} winner`;
       this.newTerm.notes = '';
     }
     this.calculateInvestmentFromWinningBid();
@@ -320,7 +326,7 @@ export class ChitDetailComponent implements OnInit {
   }
 
   deleteTerm(termId: string, termNumber: number): void {
-    if (confirm(`Delete the record for cycle ${termNumber}?`)) {
+    if (confirm(`Delete the record for auction ${termNumber}?`)) {
       this.chitService.deleteTerm(termId).subscribe(() => {
         this.loadChitDetails();
       });

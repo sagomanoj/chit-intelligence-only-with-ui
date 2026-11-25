@@ -133,7 +133,7 @@ export class ChitListComponent implements OnInit {
 
   deleteChit(event: Event, id: string, name: string): void {
     event.stopPropagation();
-    if (confirm(`Delete “${name}” and all its cycle records?`)) {
+    if (confirm(`Delete “${name}” and all its auction records?`)) {
       this.chitService.deleteChit(id).subscribe(() => {
         this.loadChits();
       });

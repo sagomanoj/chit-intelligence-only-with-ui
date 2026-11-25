@@ -226,3 +226,19 @@ dd {
 .dividend-explanation summary {
   color: #175747;
 }
+
+.kpi-grid .return-tile.gain {
+  color: #11563b;
+  background: #dff6eb;
+  border-color: #acd9c1;
+}
+.kpi-grid .return-tile.loss {
+  color: #801e37;
+  background: #ffedf1;
+  border-color: #edc3ce;
+}
+.return-tile small {
+  display: block;
+  margin-top: 3px;
+  line-height: 1.35;
+}
