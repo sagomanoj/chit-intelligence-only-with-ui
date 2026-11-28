@@ -1,0 +1,278 @@
+<div class="dashboard-container">
+  <header class="value-card">
+    <span>Total payout amount</span>
+    <h1>₹{{ totalPortfolioValue | number }}</h1>
+    <p>Across {{ chits.length }} chit {{ chits.length === 1 ? 'group' : 'groups' }}</p>
+    <i class="gold-rings" aria-hidden="true"></i>
+    <div class="value-actions">
+      <a routerLink="/chits/create">＋ Create chit group</a>
+      <a routerLink="/calculator">Bid calculator ↗</a>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="Your chit groups at a glance">
+    <article class="metric payment">
+      <svg class="ui-icon chip" aria-hidden="true">
+        <use href="assets/ui-icons.svg#calendar"></use>
+      </svg>
+      <div>
+        Estimated payment this month<strong
+          >₹{{ currentMonthMinOutflow | number
+          }}<ng-container *ngIf="currentMonthMinOutflow !== currentMonthMaxOutflow"
+            >–₹{{ currentMonthMaxOutflow | number }}</ng-container
+          ></strong
+        >
+      </div>
+    </article>
+    <article class="metric savings">
+      <span class="metric-heading"
+        ><svg class="ui-icon chip mint" aria-hidden="true">
+          <use href="assets/ui-icons.svg#savings"></use>
+        </svg>
+        Discounts received</span
+      ><strong>₹{{ totalDividendsRealized | number }}</strong>
+    </article>
+    <article class="metric prize">
+      <span class="metric-heading"
+        ><svg class="ui-icon chip gold" aria-hidden="true">
+          <use href="assets/ui-icons.svg#trophy"></use>
+        </svg>
+        Payouts received</span
+      ><strong>₹{{ totalPrizeMoneyWon | number }}</strong>
+    </article>
+  </section>
+  <button type="button" class="estimate-control" (click)="openBufferModal()">
+    <span
+      >Estimated discount per member <b>{{ minBufferPercent }}–{{ maxBufferPercent }}%</b></span
+    ><strong
+      ><svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#pencil"></use></svg>
+      Edit</strong
+    >
+  </button>
+
+  <section class="payment-panel">
+    <div class="section-head">
+      <h2>Payments by month</h2>
+      <div class="month-picker" *ngIf="activeMonthGroup as group">
+        <button
+          type="button"
+          (click)="prevMonth()"
+          [disabled]="selectedMonthIndex === 0"
+          aria-label="Previous month"
+        >
+          ‹
+        </button>
+        <select
+          aria-label="Payment month"
+          [ngModel]="selectedMonthIndex"
+          (ngModelChange)="goToMonth($event)"
+        >
+          <option *ngFor="let month of monthGroups; index as i" [ngValue]="i">
+            {{ month.monthLabel }}
+          </option>
+        </select>
+        <button
+          type="button"
+          (click)="nextMonth()"
+          [disabled]="selectedMonthIndex === monthGroups.length - 1"
+          aria-label="Next month"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+    <ng-container *ngIf="activeMonthGroup as group">
+      <ng-container *ngTemplateOutlet="payments; context: { $implicit: group }"></ng-container>
+      <div class="month-links">
+        <button type="button" *ngIf="!group.isCurrentMonth" (click)="goToCurrentMonth()">
+          Current month
+        </button>
+        <button type="button" (click)="openMonthModal(group)">View payment details →</button>
+      </div>
+    </ng-container>
+    <p *ngIf="!monthGroups.length">
+      No upcoming payments yet. <a routerLink="/chits/create">Create a chit group</a>
+    </p>
+  </section>
+  <ng-template #payments let-group>
+    <button
+      type="button"
+      class="folder-row"
+      *ngFor="let item of group.items"
+      [attr.data-color]="item.color"
+      (click)="viewChit(item.chitId)"
+    >
+      <span class="folder-label"
+        ><span class="folder-tab"
+          ><svg class="ui-icon" aria-hidden="true">
+            <use href="assets/ui-icons.svg#groups"></use>
+          </svg>
+          {{ item.chitName }}</span
+        ><small class="folder-state">{{
+          item.isRecorded
+            ? 'Recorded'
+            : item.isSelfPrizedInThisTerm
+              ? 'You won the payout'
+              : item.isSelfPrizedInPriorTerm
+                ? 'Already won'
+                : 'Upcoming'
+        }}</small></span
+      >
+      <span class="folder-front">
+        <span
+          >Due on {{ dueDay(item.scheduledDate, group.monthKey) }} · Auction {{ item.termNumber }} of
+          {{ item.totalMembers }}
+        </span>
+        <b
+          >₹{{ item.minExpectedPayment | number
+          }}<ng-container *ngIf="item.minExpectedPayment !== item.maxExpectedPayment"
+            >–₹{{ item.maxExpectedPayment | number }}</ng-container
+          ></b
+        >
+        <span aria-hidden="true">›</span>
+      </span>
+    </button>
+    <p *ngIf="!group.items.length">No payments scheduled for this month.</p>
+  </ng-template>
+  <dialog
+    appSheet
+    class="ui-overlay"
+    *ngIf="showMonthModal && selectedMonthGroup as group"
+    aria-labelledby="breakdown-title"
+    (cancel)="closeMonthModal()"
+    (click)="closeMonthModal()"
+  >
+    <section class="ui-sheet" (click)="$event.stopPropagation()">
+      <header class="sheet-head">
+        <h2 id="breakdown-title">Payments by group</h2>
+        <button
+          type="button"
+          class="ui-close"
+          (click)="closeMonthModal()"
+          aria-label="Close payment details"
+        >
+          ×
+        </button>
+      </header>
+      <div class="sheet-body">
+        <p class="breakdown-month">
+          <svg class="ui-icon" aria-hidden="true">
+            <use href="assets/ui-icons.svg#calendar"></use>
+          </svg>
+          {{ group.monthLabel }}
+        </p>
+        <div class="month-total value-card">
+          Estimated payment<strong
+            >₹{{ group.minTotalPayment | number
+            }}<ng-container *ngIf="group.minTotalPayment !== group.maxTotalPayment"
+              >–₹{{ group.maxTotalPayment | number }}</ng-container
+            ></strong
+          ><small
+            >{{ group.items.length }} chit
+            {{ group.items.length === 1 ? 'group' : 'groups' }}</small
+          >
+        </div>
+        <ng-container *ngTemplateOutlet="payments; context: { $implicit: group }"></ng-container>
+      </div>
+      <footer class="sheet-actions">
+        <button type="button" class="ui-action primary" (click)="closeMonthModal()">Close</button>
+      </footer>
+    </section>
+  </dialog>
+  <dialog
+    appSheet
+    class="ui-overlay"
+    *ngIf="showBufferModal"
+    aria-labelledby="buffer-modal-title"
+    (cancel)="closeBufferModal()"
+    (click)="closeBufferModal()"
+  >
+    <section class="ui-sheet" (click)="$event.stopPropagation()">
+      <header class="sheet-head">
+        <h2 id="buffer-modal-title">Estimated discount per member</h2>
+        <button
+          type="button"
+          class="ui-close"
+          (click)="closeBufferModal()"
+          aria-label="Close discount estimate"
+        >
+          ×
+        </button>
+      </header>
+      <div class="sheet-body">
+        <p class="sheet-intro">
+          Your discount share (dividend) is the part of the group’s discount that reduces your
+          payment. Estimate it as a percentage of one payment.
+        </p>
+        <div class="ui-fields buffer-fields">
+          <div class="form-group">
+            <label for="min-buffer">Lowest estimate (%)</label
+            ><input
+              id="min-buffer"
+              type="number"
+              [(ngModel)]="minBufferPercent"
+              (ngModelChange)="onBufferRangeChange()"
+              min="0"
+              max="50"
+            />
+          </div>
+          <div class="form-group">
+            <label for="max-buffer">Highest estimate (%)</label
+            ><input
+              id="max-buffer"
+              type="number"
+              [(ngModel)]="maxBufferPercent"
+              (ngModelChange)="onBufferRangeChange()"
+              min="0"
+              max="50"
+            />
+          </div>
+        </div>
+        <div class="preset-pills" aria-label="Choose a discount range">
+          <button
+            type="button"
+            [attr.aria-pressed]="minBufferPercent === 10 && maxBufferPercent === 20"
+            (click)="setBufferPreset(10, 20)"
+          >
+            10–20%<small>Lower</small>
+          </button>
+          <button
+            type="button"
+            [attr.aria-pressed]="minBufferPercent === 20 && maxBufferPercent === 30"
+            (click)="setBufferPreset(20, 30)"
+          >
+            20–30%<small>Middle</small>
+          </button>
+          <button
+            type="button"
+            [attr.aria-pressed]="minBufferPercent === 25 && maxBufferPercent === 35"
+            (click)="setBufferPreset(25, 35)"
+          >
+            25–35%<small>Higher</small>
+          </button>
+        </div>
+        <div class="buffer-preview">
+          <h3 class="ui-heading">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#calendar"></use>
+            </svg>
+            On a ₹{{ sampleInstallment | number }} payment
+          </h3>
+          <dl>
+            <div>
+              <dt>Discount per member</dt>
+              <dd>₹{{ sampleMinDiscount | number }}–₹{{ sampleMaxDiscount | number }}</dd>
+            </div>
+            <div>
+              <dt>Estimated payment</dt>
+              <dd>₹{{ sampleMinOutflow | number }}–₹{{ sampleMaxOutflow | number }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+      <footer class="sheet-actions">
+        <button type="button" class="ui-action primary" (click)="closeBufferModal()">Done</button>
+      </footer>
+    </section>
+  </dialog>
+</div>

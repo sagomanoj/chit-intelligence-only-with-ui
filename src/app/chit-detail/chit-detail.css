@@ -1,0 +1,244 @@
+.value-card h1 {
+  padding-right: 15%;
+  overflow-wrap: anywhere;
+  margin-bottom: 4px;
+}
+.value-card > span,
+.value-card > p {
+  font-size: 0.93rem;
+  color: #e7f2ff;
+}
+.value-card p {
+  margin: 3px 0 10px;
+}
+.value-card .detail-status {
+  background: #d9f7ed;
+  border-radius: 20px;
+  padding: 3px 10px;
+  color: #13583f;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+.detail-value {
+  display: block;
+  max-width: 77%;
+  font-size: clamp(1.8rem, 7.6vw, 3.3rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.text-action {
+  color: #125aa5;
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  min-height: 40px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.kpi-grid,
+.detail-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.kpi-grid article {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  padding: 13px 10px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #e7f4ff;
+  box-shadow: var(--card-shadow);
+  font-weight: 600;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+.kpi-grid article:nth-child(2) {
+  background: #fff4de;
+}
+.kpi-grid article:nth-child(3) {
+  background: #dff8f0;
+}
+.kpi-grid article:nth-child(4) {
+  background: #e9f8e9;
+}
+.kpi-grid strong {
+  display: block;
+  margin-top: 3px;
+  font-size: clamp(1.06rem, 4.3vw, 1.55rem);
+}
+.kpi-grid svg {
+  color: #276194;
+}
+.group-rules p {
+  color: #41566f;
+  margin: 8px 0;
+}
+summary {
+  cursor: pointer;
+  color: #215a91;
+  font-weight: 650;
+}
+.terms-section h2 {
+  margin-bottom: 12px;
+}
+.mobile-history {
+  display: grid;
+  gap: 9px;
+}
+.term-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f9fcff;
+}
+.term-card header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  background: #e4f1ff;
+  padding: 1px 9px;
+}
+.term-card header button {
+  margin-left: auto;
+}
+.term-card header time {
+  font-size: 0.86rem;
+}
+.term-numbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 12px 0;
+}
+.term-numbers div {
+  padding: 0 8px;
+  border-right: 1px solid var(--line);
+}
+.term-numbers div:last-child {
+  border: none;
+}
+dt {
+  color: #455c73;
+  font-size: 0.8rem;
+}
+dd {
+  margin: 3px 0 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.term-card details {
+  border-top: 1px solid var(--line);
+  padding: 8px 11px;
+  font-size: 0.87rem;
+}
+.term-more {
+  margin: 0;
+}
+.term-more div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+}
+.term-more dd {
+  text-align: right;
+}
+.danger {
+  color: #a12442;
+}
+.won,
+.already-taken-banner {
+  background: #e0f7ed;
+  color: #194b3e;
+  padding: 10px 12px;
+  line-height: 1.45;
+  border-radius: 8px;
+}
+.won {
+  margin: 8px;
+}
+.already-taken-banner p {
+  margin: 0;
+}
+.already-taken-banner p + p {
+  margin-top: 5px;
+}
+.term-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.term-context {
+  margin: 0 0 13px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: #16457c;
+  background: #e3f1ff;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.desktop-terms-table {
+  display: none;
+}
+@media (min-width: 900px) {
+  .desktop-terms-table {
+    display: block;
+  }
+  .mobile-history {
+    display: none;
+  }
+  .terms-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .terms-table td,
+  .terms-table th {
+    text-align: left;
+    padding: 9px 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .terms-table th {
+    background: #edf5ff;
+  }
+  .terms-table .btn-icon {
+    border: 0;
+    color: #145fa9;
+    background: transparent;
+    cursor: pointer;
+    min-height: 36px;
+  }
+  .self-tag {
+    color: #076544;
+    display: block;
+  }
+}
+@media (max-width: 640px) {
+  .term-form .ui-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.dividend-explanation details {
+  margin-top: 5px;
+}
+.dividend-explanation summary {
+  color: #175747;
+}
+
+.kpi-grid .return-tile.gain {
+  color: #11563b;
+  background: #dff6eb;
+  border-color: #acd9c1;
+}
+.kpi-grid .return-tile.loss {
+  color: #801e37;
+  background: #ffedf1;
+  border-color: #edc3ce;
+}
+.return-tile small {
+  display: block;
+  margin-top: 3px;
+  line-height: 1.35;
+}

@@ -1,219 +1,554 @@
-<div class="calculator-shell">
-  <header class="page-header">
+<div class="ui-page">
+  <!-- Chit Context Banner when opened for a specific Chit -->
+  <div class="chit-context-banner ui-panel" *ngIf="chit">
+    <div class="context-info">
+      <div class="ui-heading">
+        <svg class="ui-icon chip" aria-hidden="true">
+          <use href="assets/ui-icons.svg#calc"></use>
+        </svg>
+        Bid calculator
+      </div>
+      <h2 class="context-title">{{ chit.name }}</h2>
+      <span class="context-sub"
+        >Auction {{ currentChitNumber }} ·
+        {{
+          dividendDistributionType === ChitType.ALWAYS_COMMISSION
+            ? 'Always Commission · All members share the discount'
+            : 'Only members who haven’t won share the discount'
+        }}</span
+      >
+      <span class="context-sub"
+        >Organizer’s commission
+        {{
+          commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
+            ? 'added to'
+            : 'taken out of'
+        }}
+        the discount · Paid so far ₹{{ pastInvestment || 0 | number }}</span
+      >
+    </div>
+    <div class="context-actions">
+      <button class="ui-action" (click)="goBackToChit()">← Back to chit</button>
+    </div>
+  </div>
+
+  <div *ngIf="saveSuccessMessage" class="alert-banner alert-success-banner">
+    {{ saveSuccessMessage }}
+  </div>
+
+  <header class="page-header" *ngIf="!chit">
     <div class="header-title-row">
-      <h1 class="main-title"><span class="eyebrow">Chit Intelligence</span> Bid Profit Calculator</h1>
+      <h1 class="ui-heading">
+        <svg class="ui-icon chip" aria-hidden="true">
+          <use href="assets/ui-icons.svg#calc"></use></svg
+        >Bid calculator
+      </h1>
     </div>
   </header>
 
-  <main class="dashboard-grid">
+  <p class="helper-text">Fill in the fields marked *.</p>
+
+  <div *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }}
+  </div>
+
+  <div>
     <section class="setup-stack">
-      <article class="panel input-panel">
+      <article class="ui-panel">
         <div class="panel-header">
           <div>
-            <h2>Chit Fundamentals</h2>
-            <p>Enter the basic chit details to get started.</p>
+            <h2 class="ui-heading">
+              <svg class="ui-icon chip" aria-hidden="true">
+                <use href="assets/ui-icons.svg#calendar"></use></svg
+              >Chit details
+            </h2>
           </div>
         </div>
 
-        <div class="form-grid">
+        <div class="ui-fields">
           <div class="form-group">
-            <label for="totalAmount" class="required">Total Amount</label>
-            <input type="number" id="totalAmount" [(ngModel)]="totalAmount" (ngModelChange)="calculateProfit()" name="totalAmount" placeholder="700000">
+            <label for="totalAmount" class="required">Total payout amount (₹)</label>
+            <input
+              type="number"
+              id="totalAmount"
+              [(ngModel)]="totalAmount"
+              (ngModelChange)="onInputChange()"
+              name="totalAmount"
+              placeholder="700000"
+              [class.error]="isFieldInvalid('totalAmount')"
+            />
           </div>
 
           <div class="form-group">
-            <label for="participants" class="required">Total Members</label>
-            <input type="number" id="participants" [(ngModel)]="participants" (ngModelChange)="calculateProfit()" name="participants" placeholder="14">
+            <label for="participants" class="required">Number of members</label>
+            <input
+              type="number"
+              id="participants"
+              [(ngModel)]="participants"
+              (ngModelChange)="onInputChange()"
+              name="participants"
+              placeholder="14"
+              [class.error]="isFieldInvalid('participants')"
+            />
           </div>
 
-          <div class="form-group">
-            <label for="frequency" class="required">Chit Frequency</label>
-            <select id="frequency" [(ngModel)]="frequency" (ngModelChange)="calculateProfit()" name="frequency">
-              <option [ngValue]="1">1 month</option>
-              <option [ngValue]="2">2 months</option>
-              <option [ngValue]="3">3 months</option>
-              <option [ngValue]="4">4 months</option>
-              <option [ngValue]="5">5 months</option>
-              <option [ngValue]="6">6 months</option>
+          <div class="form-group wide" *ngIf="!chit">
+            <label for="dividendDistributionType">Who shares the discount?</label>
+            <select
+              id="dividendDistributionType"
+              [(ngModel)]="dividendDistributionType"
+              (ngModelChange)="onInputChange()"
+              name="dividendDistributionType"
+              aria-describedby="calculator-sharing-help"
+            >
+              <option [ngValue]="ChitType.ALWAYS_COMMISSION">
+                Always Commission (all members)
+              </option>
+              <option [ngValue]="ChitType.STANDARD_NON_WINNERS_ONLY">
+                Only members who haven’t won
+              </option>
+            </select>
+            <small id="calculator-sharing-help">{{
+              dividendDistributionType === ChitType.ALWAYS_COMMISSION
+                ? 'All members share the discount, even after they win.'
+                : 'Only members still waiting for their payout share the discount.'
+            }}</small>
+          </div>
+
+          <div class="form-group wide" *ngIf="!chit">
+            <label for="commissionTreatmentType">How the organizer’s commission is handled</label>
+            <select
+              id="commissionTreatmentType"
+              [(ngModel)]="commissionTreatmentType"
+              (ngModelChange)="onInputChange()"
+              name="commissionTreatmentType"
+              aria-describedby="calculator-fee-help"
+            >
+              <option [ngValue]="CommissionTreatment.DEDUCT_FROM_DISCOUNT">
+                Deduct commission from discount
+              </option>
+              <option [ngValue]="CommissionTreatment.ADD_TO_DISCOUNT">
+                Add commission to discount
+              </option>
+            </select>
+            <small id="calculator-fee-help">{{
+              commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT
+                ? 'Members share the discount plus the organizer’s commission.'
+                : 'Members share what is left after the commission is taken out.'
+            }}</small>
+          </div>
+
+          <div class="form-group wide">
+            <label for="frequency" class="required">How often you pay</label>
+            <select
+              id="frequency"
+              [(ngModel)]="frequency"
+              (ngModelChange)="onInputChange()"
+              name="frequency"
+              [class.error]="isFieldInvalid('frequency')"
+            >
+              <option [ngValue]="1">Every month</option>
+              <option [ngValue]="2">Every 2 months</option>
+              <option [ngValue]="3">Every 3 months</option>
+              <option [ngValue]="4">Every 4 months</option>
+              <option [ngValue]="5">Every 5 months</option>
+              <option [ngValue]="6">Every 6 months</option>
             </select>
           </div>
         </div>
-
-        <div class="panel-header" style="margin-top: 24px;">
-          <div>
-            <h2>Your Position</h2>
-            <p>Details about your current term and investments.</p>
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="currentChitNumber" class="required">Current Chit Term</label>
-            <input type="number" id="currentChitNumber" [(ngModel)]="currentChitNumber" (ngModelChange)="calculateProfit()" name="currentChitNumber" placeholder="6">
-          </div>
-
-          <div class="form-group">
-            <label for="pastInvestment" class="required">Past Investment</label>
-            <input type="number" id="pastInvestment" [(ngModel)]="pastInvestment" (ngModelChange)="calculateProfit()" name="pastInvestment" placeholder="195000">
-          </div>
-          
-          <div class="form-group">
-            <label for="agentCommissionAmount" class="required">Commission Amount</label>
-            <input type="number" id="agentCommissionAmount" [(ngModel)]="agentCommissionAmount" (ngModelChange)="calculateProfit()" name="agentCommissionAmount" step="100" placeholder="0">
-          </div>
-
-          <div class="form-group wide discount-bid-group">
-            <div class="input-wrapper">
-              <label for="discountAmount" class="required">Bid Discount Amount</label>
-              <input type="number" id="discountAmount" [(ngModel)]="discountAmount" (ngModelChange)="calculateProfit()" name="discountAmount" placeholder="100000">
-            </div>
-            <div class="checkbox-wrapper">
-              <label class="checkbox-label">
-                <input type="checkbox" [(ngModel)]="excludeOwnShare" (ngModelChange)="calculateProfit()" name="excludeOwnShare">
-                Exclude current term share (Rs.{{ getShareAmount() | number:'1.0-0' }}) from Profit/Loss
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="discount-slider">
-          <div class="slider-header">
-            <span>Discount Bid Range</span>
-            <strong>Rs.{{ (discountAmount || 0) | number:'1.0-0' }}</strong>
-          </div>
-          <input type="range" id="discountSlider" min="0" [max]="getDiscountUpperBound()" step="1000"
-                 [value]="discountAmount || 0" name="discountSlider" (input)="onDiscountSliderChange($event)">
-          <div class="slider-meta">
-            <span>Rs.0</span>
-            <span>Max Rs.{{ getDiscountUpperBound() | number:'1.0-0' }}</span>
-          </div>
-        </div>
       </article>
-
-      <article class="panel reinvest-panel">
-        <div class="panel-header compact">
+      <article class="ui-panel">
+        <div class="panel-header">
           <div>
-            <h2>Re-investment</h2>
-            <p>Use monthly interest from take-home amount to offset future installments.</p>
+            <h2 class="ui-heading">
+              <svg class="ui-icon chip violet" aria-hidden="true">
+                <use href="assets/ui-icons.svg#layers"></use></svg
+              >Your bid
+            </h2>
           </div>
-          <label class="switch">
-            <input type="checkbox" id="reinvestEnabled" [(ngModel)]="reinvestEnabled" (ngModelChange)="calculateProfit()" name="reinvestEnabled">
-            <span></span>
-          </label>
         </div>
 
-        <div *ngIf="reinvestEnabled" class="form-grid two-column">
+        <div class="ui-fields">
           <div class="form-group">
-            <label for="annualInterest">Annual Interest (%)</label>
-            <input type="number" id="annualInterest" [ngModel]="annualInterest" name="annualInterest"
-                   (ngModelChange)="onInterestModelChange('percent', $event)" step="0.01" placeholder="24">
+            <label for="currentChitNumber" class="required">Auction number</label>
+            <input
+              type="number"
+              id="currentChitNumber"
+              [(ngModel)]="currentChitNumber"
+              (ngModelChange)="onInputChange()"
+              name="currentChitNumber"
+              placeholder="6"
+              [class.error]="isFieldInvalid('currentChitNumber')"
+            />
           </div>
+
+          <div
+            class="form-group checkbox-row"
+            *ngIf="!chit && dividendDistributionType === ChitType.STANDARD_NON_WINNERS_ONLY"
+          >
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="hasPreviouslyWon"
+                (ngModelChange)="onInputChange()"
+                name="hasPreviouslyWon"
+              />
+              <span>I won the payout in an earlier auction</span>
+            </label>
+          </div>
+
           <div class="form-group">
-            <label for="monthlyRupee">Interest (Rupee/100)</label>
-            <input type="number" id="monthlyRupee" [ngModel]="monthlyRupee" name="monthlyRupee"
-                   (ngModelChange)="onInterestModelChange('rupee', $event)" step="0.01" placeholder="2">
+            <label for="pastInvestment" class="required">Total paid so far (₹)</label>
+            <input
+              type="number"
+              id="pastInvestment"
+              [(ngModel)]="pastInvestment"
+              (ngModelChange)="onInputChange()"
+              name="pastInvestment"
+              placeholder="195000"
+              [class.error]="isFieldInvalid('pastInvestment')"
+            />
           </div>
-        </div>
-      </article>
-    </section>
 
-    <aside class="insight-rail" [class.is-calculating]="isCalculating">
-      <div class="loading-overlay" *ngIf="isCalculating">
-        <div class="spinner"></div>
-      </div>
-      <div *ngIf="!profit" class="empty-state">
-        <span>Ready</span>
-        <strong>Run a bid check</strong>
-        <p>Results, annualized return, and reinvestment coverage will stay here while you adjust the discount slider.</p>
-      </div>
-
-      <ng-container *ngIf="profit">
-        <article class="hero-result" [class.loss-card]="profit.status === 'LOSS'" [class.neutral-card]="profit.status === 'NO PROFIT / NO LOSS'">
-          <div>
-            <span>{{ profit.status }}</span>
-            <strong>Rs.{{ profit.netProfit | number:'1.0-0' }}</strong>
+          <div class="form-group">
+            <label for="agentCommissionAmount" class="required">Organizer’s commission (₹)</label>
+            <input
+              type="number"
+              id="agentCommissionAmount"
+              [(ngModel)]="agentCommissionAmount"
+              (ngModelChange)="onInputChange()"
+              name="agentCommissionAmount"
+              step="100"
+              placeholder="0"
+              [class.error]="isFieldInvalid('agentCommissionAmount')"
+            />
           </div>
-          <div class="hero-stats">
-            <small>{{ profit.profitPercentage | number:'1.2-2' }}% overall</small>
-            <small>{{ getAnnualizedProfitPercentage() | number:'1.2-2' }}% annualized</small>
-            <small>{{ getProfitInterestRupee() | number:'1.2-2' }} rupee / month</small>
+
+          <div class="form-group wide">
+            <label for="discountAmount" class="required">Discount offered by the winner (₹)</label>
+            <input
+              type="number"
+              id="discountAmount"
+              [(ngModel)]="discountAmount"
+              (ngModelChange)="onInputChange()"
+              name="discountAmount"
+              placeholder="100000"
+              [class.error]="isFieldInvalid('discountAmount')"
+            />
           </div>
-        </article>
 
-        <section class="metric-strip">
-          <article>
-            <span>Take Home</span>
-            <strong>Rs.{{ profit.takeHomeAmount | number:'1.0-0' }}</strong>
-            <small>after discount</small>
-          </article>
-          <article>
-            <span>Investment</span>
-            <strong>Rs.{{ profit.totalInvestment | number:'1.0-0' }}</strong>
-            <small>past + future</small>
-          </article>
-        </section>
-
-        <section class="compact-panel">
-          <h2>Bid Breakdown</h2>
-          <div class="result-grid">
-            <div>
-              <span>Bid Discount Amount</span>
-              <strong>Rs.{{ profit.discountAmount | number:'1.0-0' }}</strong>
+          <div class="discount-slider">
+            <div class="slider-header">
+              <span>Adjust the bid discount</span>
+              <div class="slider-header-values">
+                <strong>₹{{ discountAmount || 0 | number: '1.0-0' }}</strong>
+              </div>
             </div>
-            <div>
-              <span>Max Bid Limit(No profit/Loss)</span>
-              <strong>Rs.{{ profit.breakEvenDiscountAmount | number:'1.0-0' }}</strong>
-            </div>
-            <div>
-              <span>Commission</span>
-              <strong>Rs.{{ profit.agentCommissionAmount | number:'1.0-0' }}</strong>
-            </div>
-            <div>
-              <span>Remaining</span>
-              <strong>{{ profit.remainingTerms }} terms</strong>
-            </div>
-            <div>
-              <span>Future Pay</span>
-              <strong>Rs.{{ profit.futureInvestment | number:'1.0-0' }}</strong>
-            </div>
-            <div>
-              <span>Installment</span>
-              <strong>Rs.{{ profit.installmentAmount | number:'1.0-0' }}</strong>
+            <input
+              type="range"
+              aria-label="Adjust the bid discount"
+              id="discountSlider"
+              min="0"
+              [max]="sliderMaximum"
+              [step]="sliderStep"
+              [value]="discountAmount || 0"
+              name="discountSlider"
+              (input)="onDiscountSliderChange($event)"
+            />
+            <div class="slider-meta">
+              <span>₹0</span>
+              <span>Max ₹{{ sliderMaximum | number: '1.0-0' }}</span>
             </div>
           </div>
-        </section>
-
-        <section *ngIf="profit.reinvestmentEnabled" class="compact-panel reinvest-results">
-          <div class="panel-title-row">
-            <h2>Re-investment</h2>
-            <span [class.profit]="profit.coverageStatus === 'FULLY_COVERED'" [class.loss]="profit.coverageStatus === 'PARTIAL'">
-              {{ profit.coverageStatus }}
+          <div class="form-group amount-to-pay-group">
+            <div class="label-with-badge">
+              <label for="amountToBePaid">Your payment after discount (₹)</label>
+              <span class="highlight-badge">Calculated</span>
+            </div>
+            <input
+              type="number"
+              id="amountToBePaid"
+              [ngModel]="getAmountToBePaid()"
+              (ngModelChange)="onAmountToBePaidChange($event)"
+              name="amountToBePaid"
+              placeholder="0"
+              class="amount-to-pay-input"
+            />
+            <span class="amount-to-pay-sub" *ngIf="participants && currentChitNumber">
+              <span *ngIf="commissionTreatmentType === CommissionTreatment.ADD_TO_DISCOUNT"
+                >Members share the ₹{{ discountAmount || 0 | number: '1.0-0' }} discount plus the
+                ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} commission.</span
+              >
+              <span *ngIf="commissionTreatmentType !== CommissionTreatment.ADD_TO_DISCOUNT"
+                >Members share what is left from the ₹{{
+                  discountAmount || 0 | number: '1.0-0'
+                }}
+                discount after the ₹{{ agentCommissionAmount || 0 | number: '1.0-0' }} commission.</span
+              >
+              <span *ngIf="getEligibleMembersCount() > 0"
+                >{{ getEligibleMembersCount() }}
+                {{ getEligibleMembersCount() === 1 ? 'member gets' : 'members share' }} ₹{{
+                  getDividendPool() | number: '1.0-0'
+                }}. That’s about ₹{{ getSharePerEligibleMember() | number: '1.0-0' }} off each
+                member’s payment.</span
+              >
+              <span *ngIf="getEligibleMembersCount() === 0"
+                >No members get a discount this auction.</span
+              >
+              <span
+                *ngIf="hasPreviouslyWon && dividendDistributionType !== ChitType.ALWAYS_COMMISSION"
+              >
+                You’ve already won, so you don’t get a discount share this auction.</span
+              >
             </span>
           </div>
-          <div class="result-grid">
-            <div>
-              <span>Monthly Interest</span>
-              <strong>Rs.{{ profit.monthlyInterest | number:'1.0-0' }}</strong>
-            </div>
-            <div>
-              <span>Interest Per Term</span>
-              <strong>Rs.{{ profit.interestPerTerm | number:'1.0-0' }}</strong>
-            </div>
-            <div>
-              <span>Extra Pay Per Term</span>
-              <strong [class.profit]="profit.extraPaymentPerTerm <= 0" [class.loss]="profit.extraPaymentPerTerm > 0">
-                Rs.{{ profit.extraPaymentPerTerm | number:'1.0-0' }}
-              </strong>
-            </div>
-            <div>
-              <span>Total Extra Pay</span>
-              <strong [class.profit]="profit.totalExtraPayment <= 0" [class.loss]="profit.totalExtraPayment > 0">
-                Rs.{{ profit.totalExtraPayment | number:'1.0-0' }}
-              </strong>
-            </div>
+
+          <div class="form-group wide checkbox-row">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="excludeOwnShare"
+                (ngModelChange)="onInputChange()"
+                name="excludeOwnShare"
+              />
+              <span
+                >When you win, take your ₹{{ getShareAmount() | number: '1.0-0' }} payment out of
+                your payout and leave it out of the gain or loss calculation.</span
+              >
+            </label>
           </div>
-        </section>
-      </ng-container>
-    </aside>
-  </main>
+        </div>
+      </article>
+
+      <article class="ui-panel reinvest-panel">
+        <div class="panel-header compact">
+          <div>
+            <h2 class="ui-heading">
+              <label for="reinvestEnabled">Use payout interest for future payments</label>
+            </h2>
+            <p>See how much of each future payment the interest on your payout could cover.</p>
+          </div>
+          <input
+            class="toggle"
+            type="checkbox"
+            id="reinvestEnabled"
+            [(ngModel)]="reinvestEnabled"
+            (ngModelChange)="onInputChange()"
+            name="reinvestEnabled"
+          />
+        </div>
+
+        <div *ngIf="reinvestEnabled" class="ui-fields two-column">
+          <div class="form-group">
+            <label for="annualInterest">Interest per year (%)</label>
+            <input
+              type="number"
+              id="annualInterest"
+              [ngModel]="annualInterest"
+              name="annualInterest"
+              (ngModelChange)="onInterestModelChange('percent', $event)"
+              step="0.01"
+              placeholder="24"
+            />
+          </div>
+          <div class="form-group">
+            <label for="monthlyRupee">Monthly interest for every ₹100</label>
+            <input
+              type="number"
+              id="monthlyRupee"
+              [ngModel]="monthlyRupee"
+              name="monthlyRupee"
+              (ngModelChange)="onInterestModelChange('rupee', $event)"
+              step="0.01"
+              placeholder="2"
+            />
+          </div>
+        </div>
+      </article>
+
+      <div class="submit-action-container">
+        <button
+          class="ui-action primary"
+          (click)="validateAndCalculate()"
+          [disabled]="isCalculating"
+        >
+          Show bid results
+        </button>
+        <button class="ui-action" *ngIf="chitId && profit" (click)="saveAsTermRecord()">
+          Save as auction {{ currentChitNumber }}
+        </button>
+      </div>
+    </section>
+  </div>
+  <dialog
+    appSheet
+    aria-labelledby="results-title"
+    (cancel)="toggleModalResults()"
+    class="ui-overlay"
+    *ngIf="showModalResults"
+    (click)="toggleModalResults()"
+  >
+    <section class="ui-sheet result-sheet" (click)="$event.stopPropagation()">
+      <header class="sheet-head">
+        <h2 id="results-title">Bid results</h2>
+        <button class="ui-close" aria-label="Close bid results" (click)="toggleModalResults()">
+          ×
+        </button>
+      </header>
+      <div class="sheet-body results-body">
+        <p *ngIf="isCalculating" role="status">Calculating…</p>
+        <ng-container *ngIf="profit as p">
+          <article
+            class="hero-result"
+            [class.loss-card]="p.status === 'LOSS'"
+            [class.neutral-card]="p.status === 'NO PROFIT / NO LOSS'"
+          >
+            <div class="result-amount">
+              <svg class="ui-icon" aria-hidden="true">
+                <use href="assets/ui-icons.svg#tag"></use>
+              </svg>
+              <div>
+                {{
+                  p.status === 'LOSS'
+                    ? 'Money you could lose'
+                    : p.status === 'PROFIT'
+                      ? 'Money you could gain'
+                      : 'No gain or loss'
+                }}
+                <strong>₹{{ p.netProfit | number: '1.0-0' }}</strong>
+              </div>
+            </div>
+            <div class="hero-stats">
+              <span>{{ p.profitPercentage | number: '1.2-2' }}% overall</span
+              ><span
+                >Estimated return per year
+                {{ getAnnualizedProfitPercentage() | number: '1.2-2' }}%</span
+              ><span>₹{{ getProfitInterestRupee() | number: '1.2-2' }} per ₹100 each month</span>
+            </div>
+          </article>
+          <div class="metric-pair">
+            <article>
+              <svg class="ui-icon" aria-hidden="true">
+                <use href="assets/ui-icons.svg#wallet"></use>
+              </svg>
+              <div>
+                Payout you would receive<strong>₹{{ p.takeHomeAmount | number: '1.0-0' }}</strong>
+              </div>
+            </article>
+            <article>
+              <svg class="ui-icon" aria-hidden="true">
+                <use href="assets/ui-icons.svg#coin"></use>
+              </svg>
+              <div>
+                Total you expect to pay<strong>₹{{ p.totalInvestment | number: '1.0-0' }}</strong>
+              </div>
+            </article>
+          </div>
+          <article class="ui-panel result-slider-card">
+            <label for="result-discount">Adjust your bid discount</label>
+            <output for="result-discount">₹{{ discountAmount || 0 | number: '1.0-0' }}</output>
+            <input
+              id="result-discount"
+              type="range"
+              [min]="sliderStep"
+              [max]="sliderMaximum"
+              [step]="sliderStep"
+              [value]="discountAmount || 0"
+              (input)="onDiscountSliderChange($event)"
+            />
+          </article>
+          <section class="ui-panel">
+            <h3>Bid breakdown</h3>
+            <dl class="result-list">
+              <div>
+                <dt>Total payout amount</dt>
+                <dd>₹{{ totalAmount | number }}</dd>
+              </div>
+              <div>
+                <dt>Organizer’s commission</dt>
+                <dd>₹{{ p.agentCommissionAmount | number: '1.0-0' }}</dd>
+              </div>
+              <div>
+                <dt>Your discount this auction</dt>
+                <dd>₹{{ getDividendPerMember() | number: '1.0-0' }}</dd>
+              </div>
+              <div>
+                <dt>Your payment after discount</dt>
+                <dd>₹{{ getAmountToBePaid() | number: '1.0-0' }}</dd>
+              </div>
+              <div>
+                <dt>Future payments</dt>
+                <dd>₹{{ p.futureInvestment | number: '1.0-0' }}</dd>
+              </div>
+              <div>
+                <dt>Auctions left</dt>
+                <dd>{{ p.remainingTerms }}</dd>
+              </div>
+              <div>
+                <dt>Payment each auction</dt>
+                <dd>₹{{ p.installmentAmount | number: '1.0-0' }}</dd>
+              </div>
+              <div>
+                <dt>Highest discount without a loss</dt>
+                <dd>{{ p.breakEvenDiscountAmount === null ? 'None' : '₹' + (p.breakEvenDiscountAmount | number: '1.0-0') }}</dd>
+              </div>
+            </dl>
+          </section>
+          <section class="ui-panel">
+            <div class="ui-heading-line">
+              <h3><label for="reinvestEnabledResult">Interest on your payout</label></h3>
+              <input
+                class="toggle"
+                id="reinvestEnabledResult"
+                type="checkbox"
+                [(ngModel)]="reinvestEnabled"
+                (ngModelChange)="onInputChange()"
+                name="reinvestEnabledResult"
+              />
+            </div>
+            <dl class="result-list" *ngIf="p.reinvestmentEnabled">
+              <div>
+                <dt>Future payments</dt>
+                <dd>
+                  {{
+                    p.coverageStatus === 'FULLY_COVERED'
+                      ? 'Interest covers the full payment'
+                      : 'You pay the rest'
+                  }}
+                </dd>
+              </div>
+              <div>
+                <dt>Interest each month</dt>
+                <dd>₹{{ p.monthlyInterest | number: '1.0-0' }}</dd>
+              </div>
+              <div>
+                <dt>Interest each auction</dt>
+                <dd>₹{{ p.interestPerTerm | number: '1.0-0' }}</dd>
+              </div>
+              <div>
+                <dt>You still pay each auction</dt>
+                <dd>₹{{ p.extraPaymentPerTerm | number: '1.0-0' }}</dd>
+              </div>
+              <div>
+                <dt>Total you still pay</dt>
+                <dd>₹{{ p.totalExtraPayment | number: '1.0-0' }}</dd>
+              </div>
+            </dl>
+          </section>
+        </ng-container>
+      </div>
+      <footer class="sheet-actions">
+        <button
+          class="ui-action"
+          [class.primary]="!chitId || !profit"
+          (click)="toggleModalResults()"
+        >
+          ← Back to calculator
+        </button>
+        <button *ngIf="chitId && profit" class="ui-action primary" (click)="saveAsTermRecord()">
+          Save as auction {{ currentChitNumber }}
+        </button>
+      </footer>
+    </section>
+  </dialog>
 </div>

@@ -1,7 +1,156 @@
-<h1>Chit Funds</h1>
-<button (click)="createChit()">Create New Chit</button>
-<ul>
-  <li *ngFor="let chit of chits">
-    <a (click)="viewChit(chit.id)">{{ chit.name }}</a>
-  </li>
-</ul>
+<div class="ui-page">
+  <header class="ui-titlebar">
+    <h1>My chit groups</h1>
+    <button class="ui-action primary" (click)="createChit()">＋ Create chit group</button>
+  </header>
+  <div class="search-box">
+    <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#search"></use></svg>
+    <input
+      type="search"
+      aria-label="Search chit groups"
+      placeholder="Search chit groups"
+      [(ngModel)]="searchQuery"
+    />
+  </div>
+  <div class="filters">
+    <button [attr.aria-pressed]="activeTab === 'ALL'" (click)="setTab('ALL')">
+      All {{ chitSummaries.length }}
+    </button>
+    <button [attr.aria-pressed]="activeTab === 'ONGOING'" (click)="setTab('ONGOING')">
+      In progress {{ ongoingCount }}
+    </button>
+    <button [attr.aria-pressed]="activeTab === 'COMPLETED'" (click)="setTab('COMPLETED')">
+      Finished {{ completedCount }}
+    </button>
+    <button class="toggle-all" *ngIf="filteredChits.length" (click)="toggleExpandAll()">
+      {{ allExpanded ? 'Hide all details' : 'Show all details' }}
+    </button>
+  </div>
+  <div class="folder-list" *ngIf="filteredChits.length; else empty">
+    <article class="chit-folder" *ngFor="let item of filteredChits" [attr.data-color]="item.color">
+      <button
+        class="folder-toggle"
+        [attr.aria-expanded]="isExpanded(item.chit.id)"
+        (click)="toggleExpand($event, item.chit.id)"
+      >
+        <span class="folder-tab"
+          ><svg class="ui-icon" aria-hidden="true">
+            <use href="assets/ui-icons.svg#groups"></use>
+          </svg>
+          {{ item.chit.name }}</span
+        >
+        <span class="folder-cover">
+          <span class="folder-status"
+            >{{
+              item.chit.status === 'COMPLETED' || item.termsCompleted >= item.chit.totalMembers
+                ? 'Finished'
+                : 'In progress'
+            }}
+            <span aria-hidden="true">{{ isExpanded(item.chit.id) ? '⌃' : '⌄' }}</span></span
+          >
+          <span class="folder-value"
+            ><small>Total payout amount</small
+            ><strong>₹{{ item.chit.chitValue | number }}</strong></span
+          >
+          <span class="folder-terms"
+            ><b>₹{{ item.chit.installmentAmount | number }}</b> each auction<small
+              >{{ item.termsCompleted }} of {{ item.chit.totalMembers }} auctions recorded</small
+            ></span
+          >
+        </span>
+      </button>
+      <div class="folder-details" *ngIf="isExpanded(item.chit.id)">
+        <div class="amounts">
+          <div>
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#wallet"></use></svg
+            ><span
+              >Total paid so far<strong>₹{{ item.totalInvested | number }}</strong></span
+            >
+          </div>
+          <div>
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#savings"></use></svg
+            ><span
+              >Discounts received<strong>₹{{ item.totalDividendEarned | number }}</strong></span
+            >
+          </div>
+          <div *ngIf="item.isSelfPrized">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#trophy"></use></svg
+            ><span
+              >Payout received<strong>₹{{ item.payoutReceived | number }}</strong></span
+            >
+          </div>
+        </div>
+        <details class="rules">
+          <summary>Group rules</summary>
+          <p>
+            {{
+              item.chit.dividendDistributionType === 1
+                ? 'Always Commission · All members share the discount'
+                : 'Only members who haven’t won share the discount'
+            }}
+          </p>
+          <p>
+            Organizer’s commission
+            {{ item.chit.commissionTreatmentType === 2 ? 'added to' : 'taken out of' }} the
+            discount.
+          </p>
+        </details>
+        <div class="folder-actions">
+          <button class="ui-action" (click)="viewChit(item.chit.id)">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#calendar"></use>
+            </svg>
+            Auction history
+          </button>
+          <button class="ui-action" (click)="openCalculator(item.chit.id)">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#calc"></use>
+            </svg>
+            Bid calculator
+          </button>
+          <button class="minor-action" (click)="editChit($event, item.chit.id)">
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#pencil"></use>
+            </svg>
+            Edit
+          </button>
+          <button
+            class="minor-action danger"
+            (click)="deleteChit($event, item.chit.id, item.chit.name)"
+          >
+            <svg class="ui-icon" aria-hidden="true">
+              <use href="assets/ui-icons.svg#trash"></use>
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    </article>
+  </div>
+  <ng-template #empty>
+    <div class="ui-panel empty">
+      <svg class="ui-icon" aria-hidden="true"><use href="assets/ui-icons.svg#folder"></use></svg>
+      <h2>{{ chitSummaries.length ? 'No matching chit groups' : 'No chit groups yet' }}</h2>
+      <p>
+        {{
+          chitSummaries.length
+            ? 'Try another name or filter.'
+            : 'Create your first chit group or restore a backup from Settings.'
+        }}
+      </p>
+      <button *ngIf="!chitSummaries.length" class="ui-action primary" (click)="createChit()">
+        ＋ Create chit group
+      </button>
+      <button
+        *ngIf="chitSummaries.length"
+        class="ui-action"
+        (click)="searchQuery = ''; setTab('ALL')"
+      >
+        Show all chits
+      </button>
+    </div>
+  </ng-template>
+</div>

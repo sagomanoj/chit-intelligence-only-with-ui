@@ -1,17 +1,33 @@
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { ChitListComponent } from './chit-list';
+import { ChitService } from '../services/chit.service';
 
-import { ChitList } from './chit-list';
-
-describe('ChitList', () => {
-  let component: ChitList;
-  let fixture: ComponentFixture<ChitList>;
+describe('ChitListComponent', () => {
+  let component: ChitListComponent;
+  let fixture: ComponentFixture<ChitListComponent>;
 
   beforeEach(async () => {
+    const mockChitService = {
+      getChits: () => of([]),
+      getChit: () => of(undefined),
+      createChit: () => of(null),
+      addTerm: () => of(null),
+      getTerms: () => of([]),
+      getChitSummary: () => null
+    };
+
     await TestBed.configureTestingModule({
-      imports: [ChitList],
+      imports: [ChitListComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ChitService, useValue: mockChitService }
+      ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ChitList);
+    fixture = TestBed.createComponent(ChitListComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
